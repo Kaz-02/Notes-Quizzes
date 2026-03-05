@@ -1,51 +1,83 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>CS4440</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CS4440 — Notes</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f6f8;
-      margin: 0;
-      padding: 40px;
-      text-align: center;
-    }
-    h1 {
-      margin-bottom: 40px;
-    }
-    .links {
-      display: flex;
-      justify-content: center;
-      gap: 40px;
-      flex-wrap: wrap;
-    }
-    a {
-      display: block;
-      padding: 20px 40px;
-      background: white;
-      border-radius: 8px;
-      text-decoration: none;
-      color: #333;
-      font-weight: bold;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-      transition: 0.2s;
-    }
-    a:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 8px 18px rgba(0,0,0,0.12);
-    }
+    :root { --bg:#0b0f14; --card:#121a24; --text:#e8eef6; --muted:#9bb0c6; --border:#243244; --accent:#6aa9ff; }
+    *{ box-sizing:border-box; }
+    body{ margin:0; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background:var(--bg); color:var(--text); }
+    .wrap{ max-width:900px; margin:0 auto; padding:40px 16px 64px; }
+    header{ display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin-bottom:20px; }
+    h1{ margin:0; font-size:28px; letter-spacing:.2px; }
+    .sub{ margin:8px 0 0; color:var(--muted); font-size:14px; }
+    .toplinks{ display:flex; gap:10px; flex-wrap:wrap; }
+    a.btn{ display:inline-block; padding:10px 12px; border:1px solid var(--border); border-radius:10px; color:var(--text); text-decoration:none; background:transparent; }
+    a.btn:hover{ border-color:var(--accent); }
+    .card{ background:var(--card); border:1px solid var(--border); border-radius:16px; padding:18px; }
+    .list{ display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px; margin-top:14px; }
+    .item{ display:block; padding:14px; border-radius:14px; border:1px solid var(--border); text-decoration:none; color:var(--text); background:rgba(255,255,255,.02); }
+    .item:hover{ border-color:var(--accent); transform: translateY(-1px); }
+    .k{ font-size:12px; color:var(--muted); letter-spacing:.08em; text-transform:uppercase; }
+    .t{ margin-top:6px; font-weight:700; }
+    .small{ margin-top:6px; color:var(--muted); font-size:13px; }
+    footer{ margin-top:18px; color:var(--muted); font-size:12px; }
+    code{ color:#b7d4ff; }
   </style>
 </head>
 <body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>CS4440 — Notes</h1>
+        <p class="sub">このフォルダ内の <code>os_chapter*_notes.html</code> を自動で一覧表示します</p>
+      </div>
+      <div class="toplinks">
+        <a class="btn" href="../">← Home</a>
+        <a class="btn" href="../quizes/">Quizzes →</a>
+      </div>
+    </header>
 
-  <h1>CS4440</h1>
-
-  <div class="links">
-    <a href="notes/">📘 Notes</a>
-    <a href="quizes/">📝 Quizzes</a>
+    <div class="card">
+      <div class="k">Chapters</div>
+      <div id="list" class="list"></div>
+      <footer id="hint"></footer>
+    </div>
   </div>
 
+  <script>
+    // ✅ ここに「このフォルダにあるノートHTML」を列挙する（増やしたら1行追加）
+    // ただし表示は自動で「Chapter番号順」に整列されます
+    const files = [
+      "os_chapter1_notes.html",
+      "os_chapter2_notes.html",
+      "os_chapter3_notes.html",
+    ];
+
+    function chapterNum(name){
+      const m = name.match(/chapter(\d+)/i);
+      return m ? Number(m[1]) : 9999;
+    }
+
+    const list = document.getElementById("list");
+    const hint = document.getElementById("hint");
+
+    const sorted = [...files].sort((a,b)=>chapterNum(a)-chapterNum(b));
+    sorted.forEach(f=>{
+      const n = chapterNum(f);
+      const a = document.createElement("a");
+      a.className = "item";
+      a.href = f; // 同一フォルダなので相対パス
+      a.innerHTML = `
+        <div class="k">Note</div>
+        <div class="t">Chapter ${n}</div>
+        <div class="small">${f}</div>
+      `;
+      list.appendChild(a);
+    });
+
+    hint.textContent = `表示件数: ${sorted.length} / 追加したら files 配列に1行足せばOK`;
+  </script>
 </body>
 </html>
