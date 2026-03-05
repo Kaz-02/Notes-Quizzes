@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OS Chapter 1 — Quiz</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inconsolata:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap');
+
+:root {
+  --bg: #080c08;
+  --surface: #0e140e;
+  --border: #1a3a1a;
+  --green: #00ff41;
+  --green-dim: #00aa2a;
+  --green-dark: #003310;
+  --amber: #ffb000;
+  --red: #ff3355;
+  --white: #d4f0d4;
+  --muted: #4a7a4a;
+  --scanline: rgba(0,255,65,0.03);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--white);
+  font-family: 'Noto Sans JP', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, var(--scanline) 2px, var(--scanline) 4px);
+  pointer-events: none;
+  z-index: 100;
+}
+
+@keyframes flicker { 0%,100%{opacity:1} 92%{opacity:1} 93%{opacity:.96} 94%{opacity:1} }
+body { animation: flicker 8s infinite; }
+
+.wrap { max-width: 720px; margin: 0 auto; padding: 2rem 1.2rem 4rem; }
+
+header {
+  border: 1px solid var(--green-dim);
+  padding: 1.4rem 1.8rem;
+  margin-bottom: 2rem;
+  position: relative;
+  background: var(--surface);
+}
+
+header::before {
+  content: 'OS_CHAPTER_1.EXE';
+  position: absolute;
+  top: -0.6rem; left: 1rem;
+  background: var(--bg);
+  padding: 0 0.5rem;
+  font-family: 'Inconsolata', monospace;
+  font-size: 0.7rem;
+  color: var(--green-dim);
+  letter-spacing: 0.1em;
+}
+
+.header-title {
+  font-family: 'Inconsolata', monospace;
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: var(--green);
+  letter-spacing: 0.05em;
+  text-shadow: 0 0 20px rgba(0,255,65,0.5);
+}
+
+.header-sub { font-size: 0.83rem; color: var(--muted); margin-top: 0.4rem; font-family: 'Inconsolata', monospace; }
+
+.scorebar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: 'Inconsolata', monospace;
+  font-size: 0.8rem;
+  color: var(--green-dim);
+  margin-bottom: 1.6rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.score-val { color: var(--green); font-size: 1.1rem; font-weight: 700; }
+
+.progress-bar { width: 200px; height: 6px; background: var(--green-dark); border-radius: 3px; overflow: hidden; }
+.progress-fill { height: 100%; background: var(--green); border-radius: 3px; transition: width 0.4s ease; box-shadow: 0 0 8px var(--green); }
+
+.q-card {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  padding: 1.6rem 1.8rem;
+  margin-bottom: 1.5rem;
+  position: relative;
+  animation: slideIn 0.35s ease both;
+}
+
+@keyframes slideIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+@keyframes glow { 0%,100%{box-shadow:none} 50%{box-shadow:0 0 16px rgba(0,255,65,0.25)} }
+
+.q-card.answered-correct { border-color: var(--green); animation: glow 1.5s ease 0.3s 2; }
+.q-card.answered-wrong   { border-color: var(--red); }
+
+.q-num { font-family: 'Inconsolata', monospace; font-size: 0.7rem; color: var(--muted); letter-spacing: 0.1em; margin-bottom: 0.6rem; }
+.q-text { font-size: 0.97rem; font-weight: 500; color: var(--white); line-height: 1.65; margin-bottom: 1.2rem; }
+
+.options { display: grid; gap: 0.5rem; }
+
+.opt {
+  display: flex; align-items: flex-start; gap: 0.8rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  cursor: pointer;
+  transition: all 0.15s;
+  font-size: 0.88rem;
+  color: #a0c0a0;
+  text-align: left;
+  font-family: 'Noto Sans JP', sans-serif;
+  border-radius: 2px;
+  width: 100%;
+}
+
+.opt:hover:not(:disabled) { border-color: var(--green-dim); color: var(--white); background: var(--green-dark); }
+.opt:disabled { cursor: default; }
+.opt-key { font-family: 'Inconsolata', monospace; font-size: 0.75rem; color: var(--muted); flex-shrink: 0; margin-top: 0.05rem; min-width: 1.5rem; }
+
+.opt.correct { border-color: var(--green); background: rgba(0,255,65,0.07); color: var(--green); }
+.opt.correct .opt-key { color: var(--green); }
+.opt.wrong   { border-color: var(--red);   background: rgba(255,51,85,0.07);  color: var(--red); }
+.opt.wrong .opt-key   { color: var(--red); }
+
+.explanation {
+  margin-top: 1rem; padding: 0.8rem 1rem;
+  border-left: 3px solid var(--green-dim);
+  background: var(--green-dark);
+  font-size: 0.84rem; color: #88cc88; line-height: 1.6;
+  display: none;
+}
+.explanation.show { display: block; }
+.explanation.wrong-exp { border-left-color: var(--amber); background: #1a1000; color: #ccaa44; }
+
+.badge {
+  font-family: 'Inconsolata', monospace; font-size: 0.7rem; letter-spacing: 0.08em;
+  padding: 0.2rem 0.5rem; position: absolute; top: 1rem; right: 1rem;
+}
+.badge-ok   { color: var(--green); border: 1px solid var(--green); }
+.badge-fail { color: var(--red);   border: 1px solid var(--red); }
+
+#result-screen {
+  display: none; border: 1px solid var(--green); background: var(--surface);
+  padding: 2.5rem 2rem; text-align: center; position: relative;
+}
+
+.result-score {
+  font-family: 'Inconsolata', monospace; font-size: 3.5rem; font-weight: 900;
+  color: var(--green); text-shadow: 0 0 30px rgba(0,255,65,0.6); line-height: 1; margin-bottom: 0.3rem;
+}
+.result-label { font-family: 'Inconsolata', monospace; font-size: 0.8rem; color: var(--muted); letter-spacing: 0.15em; margin-bottom: 1.5rem; }
+.result-msg { font-size: 1.05rem; color: var(--white); margin-bottom: 2rem; line-height: 1.6; }
+
+.btn-retry {
+  font-family: 'Inconsolata', monospace; font-size: 0.9rem; font-weight: 700;
+  letter-spacing: 0.1em; color: var(--bg); background: var(--green);
+  border: none; padding: 0.8rem 2.5rem; cursor: pointer; transition: all 0.2s; text-transform: uppercase;
+}
+.btn-retry:hover { background: #00dd38; box-shadow: 0 0 20px rgba(0,255,65,0.4); }
+
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+.cursor { display:inline-block; width:8px; height:1em; background:var(--green); vertical-align:text-bottom; animation:blink 1s step-end infinite; margin-left:2px; }
+
+@media(max-width:520px){ .progress-bar{width:120px} header{padding:1rem} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="header-title">Chapter 1 Quiz<span class="cursor"></span></div>
+    <div class="header-sub">> オペレーティングシステム入門 — 全10問</div>
+  </header>
+
+  <div class="scorebar">
+    <span>SCORE: <span class="score-val" id="score-disp">0</span> / <span id="total-disp">10</span></span>
+    <div style="display:flex;align-items:center;gap:0.8rem;">
+      <span id="q-counter">Q 0/10</span>
+      <div class="progress-bar"><div class="progress-fill" id="prog" style="width:0%"></div></div>
+    </div>
+  </div>
+
+  <div id="quiz-area"></div>
+  <div id="result-screen"></div>
+</div>
+
+<script>
+const questions = [
+  {
+    q: "オペレーティングシステムが「政府」に例えられる最も適切な理由はどれか？",
+    opts: ["税金（リソース）を徴収して再分配するから","それ自体は何も生産せず、他のプログラムが動く環境を提供するだけだから","国民（ユーザー）の命令に従って動くから","外敵（マルウェア）から守る軍隊の役割を持つから"],
+    ans: 1,
+    exp: "OSは政府と同様に、それ自体は直接有用な作業を行わず、他のプログラム（アプリ）が機能するための環境・インフラを整備します。生産活動はアプリケーション側が行います。"
+  },
+  {
+    q: "コンピュータ起動時、最初にOSカーネルをメモリに読み込む役割を担うのはどれか？",
+    opts: ["CPUのレジスタ","ハードディスクのMBRのみ","ファームウェア（EEPROM）上のブートストラッププログラム","OSカーネル自身が自動的に展開する"],
+    ans: 2,
+    exp: "電源投入後、CPUはまずEEPROM上のファームウェア（ブートストラッププログラム）を実行します。これがハードウェアを初期化し、ストレージからOSカーネルをメモリへ読み込みます。"
+  },
+  {
+    q: "「マルチプログラミング」の主な目的はどれか？",
+    opts: ["複数のユーザーが同時にログインできるようにすること","CPU使用率を最大化し、CPUがアイドル状態にならないようにすること","ユーザーに複数プログラムが同時実行しているように見せること","複数のCPUコアを並列に活用すること"],
+    ans: 1,
+    exp: "マルチプログラミングの目的はCPU使用率の最大化です。あるプロセスがI/O待ちで停止した際に、OSが別の準備完了プロセスにCPUを切り替えることで、CPUを常にビジー状態に保ちます。"
+  },
+  {
+    q: "「マルチタスキング（時分割）」がマルチプログラミングと異なる点はどれか？",
+    opts: ["複数のCPUを使う点が異なる","CPU切り替えが非常に高速で、ユーザーが各プログラムをインタラクティブに操作できる点","I/O待ちのときだけ切り替える点が異なる","メモリを仮想的に拡張する技術である"],
+    ans: 1,
+    exp: "マルチタスキング（時分割）はマルチプログラミングの拡張で、CPU切り替えを非常に高頻度で行うことで、1つのCPUで並列実行の幻想を作り出し、ユーザーがインタラクティブに各プログラムを操作できます。"
+  },
+  {
+    q: "CPUがI/Oデバイスの完了を「ポーリング（常に問い合わせ）」する方法の欠点はどれか？",
+    opts: ["割り込みよりも実装が複雑になる","I/Oデバイスへの命令が届かないことがある","CPUが何も生産的な処理をしないまま待ち続けるため時間が無駄になる","メモリ使用量が大幅に増加する"],
+    ans: 2,
+    exp: "ポーリングでは、CPUが「まだ終わった？」と繰り返し問い合わせ続けるため、I/O処理中はCPUが何も有益な作業をできません。割り込み方式ならデバイスが終わったときだけCPUに通知するため効率的です。"
+  },
+  {
+    q: "カーネルモードとユーザーモードを分ける最大の理由はどれか？",
+    opts: ["カーネルモードの方が処理速度が速いから","悪意あるまたは不具合のあるユーザープログラムがOSや他のプログラムを破壊しないよう保護するため","ユーザーモードではファイルにアクセスできないようにするため","マルチコアCPUを効率よく使うため"],
+    ans: 1,
+    exp: "2つのモードによるハードウェアレベルの分離がシステム安定性の根幹です。特権命令（I/O制御など）はカーネルモードでしか実行できないため、ユーザープログラムが直接ハードウェアを操作したりOSメモリを書き換えたりすることを防ぎます。"
+  },
+  {
+    q: "メモリ階層において「揮発性（volatile）」とは何を意味するか？",
+    opts: ["アクセス速度が非常に速いこと","電源を切るとデータが失われること","書き込みより読み込みの方が速いこと","複数プロセスが同時にアクセスできないこと"],
+    ans: 1,
+    exp: "揮発性（volatile）とは、電源供給が止まるとデータが消えることを指します。DRAMは揮発性のため、データを永続保存するには不揮発性の二次ストレージ（SSD/HDD）が必要です。"
+  },
+  {
+    q: "「トラップ（trap）」または「例外（exception）」の正しい説明はどれか？",
+    opts: ["ハードウェアデバイスがCPUに送る完了信号","OSがプロセスを強制終了するときの処理","ソフトウェアによって引き起こされる割り込み（エラーまたはシステムコール）","メモリ不足時に発生するページングのこと"],
+    ans: 2,
+    exp: "トラップはソフトウェアが引き起こす割り込みです。ゼロ除算や無効メモリアクセスなどのエラー、またはユーザープログラムがOSサービスを要求する「システムコール」によって発生します。"
+  },
+  {
+    q: "仮想化（Virtualization）においてVMM（ハイパーバイザー）の役割はどれか？",
+    opts: ["物理メモリをRAMディスクとして使えるようにする","1台の物理ハードウェア上で複数のゲストOSを、それぞれが専用マシンを持つかのように同時稼働させる","CPUの処理速度を仮想的に向上させる","ネットワーク越しに複数台PCを1台のように扱う"],
+    ans: 1,
+    exp: "VMM（ハイパーバイザー）は1台のハードウェアを複数の「仮想マシン」に分割します。各ゲストOSは自分専用のコンピュータを持っていると認識して動作します。サーバー統合や異なるOS上でのアプリ実行に利用されます。"
+  },
+  {
+    q: "GNU公開ライセンス（GPL）の「コピーレフト」の正しい説明はどれか？",
+    opts: ["著作権を完全に放棄し誰でも自由に使えるようにすること","ソフトウェアを改変・配布できるが派生物も同じGPLライセンスに従わなければならないこと","商用利用のみを許可する特殊な著作権","オープンソースコードを企業が独自にクローズドソース化できる権利"],
+    ans: 1,
+    exp: "コピーレフトはRichard Stallmanが提唱した概念です。GPLのもとでは使用・改変・配布は自由ですが、派生物も必ず同じGPLライセンスで公開しなければなりません。「自由を連鎖させる」仕組みです。"
+  }
+];
+
+let answered = new Array(questions.length).fill(null);
+let score = 0;
+
+function render() {
+  const area = document.getElementById('quiz-area');
+  area.innerHTML = '';
+  questions.forEach((q, qi) => {
+    const card = document.createElement('div');
+    card.className = 'q-card';
+    card.style.animationDelay = (qi * 0.04) + 's';
+    card.id = 'q' + qi;
+    const isAnswered = answered[qi] !== null;
+    const isCorrect  = isAnswered && answered[qi] === q.ans;
+    if (isAnswered) card.classList.add(isCorrect ? 'answered-correct' : 'answered-wrong');
+
+    const badge = isAnswered ? `<span class="badge ${isCorrect ? 'badge-ok' : 'badge-fail'}">${isCorrect ? '✓ CORRECT' : '✗ WRONG'}</span>` : '';
+    const opts = q.opts.map((o, oi) => {
+      let cls = 'opt';
+      if (isAnswered) {
+        if (oi === q.ans) cls += ' correct';
+        else if (oi === answered[qi]) cls += ' wrong';
+      }
+      return `<button class="${cls}" onclick="answer(${qi},${oi})" ${isAnswered ? 'disabled' : ''}><span class="opt-key">${String.fromCharCode(65+oi)}.</span><span>${o}</span></button>`;
+    }).join('');
+
+    const expCls = 'explanation' + (isAnswered ? ' show' : '') + (isAnswered && !isCorrect ? ' wrong-exp' : '');
+    card.innerHTML = `${badge}<div class="q-num">> Q${String(qi+1).padStart(2,'0')}</div><div class="q-text">${q.q}</div><div class="options">${opts}</div><div class="${expCls}"><strong style="font-family:Inconsolata,monospace;font-size:0.75rem;letter-spacing:0.08em;">> 解説</strong><br>${q.exp}</div>`;
+    area.appendChild(card);
+  });
+  updateHUD();
+  if (answered.every(a => a !== null)) setTimeout(showResult, 600);
+}
+
+function answer(qi, oi) {
+  if (answered[qi] !== null) return;
+  answered[qi] = oi;
+  if (oi === questions[qi].ans) score++;
+  render();
+  const next = answered.indexOf(null);
+  if (next !== -1) setTimeout(() => document.getElementById('q'+next)?.scrollIntoView({behavior:'smooth',block:'center'}), 300);
+}
+
+function updateHUD() {
+  const done = answered.filter(a => a !== null).length;
+  document.getElementById('score-disp').textContent = score;
+  document.getElementById('q-counter').textContent = `Q ${done}/${questions.length}`;
+  document.getElementById('prog').style.width = (done / questions.length * 100) + '%';
+}
+
+function showResult() {
+  document.getElementById('quiz-area').style.display = 'none';
+  const rs = document.getElementById('result-screen');
+  rs.style.display = 'block';
+  const pct = Math.round(score / questions.length * 100);
+  const [msg, color] = pct === 100
+    ? ['完璧です！OSの基礎概念を完全に習得しています。', 'var(--green)']
+    : pct >= 80 ? ['よくできました！解説を読んで更に理解を深めましょう。', 'var(--green)']
+    : pct >= 60 ? ['半分以上正解です。間違えた問題の解説を確認してみてください。', 'var(--amber)']
+    : ['もう一度ノートを読み返してから再挑戦しましょう。', 'var(--red)'];
+
+  rs.innerHTML = `<div class="result-score" style="color:${color}">${score}<span style="font-size:1.8rem;opacity:0.5">/${questions.length}</span></div><div class="result-label">FINAL SCORE — ${pct}%</div><div class="result-msg">${msg}</div><button class="btn-retry" onclick="retry()">[ RETRY ]</button>`;
+  rs.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function retry() {
+  answered = new Array(questions.length).fill(null);
+  score = 0;
+  document.getElementById('quiz-area').style.display = 'block';
+  document.getElementById('result-screen').style.display = 'none';
+  render();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+render();
+</script>
+</body>
+</html>

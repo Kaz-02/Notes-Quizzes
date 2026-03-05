@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OS Chapter 2 — Quiz</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inconsolata:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap');
+:root{--bg:#080c08;--surface:#0e140e;--border:#1a3a1a;--green:#00ff41;--gdim:#00aa2a;--gdark:#003310;--amber:#ffb000;--red:#ff3355;--white:#d4f0d4;--muted:#4a7a4a;--scan:rgba(0,255,65,0.03)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--white);font-family:'Noto Sans JP',sans-serif;min-height:100vh;overflow-x:hidden;position:relative}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,var(--scan) 2px,var(--scan) 4px);pointer-events:none;z-index:100}
+@keyframes flicker{0%,100%{opacity:1}92%{opacity:1}93%{opacity:.96}94%{opacity:1}}
+body{animation:flicker 8s infinite}
+.wrap{max-width:720px;margin:0 auto;padding:2rem 1.2rem 4rem}
+header{border:1px solid var(--gdim);padding:1.4rem 1.8rem;margin-bottom:2rem;position:relative;background:var(--surface)}
+header::before{content:'OS_CHAPTER_2.EXE';position:absolute;top:-.6rem;left:1rem;background:var(--bg);padding:0 .5rem;font-family:'Inconsolata',monospace;font-size:.7rem;color:var(--gdim);letter-spacing:.1em}
+.htitle{font-family:'Inconsolata',monospace;font-size:1.5rem;font-weight:900;color:var(--green);letter-spacing:.05em;text-shadow:0 0 20px rgba(0,255,65,.5)}
+.hsub{font-size:.83rem;color:var(--muted);margin-top:.4rem;font-family:'Inconsolata',monospace}
+.scorebar{display:flex;justify-content:space-between;align-items:center;font-family:'Inconsolata',monospace;font-size:.8rem;color:var(--gdim);margin-bottom:1.6rem;padding:.5rem 0;border-bottom:1px solid var(--border)}
+.sval{color:var(--green);font-size:1.1rem;font-weight:700}
+.pbar{width:200px;height:6px;background:var(--gdark);border-radius:3px;overflow:hidden}
+.pfill{height:100%;background:var(--green);border-radius:3px;transition:width .4s ease;box-shadow:0 0 8px var(--green)}
+@keyframes slideIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes glow{0%,100%{box-shadow:none}50%{box-shadow:0 0 16px rgba(0,255,65,.25)}}
+.qcard{border:1px solid var(--border);background:var(--surface);padding:1.6rem 1.8rem;margin-bottom:1.5rem;position:relative;animation:slideIn .35s ease both}
+.qcard.ok{border-color:var(--green);animation:glow 1.5s ease .3s 2}
+.qcard.ng{border-color:var(--red)}
+.qnum{font-family:'Inconsolata',monospace;font-size:.7rem;color:var(--muted);letter-spacing:.1em;margin-bottom:.6rem}
+.qtext{font-size:.97rem;font-weight:500;color:var(--white);line-height:1.65;margin-bottom:1.2rem}
+.opts{display:grid;gap:.5rem}
+.opt{display:flex;align-items:flex-start;gap:.8rem;padding:.75rem 1rem;border:1px solid var(--border);background:var(--bg);cursor:pointer;transition:all .15s;font-size:.88rem;color:#a0c0a0;text-align:left;font-family:'Noto Sans JP',sans-serif;border-radius:2px;width:100%}
+.opt:hover:not(:disabled){border-color:var(--gdim);color:var(--white);background:var(--gdark)}
+.opt:disabled{cursor:default}
+.okey{font-family:'Inconsolata',monospace;font-size:.75rem;color:var(--muted);flex-shrink:0;margin-top:.05rem;min-width:1.5rem}
+.opt.correct{border-color:var(--green);background:rgba(0,255,65,.07);color:var(--green)}
+.opt.correct .okey{color:var(--green)}
+.opt.wrong{border-color:var(--red);background:rgba(255,51,85,.07);color:var(--red)}
+.opt.wrong .okey{color:var(--red)}
+.exp{margin-top:1rem;padding:.8rem 1rem;border-left:3px solid var(--gdim);background:var(--gdark);font-size:.84rem;color:#88cc88;line-height:1.6;display:none}
+.exp.show{display:block}
+.exp.wexp{border-left-color:var(--amber);background:#1a1000;color:#ccaa44}
+.badge{font-family:'Inconsolata',monospace;font-size:.7rem;letter-spacing:.08em;padding:.2rem .5rem;position:absolute;top:1rem;right:1rem}
+.bok{color:var(--green);border:1px solid var(--green)}
+.bng{color:var(--red);border:1px solid var(--red)}
+#result{display:none;border:1px solid var(--green);background:var(--surface);padding:2.5rem 2rem;text-align:center;position:relative}
+.rscore{font-family:'Inconsolata',monospace;font-size:3.5rem;font-weight:900;color:var(--green);text-shadow:0 0 30px rgba(0,255,65,.6);line-height:1;margin-bottom:.3rem}
+.rlabel{font-family:'Inconsolata',monospace;font-size:.8rem;color:var(--muted);letter-spacing:.15em;margin-bottom:1.5rem}
+.rmsg{font-size:1.05rem;color:var(--white);margin-bottom:2rem;line-height:1.6}
+.btn{font-family:'Inconsolata',monospace;font-size:.9rem;font-weight:700;letter-spacing:.1em;color:var(--bg);background:var(--green);border:none;padding:.8rem 2.5rem;cursor:pointer;transition:all .2s;text-transform:uppercase}
+.btn:hover{background:#00dd38;box-shadow:0 0 20px rgba(0,255,65,.4)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+.cursor{display:inline-block;width:8px;height:1em;background:var(--green);vertical-align:text-bottom;animation:blink 1s step-end infinite;margin-left:2px}
+@media(max-width:520px){.pbar{width:120px}header{padding:1rem}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="htitle">Chapter 2 Quiz<span class="cursor"></span></div>
+    <div class="hsub">> OS構造：インターフェースからカーネルの核心へ — 全12問</div>
+  </header>
+  <div class="scorebar">
+    <span>SCORE: <span class="sval" id="sd">0</span> / <span id="td">12</span></span>
+    <div style="display:flex;align-items:center;gap:.8rem">
+      <span id="qc">Q 0/12</span>
+      <div class="pbar"><div class="pfill" id="prog" style="width:0%"></div></div>
+    </div>
+  </div>
+  <div id="qa"></div>
+  <div id="result"></div>
+</div>
+<script>
+const Q=[
+  {
+    q:"OSが提供するサービスのうち「システム効率向け」に分類されるものはどれか？",
+    opts:["UIの提供（CLI/GUI/タッチ）","プログラムのロードと実行","リソース配分（CPU・メモリ・デバイスの割り当て）","ファイルの作成・削除・読み書き"],
+    ans:2,
+    exp:"リソース配分はシステム全体の効率を高めるためのサービスです。UI提供・プログラム実行・ファイル操作はユーザーの利便性向上のための「ユーザー向けサービス」に分類されます。"
+  },
+  {
+    q:"UNIXのシェルがコマンドを実装する方法として正しいのはどれか？",
+    opts:["全コマンドのコードをシェル自身が内包している","コマンドは独立した実行ファイルとして存在し、シェルはそれを検索・実行するだけ","コマンドはカーネル内のシステムコールとして実装されている","コマンドはGUI経由でのみ実行できる"],
+    ans:1,
+    exp:"UNIXはシステムプログラム方式を採用しており、各コマンド（ls, cp 等）は独立した実行ファイルです。シェルはコマンド名をPATHで検索して実行するだけのため、シェル自体が小さく拡張性が高くなります。"
+  },
+  {
+    q:"ユーザープログラムがOSのサービス（ファイルを開くなど）を利用するための正しい手順はどれか？",
+    opts:["CPUの特権命令を直接実行する","ハードウェアのI/Oポートに直接アクセスする","システムコールを通じてカーネルにリクエストする","別のユーザープロセスに処理を依頼する"],
+    ans:2,
+    exp:"ユーザープログラムはカーネルのサービスを使いたい場合、システムコールという決められた窓口を通じてリクエストします。これがユーザーモードからカーネルモードへの唯一の合法的な入り口です。"
+  },
+  {
+    q:"システムコールのパラメータ渡し方法として「数・長さに制限がない」のはどれか（2つ選べ）？",
+    opts:["レジスタ渡し","メモリブロック渡し（アドレスをレジスタに入れる）","スタック渡し（PUSH/POP）","キャッシュライン渡し"],
+    ans:1,
+    exp:"メモリブロック渡しとスタック渡しは、パラメータの数・長さに原理的な制限がありません。レジスタ渡しは最もシンプルですが、CPUのレジスタ数に制限されます（Linuxは5つ以下に使用）。なお、本問の選択式では「メモリブロック渡し」が最も直接的な正解です。"
+  },
+  {
+    q:"APIとABIの違いとして正しいものはどれか？",
+    opts:["APIはバイナリ互換性、ABIはソースコード互換性を定義する","APIはソースコードレベルの互換性、ABIはバイナリレベルの互換性を定義する","APIとABIは全く同じ概念で、使われる文脈が異なるだけ","APIはOSが定義し、ABIはアプリ開発者が定義する"],
+    ans:1,
+    exp:"APIはソースコードレベルの互換性を定義します（同じソースをコンパイルすれば動く）。ABIはバイナリレベルの互換性を定義します（コンパイル済みバイナリがそのまま動く）。ABIはCPUアーキテクチャに依存し、呼び出し規約・スタック構造・システムコール番号なども含みます。"
+  },
+  {
+    q:"JavaアプリがWindows・Linux・macOSで同じバイナリで動く理由として正しいのはどれか？",
+    opts:["JavaはPOSIXに完全準拠しているから","各OSに共通のカーネルが存在するから","JVM（Java仮想マシン）がバイトコードを各OS向けに実行するから","Javaコンパイラが各OS用のネイティブコードを生成するから"],
+    ans:2,
+    exp:"Javaはソースを「バイトコード（.class）」にコンパイルし、各OSにインストールされたJVMがそれを実行します。JVMがOS依存の部分を吸収するため、バイトコード（.jar/.class）は変更なしにどのOS上でも動きます。"
+  },
+  {
+    q:"OS設計における「ポリシーとメカニズムの分離」の利点として最も正しいのはどれか？",
+    opts:["カーネルのコードサイズを小さくできる","カーネルを書き直さずにポリシー（優先順位や割り当て方法）だけを変更できる","システムコールの数を減らすことができる","マルチコアCPUを効率よく使える"],
+    ans:1,
+    exp:"メカニズム（How：どうやって実現するか）とポリシー（What：何をするか）を分離することで、カーネルを書き直さずにポリシーだけを変更できます。例：スケジューリングのメカニズムは同じでも、どのプロセスを優先するか（ポリシー）は別ファイルで設定できます。"
+  },
+  {
+    q:"モノリシックカーネルとマイクロカーネルの比較として正しいのはどれか？",
+    opts:["モノリシックは安全性が高いが遅く、マイクロカーネルは高速だが不安定","モノリシックは高速だが1つのバグが全体に影響し、マイクロカーネルは安全だがメッセージパッシングのオーバーヘッドがある","モノリシックはユーザー空間で動き、マイクロカーネルはカーネル空間で動く","マイクロカーネルはモノリシックより常に高速である"],
+    ans:1,
+    exp:"モノリシックカーネルは全機能が同一アドレス空間にあるため高速ですが、1つのバグが全体のクラッシュを引き起こします。マイクロカーネルは最小限の機能のみカーネルに残し安全ですが、コンポーネント間のメッセージパッシングにオーバーヘッドが発生します。"
+  },
+  {
+    q:"Linuxのロード可能カーネルモジュール（LKM）の説明として正しいのはどれか？",
+    opts:["カーネルとは別のアドレス空間で安全に動作する","起動時または実行時にカーネルに動的に追加・削除でき、再コンパイルが不要","マイクロカーネルのアーキテクチャに基づいている","ユーザープロセスとして動作するため性能が低い"],
+    ans:1,
+    exp:"LKM（Loadable Kernel Module）はカーネルを再コンパイルせずに機能を追加・削除できます。ただしモジュールはカーネル空間で動作するため、モノリシックカーネルに近い性能が出ます。一方、完全な隔離はなく、バグのあるモジュールはカーネルに影響します。"
+  },
+  {
+    q:"macOSのDarwinカーネルが「ハイブリッド」と呼ばれる理由はどれか？",
+    opts:["WindowsとLinux両方のAPIに対応しているから","MachマイクロカーネルとBSDモノリシックカーネルを組み合わせているから","ユーザーモードとカーネルモードを交互に使うから","GPUとCPUを均等に利用するアーキテクチャだから"],
+    ans:1,
+    exp:"macOSのDarwinカーネルはMachマイクロカーネル（スケジューリング・IPC・メモリ管理）とBSDモノリシックカーネル（POSIX API・ネットワーク・ファイルシステム）を組み合わせたハイブリッド構成です。性能問題への対応として、BSDとI/O KitをMachと同じアドレス空間で動かしています。"
+  },
+  {
+    q:"AndroidがLinuxカーネルをそのまま使わず「改造版」を使う主な理由はどれか？",
+    opts:["AndroidはLinuxのライセンス（GPL）を避けるため","モバイル環境特有の省電力管理・メモリ制約・多様なハードウェアに対応するため","AndroidアプリはJavaで書かれているため、LinuxのABIと非互換だから","Linuxカーネルはタッチスクリーンをサポートしていないから"],
+    ans:1,
+    exp:"AndroidはLinuxカーネルをベースに、モバイル固有の要件（バッテリー効率・小さなRAM・多様なSoC）に対応する改造を加えています。また、HAL（ハードウェア抽象化層）を追加することで多様なデバイスへの対応も実現しています。"
+  },
+  {
+    q:"OSのブートプロセスにおいて、ファームウェア（UEFI/BIOS）が実行された後の正しい順序はどれか？",
+    opts:["①カーネル初期化 → ②カーネルをロード → ③ルートFSをマウント → ④初期プロセス起動","①カーネルをロード → ②カーネル初期化 → ③ルートFSをマウント → ④初期プロセス起動","①ルートFSをマウント → ②カーネルをロード → ③カーネル初期化 → ④初期プロセス起動","①初期プロセス起動 → ②カーネルをロード → ③ルートFSをマウント → ④カーネル初期化"],
+    ans:1,
+    exp:"ファームウェア実行後のブート順は：①ストレージからカーネルをメモリへロード → ②カーネルがハードウェアを初期化し一時RAMファイルシステム（initramfs）を作成 → ③永続的なルートファイルシステムをマウント → ④最初のユーザー空間プロセス（systemd等）を起動、となります。"
+  }
+];
+
+let answered=new Array(Q.length).fill(null);
+let score=0;
+
+function render(){
+  const area=document.getElementById('qa');
+  area.innerHTML='';
+  Q.forEach((q,qi)=>{
+    const card=document.createElement('div');
+    card.className='qcard';
+    card.style.animationDelay=(qi*.04)+'s';
+    card.id='q'+qi;
+    const done=answered[qi]!==null;
+    const ok=done&&answered[qi]===q.ans;
+    if(done) card.classList.add(ok?'ok':'ng');
+    const badge=done?`<span class="badge ${ok?'bok':'bng'}">${ok?'✓ CORRECT':'✗ WRONG'}</span>`:'';
+    const opts=q.opts.map((o,oi)=>{
+      let cls='opt';
+      if(done){if(oi===q.ans)cls+=' correct';else if(oi===answered[qi])cls+=' wrong';}
+      return `<button class="${cls}" onclick="answer(${qi},${oi})" ${done?'disabled':''}><span class="okey">${String.fromCharCode(65+oi)}.</span><span>${o}</span></button>`;
+    }).join('');
+    const ecls='exp'+(done?' show':'')+(done&&!ok?' wexp':'');
+    card.innerHTML=`${badge}<div class="qnum">> Q${String(qi+1).padStart(2,'0')}</div><div class="qtext">${q.q}</div><div class="opts">${opts}</div><div class="${ecls}"><strong style="font-family:Inconsolata,monospace;font-size:.75rem;letter-spacing:.08em;">> 解説</strong><br>${q.exp}</div>`;
+    area.appendChild(card);
+  });
+  updateHUD();
+  if(answered.every(a=>a!==null)) setTimeout(showResult,600);
+}
+
+function answer(qi,oi){
+  if(answered[qi]!==null)return;
+  answered[qi]=oi;
+  if(oi===Q[qi].ans)score++;
+  render();
+  const next=answered.indexOf(null);
+  if(next!==-1) setTimeout(()=>document.getElementById('q'+next)?.scrollIntoView({behavior:'smooth',block:'center'}),300);
+}
+
+function updateHUD(){
+  const done=answered.filter(a=>a!==null).length;
+  document.getElementById('sd').textContent=score;
+  document.getElementById('qc').textContent=`Q ${done}/${Q.length}`;
+  document.getElementById('prog').style.width=(done/Q.length*100)+'%';
+}
+
+function showResult(){
+  document.getElementById('qa').style.display='none';
+  const rs=document.getElementById('result');
+  rs.style.display='block';
+  const pct=Math.round(score/Q.length*100);
+  const[msg,color]=pct===100?['完璧です！Chapter 2の全概念を完全に習得しています。','var(--green)']
+    :pct>=80?['よくできました！苦手な問題の解説を読んで確認しましょう。','var(--green)']
+    :pct>=60?['半分以上正解です。ノートと照らし合わせて復習してみてください。','var(--amber)']
+    :['もう一度Chapter 2のノートを読み返してから再挑戦しましょう。','var(--red)'];
+  rs.innerHTML=`<div class="rscore" style="color:${color}">${score}<span style="font-size:1.8rem;opacity:.5">/${Q.length}</span></div><div class="rlabel">FINAL SCORE — ${pct}%</div><div class="rmsg">${msg}</div><button class="btn" onclick="retry()">[ RETRY ]</button>`;
+  rs.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function retry(){
+  answered=new Array(Q.length).fill(null);
+  score=0;
+  document.getElementById('qa').style.display='block';
+  document.getElementById('result').style.display='none';
+  render();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+render();
+</script>
+</body>
+</html>

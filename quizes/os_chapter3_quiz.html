@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OS Chapter 3 — Quiz</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inconsolata:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap');
+:root{--bg:#080c08;--surface:#0e140e;--border:#1a3a1a;--green:#00ff41;--gdim:#00aa2a;--gdark:#003310;--amber:#ffb000;--red:#ff3355;--white:#d4f0d4;--muted:#4a7a4a;--scan:rgba(0,255,65,0.03)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--white);font-family:'Noto Sans JP',sans-serif;min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,var(--scan) 2px,var(--scan) 4px);pointer-events:none;z-index:100}
+@keyframes flicker{0%,100%{opacity:1}92%{opacity:1}93%{opacity:.96}94%{opacity:1}}
+body{animation:flicker 8s infinite}
+.wrap{max-width:720px;margin:0 auto;padding:2rem 1.2rem 4rem}
+header{border:1px solid var(--gdim);padding:1.4rem 1.8rem;margin-bottom:2rem;position:relative;background:var(--surface)}
+header::before{content:'OS_CHAPTER_3.EXE';position:absolute;top:-.6rem;left:1rem;background:var(--bg);padding:0 .5rem;font-family:'Inconsolata',monospace;font-size:.7rem;color:var(--gdim);letter-spacing:.1em}
+.htitle{font-family:'Inconsolata',monospace;font-size:1.5rem;font-weight:900;color:var(--green);letter-spacing:.05em;text-shadow:0 0 20px rgba(0,255,65,.5)}
+.hsub{font-size:.83rem;color:var(--muted);margin-top:.4rem;font-family:'Inconsolata',monospace}
+.scorebar{display:flex;justify-content:space-between;align-items:center;font-family:'Inconsolata',monospace;font-size:.8rem;color:var(--gdim);margin-bottom:1.6rem;padding:.5rem 0;border-bottom:1px solid var(--border)}
+.sval{color:var(--green);font-size:1.1rem;font-weight:700}
+.pbar{width:200px;height:6px;background:var(--gdark);border-radius:3px;overflow:hidden}
+.pfill{height:100%;background:var(--green);border-radius:3px;transition:width .4s ease;box-shadow:0 0 8px var(--green)}
+@keyframes slideIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes glow{0%,100%{box-shadow:none}50%{box-shadow:0 0 16px rgba(0,255,65,.25)}}
+.qcard{border:1px solid var(--border);background:var(--surface);padding:1.6rem 1.8rem;margin-bottom:1.5rem;position:relative;animation:slideIn .35s ease both}
+.qcard.ok{border-color:var(--green);animation:glow 1.5s ease .3s 2}
+.qcard.ng{border-color:var(--red)}
+.qnum{font-family:'Inconsolata',monospace;font-size:.7rem;color:var(--muted);letter-spacing:.1em;margin-bottom:.6rem}
+.qtext{font-size:.97rem;font-weight:500;color:var(--white);line-height:1.65;margin-bottom:1.2rem}
+.opts{display:grid;gap:.5rem}
+.opt{display:flex;align-items:flex-start;gap:.8rem;padding:.75rem 1rem;border:1px solid var(--border);background:var(--bg);cursor:pointer;transition:all .15s;font-size:.88rem;color:#a0c0a0;text-align:left;font-family:'Noto Sans JP',sans-serif;border-radius:2px;width:100%}
+.opt:hover:not(:disabled){border-color:var(--gdim);color:var(--white);background:var(--gdark)}
+.opt:disabled{cursor:default}
+.okey{font-family:'Inconsolata',monospace;font-size:.75rem;color:var(--muted);flex-shrink:0;margin-top:.05rem;min-width:1.5rem}
+.opt.correct{border-color:var(--green);background:rgba(0,255,65,.07);color:var(--green)}
+.opt.correct .okey{color:var(--green)}
+.opt.wrong{border-color:var(--red);background:rgba(255,51,85,.07);color:var(--red)}
+.opt.wrong .okey{color:var(--red)}
+.exp{margin-top:1rem;padding:.8rem 1rem;border-left:3px solid var(--gdim);background:var(--gdark);font-size:.84rem;color:#88cc88;line-height:1.6;display:none}
+.exp.show{display:block}
+.exp.wexp{border-left-color:var(--amber);background:#1a1000;color:#ccaa44}
+.badge{font-family:'Inconsolata',monospace;font-size:.7rem;letter-spacing:.08em;padding:.2rem .5rem;position:absolute;top:1rem;right:1rem}
+.bok{color:var(--green);border:1px solid var(--green)}
+.bng{color:var(--red);border:1px solid var(--red)}
+#result{display:none;border:1px solid var(--green);background:var(--surface);padding:2.5rem 2rem;text-align:center;position:relative}
+.rscore{font-family:'Inconsolata',monospace;font-size:3.5rem;font-weight:900;color:var(--green);text-shadow:0 0 30px rgba(0,255,65,.6);line-height:1;margin-bottom:.3rem}
+.rlabel{font-family:'Inconsolata',monospace;font-size:.8rem;color:var(--muted);letter-spacing:.15em;margin-bottom:1.5rem}
+.rmsg{font-size:1.05rem;color:var(--white);margin-bottom:2rem;line-height:1.6}
+.btn{font-family:'Inconsolata',monospace;font-size:.9rem;font-weight:700;letter-spacing:.1em;color:var(--bg);background:var(--green);border:none;padding:.8rem 2.5rem;cursor:pointer;transition:all .2s;text-transform:uppercase}
+.btn:hover{background:#00dd38;box-shadow:0 0 20px rgba(0,255,65,.4)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+.cursor{display:inline-block;width:8px;height:1em;background:var(--green);vertical-align:text-bottom;animation:blink 1s step-end infinite;margin-left:2px}
+@media(max-width:520px){.pbar{width:120px}header{padding:1rem}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="htitle">Chapter 3 Quiz<span class="cursor"></span></div>
+    <div class="hsub">> プロセス：コンピューティングの生きた単位 — 全12問</div>
+  </header>
+  <div class="scorebar">
+    <span>SCORE: <span class="sval" id="sd">0</span> / <span id="td">12</span></span>
+    <div style="display:flex;align-items:center;gap:.8rem">
+      <span id="qc">Q 0/12</span>
+      <div class="pbar"><div class="pfill" id="prog" style="width:0%"></div></div>
+    </div>
+  </div>
+  <div id="qa"></div>
+  <div id="result"></div>
+</div>
+<script>
+const Q=[
+  {
+    q:"「プログラム」と「プロセス」の違いとして最も正しいのはどれか？",
+    opts:[
+      "プログラムはRAM上にあり、プロセスはディスク上にある",
+      "プログラムはディスク上の受動的なファイルで、プロセスはメモリに読み込まれた実行中の能動的な実体",
+      "プログラムはOSが管理し、プロセスはユーザーが管理する",
+      "プログラムは複数起動できないが、プロセスは複数起動できる"
+    ],
+    ans:1,
+    exp:"プログラムは命令を含むディスク上の静的なファイル（例：browser.exe）です。プロセスはそのプログラムをメモリに読み込んだ動的な実体で、プログラムカウンタ（次の命令アドレス）と関連リソースを持ちます。1つのプログラムから複数のプロセスを起動することも可能です（例：ブラウザを2ウィンドウで開く）。"
+  },
+  {
+    q:"プロセスのメモリレイアウトにおいて、関数呼び出し・ローカル変数・戻りアドレスを格納するセクションはどれか？",
+    opts:[
+      "Textセクション",
+      "Dataセクション",
+      "Heap（ヒープ）",
+      "Stack（スタック）"
+    ],
+    ans:3,
+    exp:"Stackは関数の呼び出し情報（活性化レコード）、ローカル変数、戻りアドレス、関数パラメータを一時的に格納します。メモリの高位アドレスから下向きに伸びます。HeapはmallicやnewによるRuntimeの動的確保に使われ、下から上向きに伸びます。"
+  },
+  {
+    q:"プロセスのメモリレイアウトで「HeapとStackが衝突しないよう監視する」役割を担うのはどれか？",
+    opts:[
+      "プログラマー自身がコードで防止する",
+      "CPUのキャッシュが自動的に分離する",
+      "オペレーティングシステム",
+      "コンパイラが静的解析で防止する"
+    ],
+    ans:2,
+    exp:"HeapはTextセクションの上から上方向に伸び、Stackはメモリの高位アドレスから下方向に伸びます。両者が成長して衝突するとスタックオーバーフローやヒープ破壊が発生します。OSがメモリ管理を通じてこの衝突を監視・防止します。"
+  },
+  {
+    q:"PCB（プロセス制御ブロック）に含まれる情報として誤っているものはどれか？",
+    opts:[
+      "プロセス状態（Running / Waiting など）",
+      "プログラムカウンタ（次の命令アドレス）",
+      "プロセスが使用しているネットワーク帯域幅のリアルタイム計測値",
+      "CPU スケジューリング情報（優先度など）"
+    ],
+    ans:2,
+    exp:"PCBにはプロセス状態・プログラムカウンタ・CPUレジスタ・スケジューリング情報・メモリ管理情報・アカウンティング情報（CPU使用時間・PID）・I/Oステータスが含まれます。リアルタイムのネットワーク帯域幅計測値はPCBには含まれません。Linuxでは`task_struct`がPCBに対応します。"
+  },
+  {
+    q:"プロセスが「Running」状態から「Waiting」状態に遷移する原因として正しいのはどれか？",
+    opts:[
+      "タイマー割り込みによるCPUの強制返却",
+      "I/O要求またはイベント待ちによる自主的なCPU解放",
+      "スケジューラによるDispatch",
+      "exit()システムコールの呼び出し"
+    ],
+    ans:1,
+    exp:"Running→Waitingはプロセスが自主的にI/O要求（ディスク読み込みなど）やイベント待ちのためCPUを手放したときに発生します。一方、Running→ReadyはタイマーInterruptによる強制返却（プリエンプション）です。I/O/イベントが完了するとWaiting→Readyに遷移し、再びスケジューラを待ちます。"
+  },
+  {
+    q:"コンテキストスイッチについて正しく説明しているのはどれか？",
+    opts:[
+      "CPUを別プロセスに切り替えながらユーザーの仕事も並行して処理できる有用な機能",
+      "現プロセスの状態をPCBに保存し次プロセスの状態をPCBから復元する、純粋なオーバーヘッド",
+      "プロセスがI/O完了を検知する仕組み",
+      "カーネルモードとユーザーモードを切り替えること"
+    ],
+    ans:1,
+    exp:"コンテキストスイッチはマルチタスキングの「魔法のタネ」ですが、切り替え中はCPUがユーザーの仕事をまったく行えないため「純粋なオーバーヘッド」と呼ばれます。オーバーヘッドの大きさはメモリ速度・レジスタ数・特殊命令の有無に依存し、典型的には数マイクロ秒かかります。"
+  },
+  {
+    q:"UNIXの fork() と exec() の組み合わせパターンの説明として正しいのはどれか？",
+    opts:[
+      "fork()が新しいプログラムを直接読み込み、exec()が子プロセスを終了させる",
+      "fork()が親プロセスのほぼ完全なコピーを作成し、exec()がその子プロセスのメモリ空間を新プログラムで置き換える",
+      "fork()は使わず、exec()単体でプロセスの生成と実行を行う",
+      "fork()とexec()はWindowsでのみ使われ、Linuxでは使われない"
+    ],
+    ans:1,
+    exp:"UNIXの「Clone and Replace」パターン：①fork()で親プロセスをほぼそのままコピーした子プロセスを作成（子にはpid=0が返り、親には子のPIDが返る）→②子プロセス内でexec()を呼び出し、メモリ空間を新しいプログラムで完全に置き換えます。fork()後exec()前の間に、親子間での通信や環境設定が可能な点が強力です。"
+  },
+  {
+    q:"「ゾンビプロセス（Zombie Process）」とはどういう状態か？",
+    opts:[
+      "無限ループで暴走し、CPU使用率100%のプロセス",
+      "子プロセスがすでに終了しているが、親プロセスがまだwait()を呼んでいないためプロセステーブルのエントリが残っている状態",
+      "親プロセスが先に終了し、孤立してしまった子プロセス",
+      "システムクラッシュ後に再起動されたプロセス"
+    ],
+    ans:1,
+    exp:"ゾンビプロセスは終了済みだが親がwait()を呼んでいないためプロセステーブルのエントリが残り続ける状態です。対して「オーファン（孤児）プロセス」は親が先に終了したケースで、init/systemdが自動的に養子縁組してwait()で回収します。`pid = wait(&status);` がゾンビを解放する呼び出しです。"
+  },
+  {
+    q:"Androidでメモリが不足したとき、最初に強制終了されるプロセスはどれか？",
+    opts:[
+      "フォアグラウンドプロセス（ユーザーが現在操作中のアプリ）",
+      "サービスプロセス（バックグラウンドで音楽再生中など）",
+      "エンプティプロセス（キャッシュ目的のみで保持されているプロセス）",
+      "ビジブルプロセス（画面には見えているが非フォーカス）"
+    ],
+    ans:2,
+    exp:"Androidはバッテリー・メモリ制約から厳格な優先度ヒエラルキーを設けています。OOMキラーは最も重要度の低いエンプティプロセス（キャッシュ目的）から順に終了させていきます。フォアグラウンドプロセス（ユーザーが操作中）が最後まで保護されます。"
+  },
+  {
+    q:"共有メモリ（Shared Memory）によるIPCの説明として正しいのはどれか？",
+    opts:[
+      "すべてのデータ転送にカーネルが介在するため安全だが遅い",
+      "一度共有メモリ領域を確立した後は、プロセスが直接読み書きするためカーネル不介在で非常に高速",
+      "異なるマシン間の通信に最適化されている",
+      "send()とreceive()のシステムコールを使って通信する"
+    ],
+    ans:1,
+    exp:"共有メモリはOSがメモリ領域を確立した後、プロセスが直接そのメモリを読み書きします（カーネル不介在）。そのためデータ転送はほぼ通常のメモリアクセス速度で行われ非常に高速です。ただし、同時アクセスによる競合の管理はプログラマーの責任です。POSIXではshm_open→ftruncate→mmapのAPIを使います。"
+  },
+  {
+    q:"メッセージパッシングにおける「ブロッキング（Blocking）」送信の説明として正しいのはどれか？",
+    opts:[
+      "送信側がメッセージを送った後すぐに処理を継続する",
+      "送信側が受信側にメッセージが届くまで（受け取られるまで）待機し続ける",
+      "カーネルが仲介せずにメモリを直接共有する方式",
+      "メッセージが失われた場合に自動的に再送する機能"
+    ],
+    ans:1,
+    exp:"ブロッキング（同期）送信では、送信側はメッセージが受信側に届くまで待機します。送信側と受信側の両方がブロッキングの場合、両者が同時に準備できたときに通信が成立する「ランデブー（Rendezvous）」が起きます。対してノンブロッキング（非同期）では送信後すぐに次の処理に進み、管理は複雑になります。"
+  },
+  {
+    q:"UNIXの通常パイプ（Ordinary Pipe）と名前付きパイプ（Named Pipe / FIFO）の違いとして正しいのはどれか？",
+    opts:[
+      "通常パイプは双方向、名前付きパイプは単方向の通信のみ対応している",
+      "通常パイプは親子関係が必要で単方向・プロセス終了と共に消滅するが、名前付きパイプは親子関係不要でファイルシステム上に永続する特殊ファイルとして存在する",
+      "名前付きパイプはネットワーク越しの通信にも対応している",
+      "通常パイプはカーネルスペースで動作し、名前付きパイプはユーザースペースで動作する"
+    ],
+    ans:1,
+    exp:"通常パイプ：①単方向、②親子関係が必要、③プロセスが終了すると消滅。名前付きパイプ（FIFO）：①半二重（双方向可能）、②親子関係不要で任意のプロセス間で使用可能、③ファイルシステム上に特殊ファイルとして存在し明示的に削除するまで残る。`ls -l | grep 'Aug'` のパイプ記号`|`は通常パイプを使っています。"
+  }
+];
+
+let answered=new Array(Q.length).fill(null);
+let score=0;
+
+function render(){
+  const area=document.getElementById('qa');
+  area.innerHTML='';
+  Q.forEach((q,qi)=>{
+    const card=document.createElement('div');
+    card.className='qcard';
+    card.style.animationDelay=(qi*.04)+'s';
+    card.id='q'+qi;
+    const done=answered[qi]!==null;
+    const ok=done&&answered[qi]===q.ans;
+    if(done) card.classList.add(ok?'ok':'ng');
+    const badge=done?`<span class="badge ${ok?'bok':'bng'}">${ok?'✓ CORRECT':'✗ WRONG'}</span>`:'';
+    const opts=q.opts.map((o,oi)=>{
+      let cls='opt';
+      if(done){if(oi===q.ans)cls+=' correct';else if(oi===answered[qi])cls+=' wrong';}
+      return `<button class="${cls}" onclick="answer(${qi},${oi})" ${done?'disabled':''}><span class="okey">${String.fromCharCode(65+oi)}.</span><span>${o}</span></button>`;
+    }).join('');
+    const ecls='exp'+(done?' show':'')+(done&&!ok?' wexp':'');
+    card.innerHTML=`${badge}<div class="qnum">> Q${String(qi+1).padStart(2,'0')}</div><div class="qtext">${q.q}</div><div class="opts">${opts}</div><div class="${ecls}"><strong style="font-family:Inconsolata,monospace;font-size:.75rem;letter-spacing:.08em;">> 解説</strong><br>${q.exp}</div>`;
+    area.appendChild(card);
+  });
+  updateHUD();
+  if(answered.every(a=>a!==null)) setTimeout(showResult,600);
+}
+
+function answer(qi,oi){
+  if(answered[qi]!==null)return;
+  answered[qi]=oi;
+  if(oi===Q[qi].ans)score++;
+  render();
+  const next=answered.indexOf(null);
+  if(next!==-1) setTimeout(()=>document.getElementById('q'+next)?.scrollIntoView({behavior:'smooth',block:'center'}),300);
+}
+
+function updateHUD(){
+  const done=answered.filter(a=>a!==null).length;
+  document.getElementById('sd').textContent=score;
+  document.getElementById('qc').textContent=`Q ${done}/${Q.length}`;
+  document.getElementById('prog').style.width=(done/Q.length*100)+'%';
+}
+
+function showResult(){
+  document.getElementById('qa').style.display='none';
+  const rs=document.getElementById('result');
+  rs.style.display='block';
+  const pct=Math.round(score/Q.length*100);
+  const[msg,color]=pct===100?['完璧です！プロセスの全概念を完全に習得しています。','var(--green)']
+    :pct>=80?['よくできました！解説を読んで更に理解を深めましょう。','var(--green)']
+    :pct>=60?['半分以上正解！間違えた問題の解説を確認してみてください。','var(--amber)']
+    :['もう一度Chapter 3のノートを読み返してから再挑戦しましょう。','var(--red)'];
+  rs.innerHTML=`<div class="rscore" style="color:${color}">${score}<span style="font-size:1.8rem;opacity:.5">/${Q.length}</span></div><div class="rlabel">FINAL SCORE — ${pct}%</div><div class="rmsg">${msg}</div><button class="btn" onclick="retry()">[ RETRY ]</button>`;
+  rs.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function retry(){
+  answered=new Array(Q.length).fill(null);
+  score=0;
+  document.getElementById('qa').style.display='block';
+  document.getElementById('result').style.display='none';
+  render();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+render();
+</script>
+</body>
+</html>
