@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chapter 3 — プロセス</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Kaisei+Decol:wght@400;700&family=JetBrains+Mono:wght@400;600&family=Noto+Sans+JP:wght@400;500;700&display=swap');
+
+:root {
+  --bg:      #0f0f13;
+  --s1:      #16161e;
+  --s2:      #1e1e2a;
+  --border:  #2a2a3a;
+  --white:   #e8e8f0;
+  --muted:   #6060a0;
+  --a1: #e85d5d; /* 赤 */
+  --a2: #5d9ee8; /* 青 */
+  --a3: #5de87a; /* 緑 */
+  --a4: #e8c25d; /* 黄 */
+  --a5: #c25de8; /* 紫 */
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--white);
+  font-family: 'Noto Sans JP', sans-serif;
+  line-height: 1.75;
+  padding: 2.5rem 1rem 5rem;
+}
+
+.container { max-width: 900px; margin: 0 auto; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Header ── */
+header {
+  margin-bottom: 2.8rem;
+  padding-bottom: 1.4rem;
+  border-bottom: 1px solid var(--border);
+  animation: fadeUp .5s ease both;
+}
+
+.ch-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .7rem;
+  letter-spacing: .2em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: .5rem;
+}
+
+header h1 {
+  font-family: 'Kaisei Decol', serif;
+  font-size: 2.2rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--white);
+}
+
+header h1 em {
+  font-style: normal;
+  color: var(--a1);
+}
+
+header p {
+  font-size: .88rem;
+  color: var(--muted);
+  margin-top: .4rem;
+}
+
+/* ── Big idea ── */
+.big-idea {
+  background: linear-gradient(135deg, #1a1020, #101a20);
+  border: 1px solid #3a2a50;
+  border-radius: 10px;
+  padding: 1.3rem 1.6rem;
+  margin-bottom: 2.8rem;
+  animation: fadeUp .5s ease .06s both;
+}
+
+.big-idea .lbl {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .65rem;
+  letter-spacing: .15em;
+  color: var(--a5);
+  text-transform: uppercase;
+  margin-bottom: .4rem;
+}
+
+.big-idea p {
+  font-size: 1rem;
+  color: #ccc8e8;
+}
+
+/* ── Section ── */
+.section {
+  margin-bottom: 1.6rem;
+  animation: fadeUp .4s ease both;
+}
+
+.sh {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: .95rem 1.2rem;
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-radius: 8px 8px 0 0;
+  cursor: pointer;
+  user-select: none;
+  transition: background .15s;
+}
+
+.sh:hover { background: var(--s2); }
+.sh.open  { border-bottom: none; border-radius: 8px 8px 0 0; }
+
+.sh-icon { font-size: 1.1rem; flex-shrink: 0; }
+.sh h2   { flex: 1; font-size: .95rem; font-weight: 700; color: var(--white); }
+
+.stag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .62rem;
+  padding: .13rem .5rem;
+  border-radius: 20px;
+  border: 1px solid;
+  letter-spacing: .05em;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.t1 { color: var(--a1); border-color: var(--a1); background: rgba(232,93,93,.08); }
+.t2 { color: var(--a2); border-color: var(--a2); background: rgba(93,158,232,.08); }
+.t3 { color: var(--a3); border-color: var(--a3); background: rgba(93,232,122,.08); }
+.t4 { color: var(--a4); border-color: var(--a4); background: rgba(232,194,93,.08); }
+.t5 { color: var(--a5); border-color: var(--a5); background: rgba(194,93,232,.08); }
+
+.tog { color: var(--muted); font-size: .75rem; transition: transform .25s; }
+.sh.open .tog { transform: rotate(180deg); }
+
+.sb {
+  display: none;
+  padding: 1.3rem 1.4rem;
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+}
+
+.sb.open { display: block; }
+
+/* ── Inner blocks ── */
+.ct {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .72rem;
+  color: var(--a2);
+  letter-spacing: .06em;
+  margin-bottom: .3rem;
+  margin-top: .1rem;
+}
+
+.cp { font-size: .9rem; color: #b8b8d0; line-height: 1.7; }
+
+hr { border: none; border-top: 1px solid var(--border); margin: 1rem 0; }
+
+.cols2 { display: grid; grid-template-columns: 1fr 1fr; gap: .9rem; margin-top: .7rem; }
+.cols3 { display: grid; grid-template-columns: repeat(3,1fr); gap: .8rem; margin-top: .7rem; }
+
+.card {
+  background: var(--s2);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: .9rem 1rem;
+}
+
+.card .lb {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .66rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  margin-bottom: .4rem;
+  font-weight: 600;
+}
+
+.card p { font-size: .85rem; color: #9090b8; }
+
+/* keyword colors */
+.k1 { color: var(--a1); font-weight: 700; }
+.k2 { color: var(--a2); font-weight: 700; }
+.k3 { color: var(--a3); font-weight: 700; }
+.k4 { color: var(--a4); font-weight: 700; }
+.k5 { color: var(--a5); font-weight: 700; }
+
+.tags { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .55rem; }
+
+.tag {
+  background: var(--s2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: .16rem .65rem;
+  font-size: .76rem;
+  color: var(--muted);
+}
+
+/* Quote */
+.quote {
+  border-left: 3px solid var(--a4);
+  padding: .5rem 1rem;
+  background: rgba(232,194,93,.05);
+  border-radius: 0 6px 6px 0;
+  font-size: .88rem;
+  color: #c8b870;
+  margin: .8rem 0;
+  font-style: italic;
+}
+
+/* Process state diagram */
+.state-row {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  margin-top: .8rem;
+  flex-wrap: wrap;
+}
+
+.state-node {
+  flex: 1;
+  min-width: 80px;
+  text-align: center;
+  padding: .7rem .5rem;
+  border-radius: 6px;
+  font-size: .8rem;
+  font-weight: 700;
+}
+
+.sn-new  { background: rgba(130,130,130,.15); border: 1px solid #555; color: #aaa; }
+.sn-ready{ background: rgba(232,194,93,.12); border: 1px solid var(--a4); color: var(--a4); }
+.sn-run  { background: rgba(93,232,122,.12); border: 1px solid var(--a3); color: var(--a3); }
+.sn-wait { background: rgba(93,158,232,.12); border: 1px solid var(--a2); color: var(--a2); }
+.sn-term { background: rgba(232,93,93,.12);  border: 1px solid var(--a1); color: var(--a1); }
+
+.arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .8rem;
+  color: var(--muted);
+  padding: 0 .3rem;
+  flex-shrink: 0;
+}
+
+.state-desc {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: .5rem;
+  margin-top: .6rem;
+}
+
+.sd-item { font-size: .76rem; color: #8080a8; text-align: center; }
+
+/* Memory layout visual */
+.mem-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  overflow: hidden;
+  margin-top: .7rem;
+  max-width: 300px;
+}
+
+.mem-row {
+  padding: .55rem 1rem;
+  font-size: .82rem;
+  font-family: 'JetBrains Mono', monospace;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mr-stack { background: rgba(232,93,93,.15);  border-bottom: 1px solid var(--border); color: var(--a1); }
+.mr-free  { background: var(--s2);            border-bottom: 1px solid var(--border); color: var(--muted); font-size:.75rem; text-align:center; justify-content:center; padding:1rem; }
+.mr-heap  { background: rgba(232,194,93,.12); border-bottom: 1px solid var(--border); color: var(--a4); }
+.mr-data  { background: rgba(93,158,232,.12); border-bottom: 1px solid var(--border); color: var(--a2); }
+.mr-text  { background: rgba(93,232,122,.12); color: var(--a3); }
+
+.mem-row .dir { font-size:.7rem; color: var(--muted); }
+
+/* PCB table */
+.pcb-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: .7rem;
+  font-size: .83rem;
+}
+
+.pcb-table th {
+  background: var(--s2);
+  border: 1px solid var(--border);
+  padding: .5rem .8rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .7rem;
+  letter-spacing: .08em;
+  color: var(--muted);
+  text-align: left;
+}
+
+.pcb-table td {
+  border: 1px solid var(--border);
+  padding: .45rem .8rem;
+  color: #9090b8;
+}
+
+.pcb-table tr:nth-child(odd) td { background: var(--s2); }
+.pcb-table tr:nth-child(even) td { background: var(--s1); }
+
+/* IPC compare */
+.ipc-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .9rem;
+  margin-top: .7rem;
+}
+
+.ipc-card {
+  border-radius: 8px;
+  padding: 1rem 1.1rem;
+  border: 1px solid;
+}
+
+.ipc-shm  { background: rgba(93,232,122,.05); border-color: rgba(93,232,122,.3); }
+.ipc-msg  { background: rgba(93,158,232,.05); border-color: rgba(93,158,232,.3); }
+
+.ipc-card .title { font-weight: 700; font-size: .92rem; margin-bottom: .5rem; }
+.ipc-shm .title  { color: var(--a3); }
+.ipc-msg .title  { color: var(--a2); }
+
+.ipc-card p { font-size: .84rem; color: #8888b0; margin-bottom: .4rem; }
+.ipc-card .analogy { font-size: .78rem; color: var(--muted); font-style: italic; }
+
+/* Android priority pyramid */
+.pyramid {
+  display: flex;
+  flex-direction: column;
+  gap: .3rem;
+  margin-top: .7rem;
+}
+
+.py-row {
+  border-radius: 5px;
+  padding: .4rem .9rem;
+  font-size: .83rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid;
+}
+
+.py1 { background: rgba(232,93,93,.15);  border-color: rgba(232,93,93,.4);  color: var(--a1); }
+.py2 { background: rgba(232,130,93,.12); border-color: rgba(232,130,93,.3); color: #e88a5d; }
+.py3 { background: rgba(232,194,93,.10); border-color: rgba(232,194,93,.3); color: var(--a4); }
+.py4 { background: rgba(93,158,232,.10); border-color: rgba(93,158,232,.3); color: var(--a2); }
+.py5 { background: rgba(100,100,130,.10);border-color: rgba(100,100,130,.3); color: var(--muted); }
+
+.py-row .badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .65rem;
+  opacity: .8;
+}
+
+code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .82rem;
+  background: var(--s2);
+  padding: .05rem .32rem;
+  border-radius: 3px;
+  color: var(--a4);
+}
+
+@media(max-width:600px){
+  .cols2,.cols3,.ipc-cols,.state-desc{ grid-template-columns: 1fr; }
+  .state-row { flex-direction: column; }
+  header h1 { font-size: 1.7rem; }
+  .mem-stack { max-width: 100%; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <div class="ch-label">Chapter 3 — 学習ノート</div>
+  <h1>プロセス：<em>コンピューティングの生きた単位</em></h1>
+  <p>プログラムがどう「生まれ・動き・通信し・死ぬか」を理解する</p>
+</header>
+
+<div class="big-idea">
+  <div class="lbl">💡 この章の核心</div>
+  <p><span class="k1">プログラム</span>（ディスク上の静的なファイル）が<span class="k3">プロセス</span>（メモリ上で実行中の動的な実体）になることで、現代のマルチタスキングが成立する。プロセスはただ実行されるだけでなく、生まれ・状態を変え・他のプロセスと通信し・終了するライフサイクルを持つ。</p>
+</div>
+
+<!-- 1 プログラムvsプロセス -->
+<div class="section" style="animation-delay:.05s">
+  <div class="sh open" onclick="toggle(this)">
+    <span class="sh-icon">🔄</span>
+    <h2>プログラム vs プロセス：受動から能動へ</h2>
+    <span class="stag t1">CONCEPT</span>
+    <span class="tog">▼</span>
+  </div>
+  <div class="sb open">
+    <div class="cols2">
+      <div class="card">
+        <div class="lb" style="color:var(--muted)">プログラム（受動的）</div>
+        <p>ディスク上の<span class="k4">静的なファイル</span>。命令の羅列。それ自体は何もしない。例：<code>browser.exe</code></p>
+      </div>
+      <div class="card">
+        <div class="lb" style="color:var(--a3)">プロセス（能動的）</div>
+        <p>プログラムを<span class="k3">メモリに読み込んだもの</span>。<span class="k3">プログラムカウンタ</span>（次の命令アドレス）を持ち、リソースを消費しながら実行する。</p>
+      </div>
+    </div>
+    <div class="quote">1つのプログラムから複数のプロセスを起動できる。例：ブラウザを2つのウィンドウで開くと、同じ実行ファイルから2つの独立したプロセスが動く。</div>
+    <hr>
+    <div class="ct">JVMの面白い点</div>
+    <div class="cp">JVM自体も1つのプロセス。その中でJavaプログラムが動く。<span class="k5">プロセスは別のプロセスの実行環境になれる</span>（入れ子構造）。</div>
+  </div>
+</div>
+
+<!-- 2 メモリレイアウト -->
+<div class="section" style="animation-delay:.1s">
+  <div class="sh" onclick="toggle(this)">
+    <span class="sh-icon">🗂️</span>
+    <h2>プロセスのメモリレイアウト：4つのセクション</h2>
+    <span class="stag t4">MEMORY</span>
+    <span class="tog">▼</span>
+  </div>
+  <div class="sb">
+    <div class="cols2">
+      <div>
+        <div class="mem-stack">
+          <div class="mem-row mr-stack"><span>Stack</span><span class="dir">↓ 下に伸びる</span></div>
+          <div class="mem-row mr-free">↕ Free Memory（空き領域）</div>
+          <div class="mem-row mr-heap"><span>Heap</span><span class="dir">↑ 上に伸びる</span></div>
+          <div class="mem-row mr-data">Data Section（グローバル変数）</div>
+          <div class="mem-row mr-text">Text Section（コード）</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:.7rem">
+        <div class="card">
+          <div class="lb" style="color:var(--a3)">Text（テキスト）</div>
+          <p>実行可能なコード本体。固定サイズ。実行ファイルから読み込む。</p>
+        </div>
+        <div class="card">
+          <div class="lb" style="color:var(--a2)">Data（データ）</div>
+          <p>グローバル変数。固定サイズ。初期化済みと未初期化で分かれる（Cの場合）。</p>
+        </div>
+        <div class="card">
+          <div class="lb" style="color:var(--a4)">Heap（ヒープ）</div>
+          <p>実行時に動的確保されるメモリ（<code>malloc</code>/<code>new</code>）。上向きに伸びる。</p>
+        </div>
+        <div class="card">
+          <div class="lb" style="color:var(--a1)">Stack（スタック）</div>
+          <p>関数呼び出し・ローカル変数・戻りアドレスの一時保存。下向きに伸びる。</p>
+        </div>
+      </div>
+    </div>
+    <div class="quote" style="margin-top:.9rem">OSはStackとHeapが衝突しないよう監視しなければならない。衝突すればスタックオーバーフロー。</div>
+  </div>
+</div>
+
+<!-- 3 PCB -->
+<div class="section" style="animation-delay:.15s">
+  <div class="sh" onclick="toggle(this)">
+    <span class="sh-icon">🪪</span>
+    <h2>PCB（プロセス制御ブロック）：プロセスの身分証明書</h2>
+    <span class="stag t2">PCB</span>
+    <span class="tog">▼</span>
+  </div>
+  <div class="sb">
+    <div class="cp">カーネルが各プロセスを管理するためのデータ構造。Linuxでは <code>task_struct</code>。</div>
+    <table class="pcb-table">
+      <tr><th>フィールド</th><th>内容</th><th>Linuxでの実装</th></tr>
+      <tr><td><span class="k1">プロセス状態</span></td><td>New / Ready / Running / Waiting / Terminated</td><td><code>long state</code></td></tr>
+      <tr><td><span class="k2">プログラムカウンタ</span></td><td>次に実行する命令のアドレス</td><td>レジスタに保存</td></tr>
+      <tr><td><span class="k3">CPUレジスタ</span></td><td>コンテキストスイッチ時に保存・復元</td><td>レジスタセット</td></tr>
+      <tr><td><span class="k4">CPUスケジューリング</span></td><td>優先度・スケジューリングキューへのポインタ</td><td>優先度フィールド</td></tr>
+      <tr><td><span class="k5">メモリ管理</span></td><td>ベース/リミットレジスタ、ページテーブル</td><td><code>mm_struct *mm</code></td></tr>
+      <tr><td>アカウンティング</td><td>CPU使用時間・プロセスID</td><td>PID, タイムカウンタ</td></tr>
+      <tr><td>I/Oステータス</td><td>オープン中のファイル・デバイス</td><td>ファイルディスクリプタ</td></tr>
+    </table>
+    <div class="tags" style="margin-top:.8rem">
+      <span class="tag">Linuxのプロセス名の最大長：TASK_COMM_LEN = 16バイト</span>
+      <span class="tag">子プロセスのリスト：list_head children（双方向リンクリスト）</span>
+    </div>
+  </div>
+</div>
+
+<!-- 4 5つの状態 -->
+<div class="section" style="animation-delay:.2s">
+  <div class="sh" onclick="toggle(this)">
+    <span class="sh-icon">🔁</span>
+    <h2>プロセスの5つの状態：ライフサイクル</h2>
+    <span class="stag t3">LIFECYCLE</span>
+    <span class="tog">▼</span>
+  </div>
+  <div class="sb">
+    <div class="state-row">
+      <div class="state-node sn-new">New<br><small style="font-size:.65rem;font-weight:400">生成中</small></div>
+      <div class="arrow">→</div>
+      <div class="state-node sn-ready">Ready<br><small style="font-size:.65rem;font-weight:400">実行待ち</small></div>
+      <div class="arrow">⇄</div>
+      <div class="state-node sn-run">Running<br><small style="font-size:.65rem;font-weight:400">実行中</small></div>
+      <div class="arrow">→</div>
+      <div class="state-node sn-term">Terminated<br><small style="font-size:.65rem;font-weight:400">終了</small></div>
+    </div>
+    <div style="margin-top:.6rem;text-align:center;font-size:.75rem;color:var(--muted)">Running ⇄ Waiting（I/O待ち / I/O完了で復帰）</div>
+    <hr>
+    <div class="cols3" style="margin-top:.3rem">
+      <div class="card"><div class="lb" style="color:var(--muted)">New → Ready</div><p>OSがプロセスをメモリに読み込みAdmit（受け入れ）</p></div>
+      <div class="card"><div class="lb" style="color:var(--a4)">Ready → Running</div><p>スケジューラがDispatch（CPUを割り当て）</p></div>
+      <div class="card"><div class="lb" style="color:var(--a2)">Running → Waiting</div><p>I/O要求やイベント待ちで自主的にCPUを手放す</p></div>
+      <div class="card"><div class="lb" style="color:var(--a2)">Waiting → Ready</div><p>I/OやイベントのCompletion（完了）を受け取る</p></div>
+      <div class="card"><div class="lb" style="color:var(--a4)">Running → Ready</div><p>タイマー割り込みにより強制的にInterrupt（中断）</p></div>
+      <div class="card"><div class="lb" style="color:var(--a1)">Running → Terminated</div><p>exit()呼び出しまたはエラーによりExit</p></div>
+    </div>
+    <div class="quote" style="margin-top:.8rem">1つのCPUコアで「Running」状態になれるのは常に1プロセスだけ。</div>
+  </div>
+</div>
+
+<!-- 5 スケジューラとコンテキストスイッチ -->
+<div class="section" style="animation-delay:.25s">
+  <div class="sh" onclick="toggle(this)">
+    <span class="sh-icon">⏱️</span>
+    <h2>スケジューラとコンテキストスイッチ：マルチタスキングのコスト</h2>
+    <span class="stag t4">SCHEDULER</span>
+    <span class="tog">▼</span>
+  </div>
+  <div class="sb">
+    <div class="cols2">
+      <div class="card">
+        <div class="lb" style="color:var(--a4)">Ready Queue と Wait Queue</div>
+        <p>
+          <span class="k4">Ready Queue</span>：CPU待ちのプロセスが並ぶ。スケジューラがここから選んでDispatch。<br><br>
+          <span class="k2">Wait Queue</span>：I/O待ちやイベント待ちのプロセスが待機。完了するとReady Queueに戻る。
+        </p>
+      </div>
+      <div class="card">
+        <div class="lb" style="color:var(--a1)">コンテキストスイッチとは？</div>
+        <p>
+          CPUを別プロセスに切り替えるとき、<span class="k1">現プロセスの状態をPCBに保存</span>し、<span class="k1">次プロセスの状態をPCBから復元</span>する操作。<br><br>
+          <span class="k1">純粋なオーバーヘッド</span>。切り替え中はCPUがユーザーの仕事をしない。典型的には数マイクロ秒かかる。
+        </p>
+      </div>
+    </div>
+    <div class="tags" style="margin-top:.8rem">
+      <span class="tag">オーバーヘッドの要因：メモリ速度・レジスタ数・特殊命令の有無</span>
+      <span class="tag">切り替えが多すぎるとスラッシング（処理なしにスイッチだけ）</span>
+    </div>
+  </div>
+</div>
+
+<!-- 6 プロセスの生成 -->
+<div class="section" style="animation-delay:.3s">
+  <div class="sh" onclick="toggle(this)">
+    <span class="sh-icon">🌱</span>
+    <h2>プロセスの生成：fork・exec・CreateProcess</h2>
+    <span class="stag t3">CREATION</span>
+    <span class="tog">▼</span>
+  </div>
+  <div class="sb">
+    <div class="cp">プロセスは必ず別のプロセスから生まれる。Linuxは <code>systemd</code>（PID=1）を祖先とするツリー構造。</div>
+    <div class="cols2" style="margin-top:.8rem">
+      <div class="card" style="border-color:rgba(93,232,122,.3)">
+        <div class="lb" style="color:var(--a3)">UNIX方式：Clone and Replace</div>
+        <p>
+          <span class="k3">① fork()</span>：親プロセスをほぼ完全にコピーして子プロセスを作成。子にはPID=0が返る。親には子のPIDが返る。<br><br>
+          <span class="k3">② exec()</span>：子プロセスのメモリ空間を新しいプログラムで置き換える。<br><br>
+          この「クローンして置き換え」パターンが、起動前に親子間で通信や設定ができる柔軟性を生む。
+        </p>
+      </div>
+      <div class="card" style="border-color:rgba(93,158,232,.3)">
+        <div class="lb" style="color:var(--a2)">Windows方式：Direct Creation</div>
+        <p>
+          <span class="k2">CreateProcess()</span>：子プロセスを作成すると同時にプログラムを読み込む。クローンは行わない。<br><br>
+          より直接的なアプローチ。引数で実行ファイル名・セキュリティ設定・継承フラグ・環境変数などを一度に指定する。
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 7 終了：Zombie・Orphan -->
+<div class="section" style="animation-delay:.35s">
+  <div class="sh" onclick="toggle(this)">
+    <span class="sh-icon">💀</span>
+    <h2>プロセスの終了：Zombie と Orphan</h2>
+    <span class="stag t1">TERMINATION</span>
+    <span class="tog">▼</span>
+  </div>
+  <div class="sb">
+    <div class="cols3">
+      <div class="card" style="border-color:rgba(93,232,122,.3)">
+        <div class="lb" style="color:var(--a3)">正常終了</div>
+        <p>子が <code>exit()</code> → 親が <code>wait()</code> で終了ステータスを回収 → OSがプロセスを完全に削除。</p>
+      </div>
+      <div class="card" style="border-color:rgba(232,93,93,.3)">
+        <div class="lb" style="color:var(--a1)">ゾンビプロセス</div>
+        <p>子はすでに終了しているが、<span class="k1">親がまだ <code>wait()</code> を呼んでいない</span>状態。PCBのエントリがプロセステーブルに残り続ける。</p>
+      </div>
+      <div class="card" style="border-color:rgba(232,194,93,.3)">
+        <div class="lb" style="color:var(--a4)">オーファン（孤児）プロセス</div>
+        <p>親が <code>wait()</code> せずに先に終了した場合、子プロセスが孤立。<span class="k4"><code>init</code>/<code>systemd</code> が自動的に養子縁組</span>して回収する。</p>
+      </div>
+    </div>
+    <div class="quote" style="margin-top:.8rem"><code>pid = wait(&status);</code> — 親がこれを呼ぶことでゾンビを解放し、プロセステーブルのエントリが消える。</div>
+  </div>
+</div>
+
+<!-- 8 モバイル（Android） -->
+<div class="section" style="animation-delay:.38s">
+  <div class="sh" onclick="toggle(this)">
+    <span class="sh-icon">📱</span>
+    <h2>モバイル環境での生存競争：Androidの優先度ヒエラルキー</h2>
+    <span class="stag t5">MOBILE</span>
+    <span class="tog">▼</span>
+  </div>
+  <div class="sb">
+    <div class="cp">バッテリーとメモリの制約から、AndroidはOOMキラー（Out-Of-Memory killer）が低優先度プロセスを強制終了してリソースを回収する。</div>
+    <div class="pyramid">
+      <div class="py-row py1"><span>① フォアグラウンドプロセス</span><span class="badge">最後に終了 / Critical</span></div>
+      <div class="py-row py2"><span>② ビジブルプロセス</span><span class="badge">画面に見えているが非フォーカス</span></div>
+      <div class="py-row py3"><span>③ サービスプロセス</span><span class="badge">BGで音楽再生など</span></div>
+      <div class="py-row py4"><span>④ バックグラウンドプロセス</span><span class="badge">ユーザーには見えない</span></div>
+      <div class="py-row py5"><span>⑤ エンプティプロセス</span><span class="badge">キャッシュのみ / 最初に終了</span></div>
+    </div>
+    <div class="tags" style="margin-top:.8rem">
+      <span class="tag">iOSは歴史的にすべてのBGアプリを一時停止（suspend）</span>
+      <span class="tag">現代iOSは特定APIでのみ限定的なBGタスクを許可</span>
+    </div>
+  </div>
+</div>
+
+<!-- 9 IPC -->
+<div class="section" style="animation-delay:.42s">
+  <div class="sh" onclick="toggle(this)">
+    <span class="sh-icon">💬</span>
+    <h2>プロセス間通信（IPC）：2つの根本モデル</h2>
+    <span class="stag t2">IPC</span>
+    <span class="tog">▼</span>
+  </div>
+  <div class="sb">
+    <div class="ipc-cols">
+      <div class="ipc-card ipc-shm">
+        <div class="title">① 共有メモリ（Shared Memory）</div>
+        <p>OSが共有メモリ領域を確立後、プロセスが<span class="k3">直接読み書き</span>してデータ交換。カーネル不介入で<span class="k3">超高速</span>。</p>
+        <p>POSIX API：<code>shm_open()</code> → <code>ftruncate()</code> → <code>mmap()</code></p>
+        <p><strong style="color:var(--a3)">典型例：</strong>Producer-Consumer問題（有界バッファ）</p>
+        <div class="analogy">🟩 比喩：会議室のホワイトボード（誰でも直接書ける）</div>
+      </div>
+      <div class="ipc-card ipc-msg">
+        <div class="title">② メッセージパッシング（Message Passing）</div>
+        <p>カーネルの <code>send()</code> / <code>receive()</code> を通じてメッセージを交換。<span class="k2">共有アドレス空間不要</span>。分散システムに最適。</p>
+        <p><strong>ネーミング：</strong><span class="k2">直接</span>（相手を明示）vs <span class="k2">間接</span>（メールボックス経由）</p>
+        <p><strong>同期：</strong>ブロッキング（同期）vs ノンブロッキング（非同期）</p>
+        <div class="analogy">📨 比喩：郵便局経由の手紙（カーネルが仲介）</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 10 Pipes -->
+<div class="section" style="animation-delay:.46s">
+  <div class="sh" onclick="toggle(this)">
+    <span class="sh-icon">🔧</span>
+    <h2>パイプ：UNIXの哲学を体現するIPC</h2>
+    <span class="stag t4">PIPES</span>
+    <span class="tog">▼</span>
+  </div>
+  <div class="sb">
+    <div class="cols2">
+      <div class="card">
+        <div class="lb" style="color:var(--a4)">通常パイプ（Ordinary Pipe）</div>
+        <p>
+          <span class="k4">単方向</span>通信。<span class="k4">親子関係が必要</span>。プロセスが終了すると消滅。<br>
+          出力側（write-end）→ 入力側（read-end）の一方通行。
+        </p>
+      </div>
+      <div class="card">
+        <div class="lb" style="color:var(--a5)">名前付きパイプ（Named Pipe / FIFO）</div>
+        <p>
+          <span class="k5">双方向（半二重）</span>通信可能。<span class="k5">親子関係不要</span>。ファイルシステム上に特殊ファイルとして存在し、明示的に削除するまで残る。
+        </p>
+      </div>
+    </div>
+    <div class="quote" style="margin-top:.8rem">パイプはUNIXコマンドライン哲学の基盤。<code>ls -l | grep 'Aug'</code> の <code>|</code> がパイプ。<code>ls</code> の出力が <code>grep</code> の入力に直結する。</div>
+  </div>
+</div>
+
+<!-- 11 Sockets & RPC -->
+<div class="section" style="animation-delay:.5s">
+  <div class="sh" onclick="toggle(this)">
+    <span class="sh-icon">🌐</span>
+    <h2>ネットワーク越しのIPC：ソケットと RPC</h2>
+    <span class="stag t2">NETWORK</span>
+    <span class="tog">▼</span>
+  </div>
+  <div class="sb">
+    <div class="cols2">
+      <div class="card">
+        <div class="lb" style="color:var(--a2)">ソケット（Socket）</div>
+        <p><span class="k2">IPアドレス＋ポート番号</span>で一意に識別される通信エンドポイント。ファイルハンドルのように <code>read()</code>/<code>write()</code> でデータを送受信。<br><br>
+          ウェルノウンポート（1024以下）：SSH=22, FTP=21, HTTP=80<br>
+          比喩：建物のアドレス（IP）＋部屋番号（ポート）
+        </p>
+      </div>
+      <div class="card">
+        <div class="lb" style="color:var(--a5)">RPC（Remote Procedure Call）</div>
+        <p><span class="k5">ネットワーク越しの関数呼び出しをローカル呼び出しのように見せる</span>高レベル抽象化。ネットワーク通信の複雑さを「スタブ」が隠蔽。<br><br>
+          <span class="k4">パラメータマーシャリング</span>：マシンアーキテクチャ間（big-endian vs little-endian等）のデータ形式差異を標準フォーマットに変換。
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 12 Chrome case study -->
+<div class="section" style="animation-delay:.54s">
+  <div class="sh" onclick="toggle(this)">
+    <span class="sh-icon">🔬</span>
+    <h2>ケーススタディ：Chromeのマルチプロセスアーキテクチャ</h2>
+    <span class="stag t1">CASE STUDY</span>
+    <span class="tog">▼</span>
+  </div>
+  <div class="sb">
+    <div class="cp">Chromeは「なぜタブが1つクラッシュしてもブラウザ全体が落ちないのか」の完璧な例。</div>
+    <div class="cols3" style="margin-top:.8rem">
+      <div class="card" style="border-color:rgba(93,232,122,.3)">
+        <div class="lb" style="color:var(--a3)">Browser Process（1つ）</div>
+        <p>UI・ディスク・ネットワークI/Oを管理。ブラウザ全体の司令塔。</p>
+      </div>
+      <div class="card" style="border-color:rgba(93,158,232,.3)">
+        <div class="lb" style="color:var(--a2)">Renderer Process（タブごと）</div>
+        <p>HTML/JSをレンダリング。<span class="k2">サンドボックス化</span>。1タブ＝1プロセスのため、クラッシュが隔離される。</p>
+      </div>
+      <div class="card" style="border-color:rgba(194,93,232,.3)">
+        <div class="lb" style="color:var(--a5)">Plug-in Process（プラグインごと）</div>
+        <p>Flash等のプラグインを専用プロセスで隔離。バグがあっても他に影響しない。</p>
+      </div>
+    </div>
+    <div class="quote" style="margin-top:.8rem">「悲しいタブ」のアイコンは、プロセス隔離の勝利。1タブのクラッシュが連鎖しない。</div>
+  </div>
+</div>
+
+</div>
+<script>
+function toggle(h){
+  h.classList.toggle('open');
+  h.nextElementSibling.classList.toggle('open');
+}
+</script>
+</body>
+</html>

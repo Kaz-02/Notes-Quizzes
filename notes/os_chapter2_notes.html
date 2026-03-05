@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chapter 2 — OS構造</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;700;900&family=JetBrains+Mono:wght@400;600&display=swap');
+:root{--bg:#faf7f2;--surface:#fff;--surface2:#f3ede3;--border:#e0d6c8;--ink:#1a1510;--muted:#8a7f70;--a1:#c05a2a;--a2:#2a6b9c;--a3:#2a7a4a;--a4:#7a3a8c;--tag:#ede8e0}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:'Zen Kaku Gothic New',sans-serif;line-height:1.75;padding:2.5rem 1rem 5rem}
+.container{max-width:880px;margin:0 auto}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+header{margin-bottom:2.8rem;padding-bottom:1.4rem;border-bottom:2px solid var(--ink);animation:fadeUp .5s ease both}
+.ch-label{font-family:'JetBrains Mono',monospace;font-size:.7rem;letter-spacing:.15em;color:var(--muted);text-transform:uppercase;margin-bottom:.3rem}
+header h1{font-size:1.9rem;font-weight:900;line-height:1.2}
+header h1 span{color:var(--a1)}
+header p{color:var(--muted);font-size:.9rem;margin-top:.3rem}
+.journey{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:3rem;animation:fadeUp .5s ease .05s both}
+.jcell{background:var(--surface);padding:1.2rem 1.3rem}
+.jnum{font-family:'JetBrains Mono',monospace;font-size:1.8rem;font-weight:600;line-height:1;margin-bottom:.4rem}
+.j1 .jnum{color:var(--a1)}.j2 .jnum{color:var(--a2)}.j3 .jnum{color:var(--a4)}
+.jcell h3{font-size:.92rem;font-weight:700;margin-bottom:.3rem}
+.jcell p{font-size:.82rem;color:var(--muted)}
+.section{margin-bottom:1.8rem;animation:fadeUp .45s ease both}
+.section:nth-child(1){animation-delay:.05s}.section:nth-child(2){animation-delay:.1s}.section:nth-child(3){animation-delay:.15s}.section:nth-child(4){animation-delay:.2s}.section:nth-child(5){animation-delay:.25s}.section:nth-child(6){animation-delay:.3s}.section:nth-child(7){animation-delay:.35s}.section:nth-child(8){animation-delay:.4s}.section:nth-child(9){animation-delay:.45s}
+.sh{display:flex;align-items:center;gap:.8rem;padding:1rem 1.3rem;background:var(--surface);border:1px solid var(--border);border-radius:8px 8px 0 0;cursor:pointer;user-select:none;transition:background .15s}
+.sh:hover{background:var(--surface2)}.sh.open{border-bottom:none}
+.sh-icon{font-size:1.15rem;flex-shrink:0}
+.sh h2{flex:1;font-size:.97rem;font-weight:700}
+.stag{font-family:'JetBrains Mono',monospace;font-size:.65rem;padding:.15rem .5rem;border-radius:20px;border:1px solid;letter-spacing:.05em;font-weight:600}
+.t1{color:var(--a1);border-color:var(--a1);background:#fef3ed}
+.t2{color:var(--a2);border-color:var(--a2);background:#edf4fb}
+.t3{color:var(--a4);border-color:var(--a4);background:#f6edfb}
+.t4{color:var(--a3);border-color:var(--a3);background:#edfaf3}
+.tog{color:var(--muted);font-size:.75rem;transition:transform .25s}
+.sh.open .tog{transform:rotate(180deg)}
+.sb{display:none;padding:1.3rem 1.5rem;background:var(--surface);border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px}
+.sb.open{display:block}
+.ct{font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--a2);letter-spacing:.06em;margin-bottom:.25rem}
+.cp{font-size:.91rem;color:#3a3028}
+hr{border:none;border-top:1px solid var(--border);margin:1rem 0}
+.cols2{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:.7rem}
+.cols3{display:grid;grid-template-columns:repeat(3,1fr);gap:.8rem;margin-top:.8rem}
+.card{background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:.9rem 1rem}
+.card .lb{font-family:'JetBrains Mono',monospace;font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;margin-bottom:.4rem;font-weight:600}
+.card p{font-size:.86rem;color:#4a4038}
+.ac1{color:var(--a1);font-weight:700}.ac2{color:var(--a2);font-weight:700}.ac3{color:var(--a3);font-weight:700}.ac4{color:var(--a4);font-weight:700}
+.tags{display:flex;flex-wrap:wrap;gap:.45rem;margin-top:.55rem}
+.tag{background:var(--tag);border:1px solid var(--border);border-radius:20px;padding:.18rem .65rem;font-size:.76rem;color:var(--muted)}
+.quote{border-left:3px solid var(--a1);padding:.5rem 1rem;background:#fef8f3;border-radius:0 6px 6px 0;font-size:.88rem;color:#5a3a20;margin:.8rem 0;font-style:italic}
+.acard{border-radius:7px;padding:.9rem 1rem;border:1px solid}
+.am{background:#fef3ed;border-color:#e0b090}.ami{background:#edf4fb;border-color:#90b8d8}.amod{background:#edfaf3;border-color:#90c8aa}.ahyb{background:#f6edfb;border-color:#c8a0d8}
+.at{font-weight:700;font-size:.88rem;margin-bottom:.35rem}
+.am .at{color:var(--a1)}.ami .at{color:var(--a2)}.amod .at{color:var(--a3)}.ahyb .at{color:var(--a4)}
+.acard p{font-size:.82rem;color:#3a3028}
+.pc{margin-top:.5rem;font-size:.78rem}
+.pro{color:var(--a3)}.con{color:var(--a1)}
+.boot{display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem;margin-top:.7rem}
+.bs{background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:.7rem .9rem}
+.bn{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--muted);margin-bottom:.2rem}
+.bs p{font-size:.82rem;font-weight:700;color:var(--ink)}
+.bs small{font-size:.76rem;color:var(--muted)}
+code{font-family:'JetBrains Mono',monospace;font-size:.85rem;background:var(--tag);padding:.05rem .3rem;border-radius:3px}
+@media(max-width:600px){.cols2,.cols3,.journey,.boot{grid-template-columns:1fr}header h1{font-size:1.5rem}}
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <div class="ch-label">Chapter 2 — 学習ノート</div>
+  <h1>OS構造：<span>インターフェースから<br>カーネルの核心へ</span></h1>
+  <p>3つの視点（ユーザー・プログラマー・アーキテクト）でOSの内側を掘り下げる</p>
+</header>
+
+<div class="journey">
+  <div class="jcell j1"><div class="jnum">L1</div><h3>ユーザーの視点</h3><p>OSは何をしてくれるのか？<br>サービスとインターフェース</p></div>
+  <div class="jcell j2"><div class="jnum">L2</div><h3>プログラマーの視点</h3><p>アプリはどうOSに話しかけるのか？<br>システムコール・API</p></div>
+  <div class="jcell j3"><div class="jnum">L3</div><h3>アーキテクトの視点</h3><p>OSはどう作られているのか？<br>モノリシック・マイクロ・ハイブリッド</p></div>
+</div>
+
+<!-- 1 -->
+<div class="section">
+  <div class="sh open" onclick="toggle(this)">
+    <span class="sh-icon">🛠️</span><h2>OSが提供するサービス（Layer 1）</h2>
+    <span class="stag t1">USER VIEW</span><span class="tog">▼</span>
+  </div>
+  <div class="sb open">
+    <div class="cols2">
+      <div class="card"><div class="lb" style="color:var(--a1)">ユーザー向けサービス</div>
+        <p><span class="ac1">UI</span>（CLI/GUI/タッチ）、<span class="ac1">プログラム実行</span>（ロード・実行・終了）、<span class="ac1">I/O操作</span>、<span class="ac1">ファイル操作</span>（作成・削除・読み書き・権限）、<span class="ac1">プロセス間通信</span>（共有メモリ/メッセージパッシング）、<span class="ac1">エラー検出</span></p>
+      </div>
+      <div class="card"><div class="lb" style="color:var(--a2)">システム効率向けサービス</div>
+        <p><span class="ac2">リソース配分</span>（CPU・メモリ・デバイス）、<span class="ac2">ロギング</span>（使用統計の記録）、<span class="ac2">保護とセキュリティ</span>（アクセス制御・外部攻撃への防御）</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 2 -->
+<div class="section">
+  <div class="sh" onclick="toggle(this)">
+    <span class="sh-icon">🖥️</span><h2>ユーザーインターフェースの3種類 ＋ シェルの仕組み</h2>
+    <span class="stag t1">USER VIEW</span><span class="tog">▼</span>
+  </div>
+  <div class="sb">
+    <div class="cols3">
+      <div class="acard am"><div class="at">CLI（コマンドライン）</div><p>テキストで直接コマンド入力。シェル（bash等）が解釈・実行。パワーユーザーや自動化に最適。</p></div>
+      <div class="acard ami"><div class="at">GUI（グラフィカル）</div><p>ウィンドウ・アイコン・マウス操作。デスクトップ比喩。Xerox PARCが発明、Appleが普及。</p></div>
+      <div class="acard amod"><div class="at">タッチスクリーン</div><p>スワイプ・タップ操作。スマートフォン標準。iOS, Android等。</p></div>
+    </div>
+    <hr>
+    <div class="ct">シェルの2つの実装方式</div>
+    <div class="cols2">
+      <div class="card"><div class="lb">組み込みコマンド方式</div><p>シェル自身がコマンドのコードを内包。追加はシェル自体の改変が必要。シェルが大きくなる。</p></div>
+      <div class="card"><div class="lb">システムプログラム方式（UNIXの方法）</div><p>コマンドは独立した実行ファイル。シェルはファイルを検索・実行するだけ。シェルが小さく拡張性◎。</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- 3 -->
+<div class="section">
+  <div class="sh" onclick="toggle(this)">
+    <span class="sh-icon">📞</span><h2>システムコール：カーネルへの唯一の合法的な入り口</h2>
+    <span class="stag t2">PROGRAMMER</span><span class="tog">▼</span>
+  </div>
+  <div class="sb">
+    <div class="cp">アプリはハードウェアを直接制御できない。OSサービスを使うには決められた窓口 <span class="ac2">システムコール</span> を通じてカーネルにリクエストする。単純なプログラムでも毎秒数千回呼び出す。</div>
+    <div class="quote">ユーザーモード（mode bit=1）からカーネルモード（mode bit=0）への唯一の合法的な入り口。</div>
+    <hr>
+    <div class="ct">6つのカテゴリー</div>
+    <div class="tags">
+      <span class="tag">① プロセス制御（fork, exit, wait）</span>
+      <span class="tag">② ファイル管理（open, read, write, close）</span>
+      <span class="tag">③ デバイス管理（ioctl, read, write）</span>
+      <span class="tag">④ 情報管理（getpid, alarm, sleep）</span>
+      <span class="tag">⑤ 通信（pipe, shm_open, mmap）</span>
+      <span class="tag">⑥ 保護（chmod, umask, chown）</span>
+    </div>
+    <hr>
+    <div class="ct">パラメータ渡しの3方法</div>
+    <div class="cols3">
+      <div class="card"><div class="lb">① レジスタ渡し</div><p>最シンプル。CPUレジスタに直接格納。Linuxは5つ以下に使用。<span class="ac1">数が制限される</span>のが欠点。</p></div>
+      <div class="card"><div class="lb">② メモリブロック渡し</div><p>パラメータをメモリに格納しアドレスをレジスタに入れる。<span class="ac3">数・長さに制限なし</span>。</p></div>
+      <div class="card"><div class="lb">③ スタック渡し</div><p>プログラムがPUSH、OSがPOPして取得。同様に<span class="ac3">数・長さに制限なし</span>。</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- 4 -->
+<div class="section">
+  <div class="sh" onclick="toggle(this)">
+    <span class="sh-icon">🔌</span><h2>API・ABI：抽象化レイヤーと互換性</h2>
+    <span class="stag t2">PROGRAMMER</span><span class="tog">▼</span>
+  </div>
+  <div class="sb">
+    <div class="cp">プログラマーは通常 <span class="ac2">API</span>（高レベルな関数群）を使う。ライブラリ（libc等）がシステムコールへの変換を担う。例：<code>printf()</code> → <code>write()</code> システムコール</div>
+    <div class="cols2" style="margin-top:.8rem">
+      <div class="card">
+        <div class="lb" style="color:var(--a2)">API（Application Programming Interface）</div>
+        <p><span class="ac2">ソースコードレベル</span>の互換性。標準API（POSIX等）を使えば再コンパイルだけで別OSでも動く。<br><br>主要API：<span class="ac1">Windows API</span>、<span class="ac2">POSIX（Unix/Linux/macOS）</span>、<span class="ac3">Java API（JVM）</span></p>
+      </div>
+      <div class="card">
+        <div class="lb" style="color:var(--a4)">ABI（Application Binary Interface）</div>
+        <p><span class="ac4">バイナリレベル</span>の互換性。コンパイル済みコードがそのまま動く。アーキテクチャに依存。<br><br>規定するもの：アドレス幅（32/64bit）、システムコールのパラメータ渡し規約、スタック構造、ライブラリのバイナリ形式</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 5 -->
+<div class="section">
+  <div class="sh" onclick="toggle(this)">
+    <span class="sh-icon">📦</span><h2>なぜアプリはOS固有なのか？ → ポータビリティの解決策</h2>
+    <span class="stag t2">PROGRAMMER</span><span class="tog">▼</span>
+  </div>
+  <div class="sb">
+    <div class="cols3">
+      <div class="card"><div class="lb">固有のシステムコール</div><p>各OSは独自のセットを持つ。<br>Linux：300以上<br>Windows：約2000<br>macOS：300〜500</p></div>
+      <div class="card"><div class="lb">実行ファイル形式の違い</div><p>Windows → <span class="ac1">.exe（PE形式）</span><br>Linux → <span class="ac2">.elf（ELF形式）</span><br>macOS → <span class="ac3">.mach-o（Mach-O）</span><br><br>Mach-Oは「Fat Binary」で複数アーキテクチャを1ファイルに。</p></div>
+      <div class="card"><div class="lb">ポータビリティの3解決策</div><p><span class="ac1">① インタープリタ</span>（Python, Ruby）：遅いが簡単<br><span class="ac2">② 仮想マシン</span>（Java/JVM）：バイトコードを中間層で実行<br><span class="ac3">③ ネイティブポーティング</span>（C/POSIX）：高労力</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- 6 -->
+<div class="section">
+  <div class="sh" onclick="toggle(this)">
+    <span class="sh-icon">⚙️</span><h2>黄金律：ポリシーとメカニズムの分離</h2>
+    <span class="stag t3">ARCHITECT</span><span class="tog">▼</span>
+  </div>
+  <div class="sb">
+    <div class="cols2">
+      <div class="card"><div class="lb" style="color:var(--a4)">メカニズム（How）</div><p>「どうやって」実現するか。例：タイマー割り込みを設定する仕組み。カーネルに実装。</p></div>
+      <div class="card"><div class="lb" style="color:var(--a1)">ポリシー（What）</div><p>「何を」するか。例：特定ユーザーにタイマーを何秒設定するか。変更が容易。</p></div>
+    </div>
+    <div class="quote" style="margin-top:.9rem">メカニズムが汎用的であれば、カーネルを書き直さずにポリシー（I/OとCPUの優先順位など）だけを変更できる。</div>
+  </div>
+</div>
+
+<!-- 7 -->
+<div class="section">
+  <div class="sh" onclick="toggle(this)">
+    <span class="sh-icon">🏗️</span><h2>カーネルアーキテクチャの4パターン</h2>
+    <span class="stag t3">ARCHITECT</span><span class="tog">▼</span>
+  </div>
+  <div class="sb">
+    <div class="cols2">
+      <div class="acard am">
+        <div class="at">① モノリシック</div>
+        <p>全機能を単一アドレス空間に。密結合。例：伝統的UNIX</p>
+        <div class="pc"><span class="pro">✓ 高速（内部通信コスト低）</span><br><span class="con">✗ デバッグ・拡張困難。1バグが全体をクラッシュ</span></div>
+      </div>
+      <div class="acard ami">
+        <div class="at">② マイクロカーネル</div>
+        <p>最小限のみカーネルに残し、残りをユーザー空間へ。通信はメッセージパッシング。例：Mach, QNX</p>
+        <div class="pc"><span class="pro">✓ 安全・信頼性高い、拡張容易</span><br><span class="con">✗ メッセージパッシングのオーバーヘッドで性能低下</span></div>
+      </div>
+      <div class="acard amod">
+        <div class="at">③ モジュラー（LKM）</div>
+        <p>コアカーネル＋動的にロード可能なモジュール。起動時・実行時に追加・削除。例：Linux, macOS, Windows</p>
+        <div class="pc"><span class="pro">✓ 再コンパイル不要で柔軟。モノリシック並みの性能</span><br><span class="con">✗ モジュールがカーネル空間 → 完全隔離はなし</span></div>
+      </div>
+      <div class="acard ahyb">
+        <div class="at">④ ハイブリッド（現実解）</div>
+        <p>複数のアーキテクチャを組み合わせて性能・安全・柔軟性を最適化。現代のOSはほぼハイブリッド。例：macOS Darwin（Mach + BSD）、Android（Linux + ART）</p>
+        <div class="pc"><span class="pro">✓ 各手法の長所を組み合わせられる</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 8 -->
+<div class="section">
+  <div class="sh" onclick="toggle(this)">
+    <span class="sh-icon">🔬</span><h2>ケーススタディ：macOS（Darwin） と Android スタック</h2>
+    <span class="stag t3">ARCHITECT</span><span class="tog">▼</span>
+  </div>
+  <div class="sb">
+    <div class="cols2">
+      <div class="card">
+        <div class="lb" style="color:var(--a4)">macOS / iOS — Darwin カーネル</div>
+        <p><span class="ac4">Machマイクロカーネル</span>（スケジューリング・IPC・メモリ管理）＋ <span class="ac4">BSDモノリシックカーネル</span>（POSIX API・ネットワーク・ファイルシステム）の融合。<br><br>性能の解決策：BSDとI/O KitをMachと<strong>同じアドレス空間</strong>で実行 → ユーザー空間メッセージパッシングなしで高速通信を実現。</p>
+      </div>
+      <div class="card">
+        <div class="lb" style="color:var(--a3)">Android — レイヤードスタック</div>
+        <p>
+          <span class="ac3">Applications（Java）</span><br>↓ <span class="ac3">ART</span>（AOTコンパイルでネイティブコードに変換）<br>
+          ↓ <span class="ac3">Libraries &amp; Frameworks</span>（WebKit, SQLite, Bionic C等）<br>
+          ↓ <span class="ac3">HAL</span>（多様なハードウェアを抽象化）<br>
+          ↓ <span class="ac3">改造Linuxカーネル</span>（省電力・メモリ制約対応）
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 9 -->
+<div class="section">
+  <div class="sh" onclick="toggle(this)">
+    <span class="sh-icon">🚀</span><h2>OSブートの6ステップ</h2>
+    <span class="stag t4">SYSTEM</span><span class="tog">▼</span>
+  </div>
+  <div class="sb">
+    <div class="boot">
+      <div class="bs"><div class="bn">STEP 01</div><p>電源 ON</p><small>システムが電力を受ける</small></div>
+      <div class="bs"><div class="bn">STEP 02</div><p>ファームウェア起動</p><small>UEFI / BIOS — 不揮発性メモリ上のブートプログラムが実行</small></div>
+      <div class="bs"><div class="bn">STEP 03</div><p>カーネルをロード</p><small>ストレージ上のカーネルを見つけてメモリへ読み込む</small></div>
+      <div class="bs"><div class="bn">STEP 04</div><p>カーネル初期化</p><small>ハードウェアを初期化し、一時RAMファイルシステム（initramfs）を作成</small></div>
+      <div class="bs"><div class="bn">STEP 05</div><p>ルートFSをマウント</p><small>永続的なルートファイルシステムをマウント</small></div>
+      <div class="bs"><div class="bn">STEP 06</div><p>初期プロセス起動</p><small>最初のユーザー空間プロセス（systemd等）が起動。システム稼働開始。</small></div>
+    </div>
+  </div>
+</div>
+
+</div>
+<script>
+function toggle(h){
+  h.classList.toggle('open');
+  h.nextElementSibling.classList.toggle('open');
+}
+</script>
+</body>
+</html>
