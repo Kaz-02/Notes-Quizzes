@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>C Basics — CS3035</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Fira+Code:wght@400;500&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #13161e;
+    --surface2: #1a1e2a;
+    --border: #252a38;
+    --accent: #22d3ee;      /* cyan */
+    --accent2: #818cf8;     /* indigo */
+    --accent3: #34d399;     /* green */
+    --accent4: #fb923c;     /* orange */
+    --danger: #f87171;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --code-bg: #080b10;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Lora', serif;
+    line-height: 1.7;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 55% 40% at 10% 5%, rgba(34,211,238,0.06) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 50% at 90% 90%, rgba(129,140,248,0.05) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 6rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ── Header ── */
+  header {
+    text-align: center;
+    padding: 4rem 0 3rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 3rem;
+  }
+
+  .course-tag {
+    display: inline-block;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.15em;
+    color: var(--accent);
+    background: rgba(34,211,238,0.09);
+    border: 1px solid rgba(34,211,238,0.22);
+    padding: 0.3rem 0.9rem;
+    border-radius: 2px;
+    margin-bottom: 1.2rem;
+    text-transform: uppercase;
+  }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2.2rem, 5vw, 3.5rem);
+    font-weight: 800;
+    background: linear-gradient(135deg, #e2e8f0 0%, #94a3b8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.8rem;
+  }
+
+  header p { color: var(--muted); font-size: 0.95rem; font-style: italic; }
+
+  /* ── TOC ── */
+  .toc {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    padding: 1.5rem 2rem;
+    margin-bottom: 3rem;
+  }
+
+  .toc-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 1rem;
+  }
+
+  .toc ol {
+    list-style: none;
+    counter-reset: toc;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.4rem 1.5rem;
+  }
+
+  .toc li {
+    counter-increment: toc;
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+  }
+
+  .toc li::before {
+    content: counter(toc, decimal-leading-zero);
+    font-family: 'Fira Code', monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+
+  .toc a { color: var(--text); text-decoration: none; font-size: 0.9rem; transition: color 0.2s; }
+  .toc a:hover { color: var(--accent); }
+
+  /* ── Sections ── */
+  .section { margin-bottom: 3rem; animation: fadeUp 0.5s ease both; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .section-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
+
+  .section-num {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+
+  h2 { font-family: 'Syne', sans-serif; font-size: 1.6rem; font-weight: 700; color: #fff; }
+
+  .section-body {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.8rem 2rem;
+  }
+
+  p { margin-bottom: 1rem; color: #c4cdd8; font-size: 0.97rem; }
+  p:last-child { margin-bottom: 0; }
+
+  /* ── Cards ── */
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+
+  .card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1.1rem 1.2rem;
+  }
+
+  .card-label { font-family: 'Fira Code', monospace; font-size: 0.73rem; color: var(--accent); margin-bottom: 0.4rem; display: block; }
+  .card-title { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; color: #fff; margin-bottom: 0.4rem; }
+  .card p { font-size: 0.84rem; margin: 0; }
+
+  /* ── Code ── */
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1.2rem 1.5rem;
+    overflow-x: auto;
+    margin: 1.2rem 0;
+  }
+
+  pre code {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.84rem;
+    line-height: 1.7;
+    color: #c9d1d9;
+  }
+
+  .code-label { font-family: 'Fira Code', monospace; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 0.4rem; display: block; }
+
+  /* Syntax highlighting */
+  .kw  { color: #ff7b72; }        /* keywords */
+  .ty  { color: #79c0ff; }        /* types */
+  .fn  { color: #d2a8ff; }        /* functions */
+  .st  { color: #a5d6ff; }        /* strings */
+  .cm  { color: #8b949e; font-style: italic; }
+  .nu  { color: #f0883e; }        /* numbers */
+  .cl  { color: #ffa657; }        /* struct/union names */
+  .pp  { color: #22d3ee; }        /* preprocessor */
+  .ok  { color: #3fb950; }
+  .er  { color: #f85149; }
+
+  /* ── Tables ── */
+  table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.88rem; }
+  th { font-family: 'Syne', sans-serif; font-weight: 600; text-align: left; padding: 0.7rem 1rem; background: var(--surface2); color: var(--accent); font-size: 0.8rem; letter-spacing: 0.06em; border-bottom: 1px solid var(--border); }
+  td { padding: 0.65rem 1rem; border-bottom: 1px solid rgba(37,42,56,0.6); color: #c4cdd8; vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  /* ── Badges ── */
+  .badge { font-family: 'Fira Code', monospace; font-size: 0.78rem; padding: 0.2rem 0.6rem; border-radius: 3px; display: inline-block; }
+  .badge-cyan   { background: rgba(34,211,238,0.1);  color: #22d3ee; border: 1px solid rgba(34,211,238,0.2); }
+  .badge-green  { background: rgba(52,211,153,0.1);  color: #34d399; border: 1px solid rgba(52,211,153,0.2); }
+  .badge-orange { background: rgba(251,146,60,0.1);  color: #fb923c; border: 1px solid rgba(251,146,60,0.2); }
+  .badge-red    { background: rgba(248,113,113,0.1); color: #f87171; border: 1px solid rgba(248,113,113,0.2); }
+
+  /* ── Callouts ── */
+  .callout {
+    border-left: 3px solid var(--accent);
+    background: rgba(34,211,238,0.06);
+    border-radius: 0 6px 6px 0;
+    padding: 0.9rem 1.2rem;
+    margin: 1.2rem 0;
+    font-size: 0.9rem;
+    color: #a5f3fc;
+  }
+  .callout strong { color: var(--accent); font-family: 'Syne', sans-serif; }
+
+  .warn {
+    border-left: 3px solid var(--danger);
+    background: rgba(248,113,113,0.07);
+    border-radius: 0 6px 6px 0;
+    padding: 0.9rem 1.2rem;
+    margin: 1.2rem 0;
+    font-size: 0.9rem;
+    color: #fca5a5;
+  }
+  .warn strong { color: var(--danger); }
+
+  .info {
+    border-left: 3px solid var(--accent3);
+    background: rgba(52,211,153,0.07);
+    border-radius: 0 6px 6px 0;
+    padding: 0.9rem 1.2rem;
+    margin: 1.2rem 0;
+    font-size: 0.9rem;
+    color: #6ee7b7;
+  }
+  .info strong { color: var(--accent3); }
+
+  hr { border: none; border-top: 1px solid var(--border); margin: 1.6rem 0; }
+
+  /* ── Two-col compare ── */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem; }
+
+  .col-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1rem 1.2rem;
+  }
+
+  .col-box h4 {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    margin-bottom: 0.6rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .col-box.cyan h4   { color: var(--accent); }
+  .col-box.indigo h4 { color: var(--accent2); }
+  .col-box.green h4  { color: var(--accent3); }
+  .col-box.orange h4 { color: var(--accent4); }
+
+  .col-box pre { margin: 0; border: none; padding: 0; background: transparent; }
+  .col-box pre code { font-size: 0.8rem; }
+
+  /* ── Naming pill list ── */
+  .naming-list { display: flex; flex-direction: column; gap: 0.6rem; margin-top: 1rem; }
+  .naming-row  { display: flex; align-items: center; gap: 1rem; }
+  .naming-pill {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.78rem;
+    padding: 0.25rem 0.8rem;
+    border-radius: 20px;
+    flex-shrink: 0;
+    min-width: 130px;
+    text-align: center;
+  }
+  .np-cyan   { background: rgba(34,211,238,0.1);  color: #22d3ee; border: 1px solid rgba(34,211,238,0.2); }
+  .np-green  { background: rgba(52,211,153,0.1);  color: #34d399; border: 1px solid rgba(52,211,153,0.2); }
+  .np-orange { background: rgba(251,146,60,0.1);  color: #fb923c; border: 1px solid rgba(251,146,60,0.2); }
+  .np-indigo { background: rgba(129,140,248,0.1); color: #818cf8; border: 1px solid rgba(129,140,248,0.2); }
+  .naming-example { font-family: 'Fira Code', monospace; font-size: 0.82rem; color: #e2e8f0; }
+  .naming-desc { font-size: 0.83rem; color: var(--muted); }
+
+  /* ── File anatomy diagram ── */
+  .file-diagram {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+
+  .file-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .file-header {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.78rem;
+    padding: 0.5rem 1rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .fh-cyan   { background: rgba(34,211,238,0.12); color: #22d3ee; }
+  .fh-indigo { background: rgba(129,140,248,0.12); color: #818cf8; }
+  .fh-orange { background: rgba(251,146,60,0.12); color: #fb923c; }
+
+  .file-box pre { margin: 0; border: none; border-radius: 0; background: transparent; padding: 0.8rem 1rem; }
+  .file-box code { font-size: 0.78rem; }
+
+  /* ── Pipeline arrows ── */
+  .pipeline {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin: 1.5rem 0;
+    flex-wrap: wrap;
+  }
+
+  .pipe-step {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.6rem 1rem;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.82rem;
+    color: var(--text);
+    text-align: center;
+  }
+
+  .pipe-step.highlight { border-color: var(--accent); color: var(--accent); background: rgba(34,211,238,0.07); }
+
+  .pipe-arrow { color: var(--muted); font-size: 1.2rem; }
+
+  /* ── Memory diagram for union ── */
+  .memory-diagram {
+    margin: 1.2rem 0;
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1.2rem 1.5rem;
+  }
+
+  .memory-diagram h4 {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-bottom: 1rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .mem-row { display: flex; align-items: stretch; gap: 0; margin-bottom: 0.5rem; }
+  .mem-label { font-family: 'Fira Code', monospace; font-size: 0.78rem; color: var(--muted); width: 70px; flex-shrink: 0; display: flex; align-items: center; }
+  .mem-blocks { display: flex; gap: 2px; flex: 1; }
+  .mem-block {
+    height: 28px;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.68rem;
+    flex: 1;
+  }
+  .mb-int    { background: rgba(34,211,238,0.15); border: 1px solid rgba(34,211,238,0.3); color: #22d3ee; }
+  .mb-float  { background: rgba(129,140,248,0.15); border: 1px solid rgba(129,140,248,0.3); color: #818cf8; }
+  .mb-char   { background: rgba(52,211,153,0.15); border: 1px solid rgba(52,211,153,0.3); color: #34d399; }
+  .mb-shared { background: rgba(251,146,60,0.12); border: 1px solid rgba(251,146,60,0.25); color: #fb923c; }
+  .mb-empty  { background: rgba(37,42,56,0.4); border: 1px solid var(--border); }
+
+  @media (max-width: 640px) {
+    .toc ol, .two-col, .file-diagram { grid-template-columns: 1fr; }
+    .naming-row { flex-direction: column; align-items: flex-start; }
+    .pipeline { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="course-tag">CS3035 — Programming Paradigms</div>
+    <h1>C Basics</h1>
+    <p>Study notes · Chengyu Sun · Cal State LA</p>
+  </header>
+
+  <!-- TOC -->
+  <nav class="toc">
+    <div class="toc-title">Contents</div>
+    <ol>
+      <li><a href="#about">About C</a></li>
+      <li><a href="#standards">C Standards</a></li>
+      <li><a href="#hello">Hello World & printf</a></li>
+      <li><a href="#typing">Static vs Dynamic Typing</a></li>
+      <li><a href="#comments">Comments</a></li>
+      <li><a href="#types">Types & Literals</a></li>
+      <li><a href="#arrays">Arrays & Strings</a></li>
+      <li><a href="#naming">Naming Conventions</a></li>
+      <li><a href="#operators">Operators & Expressions</a></li>
+      <li><a href="#statements">Statements & Control Flow</a></li>
+      <li><a href="#functions">Functions</a></li>
+      <li><a href="#struct">Struct & Union</a></li>
+      <li><a href="#libraries">Libraries & Header Files</a></li>
+    </ol>
+  </nav>
+
+  <!-- 1. About C -->
+  <section class="section" id="about">
+    <div class="section-header"><span class="section-num">01</span><h2>About C</h2></div>
+    <div class="section-body">
+      <div class="cards">
+        <div class="card">
+          <span class="card-label">Popularity</span>
+          <div class="card-title">#2 TIOBE · #11 SO 2025</div>
+          <p>Consistently one of the most used languages despite its age (invented ~1972).</p>
+        </div>
+        <div class="card">
+          <span class="card-label">Strength</span>
+          <div class="card-title">Low-level & fast</div>
+          <p>Direct memory access and minimal runtime overhead make it ideal for systems programming.</p>
+        </div>
+        <div class="card">
+          <span class="card-label">Legacy</span>
+          <div class="card-title">Basis for everything</div>
+          <p>Linux, Windows, macOS kernels, the Python and Java runtimes, and most infrastructure libraries are written in C.</p>
+        </div>
+        <div class="card">
+          <span class="card-label">Risk</span>
+          <div class="card-title">Security vulnerabilities</div>
+          <p>Manual memory management enables devastating bugs: Morris Worm (1988), Heartbleed (2014), and many more.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. C Standards -->
+  <section class="section" id="standards">
+    <div class="section-header"><span class="section-num">02</span><h2>The C Standards</h2></div>
+    <div class="section-body">
+      <p>C has evolved through several standardized revisions. Most modern code targets C11 or C17:</p>
+      <table>
+        <thead>
+          <tr><th>Standard</th><th>Year</th><th>Purpose</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><span class="badge badge-cyan">C89 / C90</span></td><td>1989</td><td>First official standardization of the language</td></tr>
+          <tr><td><span class="badge badge-cyan">C99</span></td><td>1999</td><td>Modernization — inline functions, <code>//</code> comments, <code>bool</code>, variable-length arrays</td></tr>
+          <tr><td><span class="badge badge-green">C11</span></td><td>2011</td><td>Concurrency support, improved safety, Unicode</td></tr>
+          <tr><td><span class="badge badge-cyan">C17 / C18</span></td><td>2017</td><td>Bug fixes and clarifications — no new features</td></tr>
+          <tr><td><span class="badge badge-orange">C23</span></td><td>2023</td><td>Cleanup and language evolution</td></tr>
+        </tbody>
+      </table>
+      <div class="callout" style="margin-top:1.2rem"><strong>Tip:</strong> When creating a new project in an IDE (e.g. CLion), you'll be asked to choose a standard. C11 or C17 are safe and widely supported choices.</div>
+    </div>
+  </section>
+
+  <!-- 3. Hello World & printf -->
+  <section class="section" id="hello">
+    <div class="section-header"><span class="section-num">03</span><h2>Hello World &amp; printf()</h2></div>
+    <div class="section-body">
+      <span class="code-label">hello.c</span>
+      <pre><code><span class="pp">#include</span> &lt;stdio.h&gt;     <span class="cm">// like import — gives us printf(), scanf(), etc.</span>
+
+<span class="ty">int</span> <span class="fn">main</span>() {
+  <span class="fn">printf</span>(<span class="st">"Hello, World!\n"</span>);
+  <span class="kw">return</span> <span class="nu">0</span>;              <span class="cm">// exit code: 0 = success, non-0 = error</span>
+}</code></pre>
+      <div class="cards" style="margin-top:0.5rem">
+        <div class="card"><span class="card-label">main()</span><div class="card-title">Required entry point</div><p>Every C program must have exactly one <code>main()</code> function — this is where execution begins.</p></div>
+        <div class="card"><span class="card-label">\n</span><div class="card-title">Escape sequences</div><p><code>\n</code> = newline, <code>\t</code> = tab, <code>\\</code> = backslash, <code>\"</code> = quote. Unlike Python's <code>print()</code>, <code>printf()</code> does <em>not</em> add a newline automatically.</p></div>
+        <div class="card"><span class="card-label">return 0</span><div class="card-title">Exit code</div><p>Returning <code>0</code> signals success to the OS. Non-zero values signal errors.</p></div>
+      </div>
+
+      <hr>
+      <p><strong>printf() format specifiers:</strong></p>
+      <pre><code><span class="ty">char</span>   name[] = <span class="st">"John"</span>;
+<span class="ty">int</span>    age    = <span class="nu">20</span>;
+<span class="ty">double</span> gpa    = <span class="nu">3.1</span>;
+<span class="ty">char</span>   grade  = <span class="st">'A'</span>;
+<span class="ty">unsigned int</span> x = <span class="nu">42</span>;
+
+<span class="fn">printf</span>(<span class="st">"Name:  %s\n"</span>,     name);   <span class="cm">// %s  = string (char array)</span>
+<span class="fn">printf</span>(<span class="st">"Age:   %d\n"</span>,     age);    <span class="cm">// %d  = signed decimal int</span>
+<span class="fn">printf</span>(<span class="st">"GPA:   %f\n"</span>,     gpa);    <span class="cm">// %f  = float/double</span>
+<span class="fn">printf</span>(<span class="st">"GPA:   %.3f\n"</span>,   gpa);    <span class="cm">// %.3f = 3 decimal places → 3.100</span>
+<span class="fn">printf</span>(<span class="st">"Grade: %c\n"</span>,     grade);  <span class="cm">// %c  = single char</span>
+<span class="fn">printf</span>(<span class="st">"Uint:  %u\n"</span>,     x);      <span class="cm">// %u  = unsigned decimal</span></code></pre>
+    </div>
+  </section>
+
+  <!-- 4. Static vs Dynamic Typing -->
+  <section class="section" id="typing">
+    <div class="section-header"><span class="section-num">04</span><h2>Static vs Dynamic Typing</h2></div>
+    <div class="section-body">
+      <div class="two-col">
+        <div class="col-box cyan">
+          <h4>C — Static Typing</h4>
+          <pre><code><span class="ty">int</span> <span class="fn">add</span>(<span class="ty">int</span> x, <span class="ty">int</span> y) {
+  <span class="ty">int</span> sum = x + y;
+  <span class="kw">return</span> sum;
+}
+<span class="cm">// Types checked at compile time</span></code></pre>
+        </div>
+        <div class="col-box indigo">
+          <h4>Python — Dynamic Typing</h4>
+          <pre><code><span class="kw">def</span> <span class="fn">add</span>(x, y):
+  sum = x + y
+  <span class="kw">return</span> sum
+<span class="cm"># Types checked at runtime</span></code></pre>
+        </div>
+      </div>
+      <table style="margin-top:1.2rem">
+        <thead><tr><th>Feature</th><th>Static (C, Java)</th><th>Dynamic (Python, JS)</th></tr></thead>
+        <tbody>
+          <tr><td>Type checking</td><td>Compile time</td><td>Runtime</td></tr>
+          <tr><td>Error detection</td><td>Earlier — before running</td><td>Later — only when executed</td></tr>
+          <tr><td>Verbosity</td><td>More (explicit types)</td><td>Less (types inferred)</td></tr>
+          <tr><td>Flexibility</td><td>Lower</td><td>Higher</td></tr>
+          <tr><td>Performance</td><td>Usually faster</td><td>Usually slower</td></tr>
+          <tr><td>Tooling</td><td>Strong (autocomplete, refactoring)</td><td>Weaker without type hints</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 5. Comments -->
+  <section class="section" id="comments">
+    <div class="section-header"><span class="section-num">05</span><h2>Comments in C</h2></div>
+    <div class="section-body">
+      <div class="cards">
+        <div class="card">
+          <span class="card-label">Single-line</span>
+          <div class="card-title">// comment</div>
+          <p>Added in C99. Everything after <code>//</code> on a line is ignored.</p>
+        </div>
+        <div class="card">
+          <span class="card-label">Multi-line</span>
+          <div class="card-title">/* comment */</div>
+          <p>Available since C89. Spans any number of lines. Cannot be nested.</p>
+        </div>
+      </div>
+      <pre><code><span class="cm">// Single-line comment</span>
+
+<span class="cm">/* Multi-line comment
+   spanning several lines */</span>
+
+<span class="ty">int</span> x = <span class="nu">10</span>; <span class="cm">// inline comment</span></code></pre>
+      <div class="warn"><strong>⚠ C has no JavaDoc equivalent.</strong> Documentation tools like Doxygen use their own comment syntax (<code>/** */</code>), but this is a convention, not part of the C standard.</div>
+    </div>
+  </section>
+
+  <!-- 6. Types & Literals -->
+  <section class="section" id="types">
+    <div class="section-header"><span class="section-num">06</span><h2>Types &amp; Literals</h2></div>
+    <div class="section-body">
+      <p>C has no built-in <code>String</code> or <code>bool</code> types — strings are char arrays, and booleans are integers (<code>0</code> = false, non-zero = true). C99 added <code>&lt;stdbool.h&gt;</code> for convenience.</p>
+      <table>
+        <thead><tr><th>Type</th><th>Typical Size</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><span class="badge badge-cyan">char</span></td><td>1 byte</td><td>Integer type — also used to store single characters</td></tr>
+          <tr><td><span class="badge badge-cyan">short</span></td><td>2 bytes</td><td>Small integer</td></tr>
+          <tr><td><span class="badge badge-cyan">int</span></td><td>4 bytes</td><td>Standard integer (most common)</td></tr>
+          <tr><td><span class="badge badge-cyan">long</span></td><td>4 or 8 bytes</td><td>Platform-dependent size</td></tr>
+          <tr><td><span class="badge badge-cyan">long long</span></td><td>8 bytes</td><td>Guaranteed 64-bit integer</td></tr>
+          <tr><td><span class="badge badge-orange">float</span></td><td>4 bytes</td><td>32-bit floating point</td></tr>
+          <tr><td><span class="badge badge-orange">double</span></td><td>8 bytes</td><td>64-bit floating point (preferred)</td></tr>
+          <tr><td><span class="badge badge-orange">long double</span></td><td>12 or 16 bytes</td><td>Extended precision</td></tr>
+          <tr><td><span class="badge badge-green">void</span></td><td>—</td><td>No value (used for functions with no return, and void pointers)</td></tr>
+        </tbody>
+      </table>
+      <div class="callout"><strong>Why so many numeric types?</strong> C targets embedded systems, OS kernels, and hardware where precise control over memory layout and integer width is essential.</div>
+
+      <hr>
+      <p><strong>Literal examples:</strong></p>
+      <pre><code><span class="cm">// Integer suffixes</span>
+<span class="ty">int</span>          a = <span class="nu">123</span>;     <span class="cm">// decimal</span>
+<span class="ty">int</span>          b = <span class="nu">0x10</span>;    <span class="cm">// hex  (16)</span>
+<span class="ty">int</span>          c = <span class="nu">010</span>;     <span class="cm">// octal (8)</span>
+<span class="ty">int</span>          d = <span class="nu">0b10</span>;    <span class="cm">// binary (2) — C23 / GCC extension</span>
+<span class="ty">unsigned int</span> e = <span class="nu">10u</span>;     <span class="cm">// u = unsigned</span>
+<span class="ty">long</span>         f = <span class="nu">10l</span>;     <span class="cm">// l = long</span>
+<span class="ty">unsigned long</span> g = <span class="nu">10ul</span>;   <span class="cm">// ul = unsigned long</span>
+
+<span class="cm">// char is an integer too</span>
+<span class="ty">char</span> ch1 = <span class="st">'a'</span>;           <span class="cm">// character literal</span>
+<span class="ty">char</span> ch2 = <span class="nu">65</span>;            <span class="cm">// same as 'A' — ASCII value</span>
+
+<span class="cm">// Floating point</span>
+<span class="ty">double</span> x = <span class="nu">-4.56</span>;
+<span class="ty">double</span> y = <span class="nu">1.5e3</span>;         <span class="cm">// = 1500.0</span>
+<span class="ty">float</span>  z = <span class="nu">3.14f</span>;         <span class="cm">// f suffix = float</span>
+<span class="ty">long double</span> w = <span class="nu">3.14l</span>;    <span class="cm">// l suffix = long double</span></code></pre>
+    </div>
+  </section>
+
+  <!-- 7. Arrays & Strings -->
+  <section class="section" id="arrays">
+    <div class="section-header"><span class="section-num">07</span><h2>Arrays &amp; Strings</h2></div>
+    <div class="section-body">
+      <span class="code-label">Array declaration & initialization</span>
+      <pre><code><span class="ty">int</span> a[] = {<span class="nu">1</span>, <span class="nu">2</span>, <span class="nu">3</span>, <span class="nu">4</span>};         <span class="cm">// size inferred = 4</span>
+<span class="ty">int</span> b[<span class="nu">6</span>] = {<span class="nu">1</span>, <span class="nu">2</span>, <span class="nu">3</span>};           <span class="cm">// → {1, 2, 3, 0, 0, 0} rest zero-filled</span>
+<span class="ty">int</span> c[<span class="nu">6</span>];                       <span class="cm">// uninitialized — local array has garbage values!</span>
+
+<span class="ty">int</span>[] d;  <span class="cm">// ❌ Error — array needs a size or initializer</span>
+<span class="ty">int</span>  e[]; <span class="cm">// ❌ Syntax error</span></code></pre>
+
+      <div class="warn"><strong>⚠ Uninitialized local arrays</strong> contain garbage values — unlike global arrays which are zero-initialized. Always initialize explicitly.</div>
+
+      <span class="code-label" style="margin-top:1.2rem">Compound literal (anonymous array)</span>
+      <pre><code><span class="cm">// Pass an array inline without naming it — like Python's [1,2,3]</span>
+<span class="fn">print_sum</span>( (<span class="ty">int</span>[]){<span class="nu">1</span>, <span class="nu">2</span>, <span class="nu">3</span>}, <span class="nu">3</span> );</code></pre>
+
+      <hr>
+      <p><strong>Strings in C</strong> — there is no <code>String</code> type. A string is just an array of <code>char</code> terminated by a null byte (<code>'\0'</code>, i.e., byte value 0):</p>
+      <pre><code><span class="ty">char</span> s1[] = <span class="st">"hello"</span>;                       <span class="cm">// 6 bytes: h e l l o \0</span>
+<span class="ty">char</span> s2[] = {<span class="st">'h'</span>,<span class="st">'e'</span>,<span class="st">'l'</span>,<span class="st">'l'</span>,<span class="st">'o'</span>,<span class="st">'\0'</span>};  <span class="cm">// exactly the same</span></code></pre>
+      <div class="info"><strong>Key distinction:</strong> <code>'0'</code> is the character digit zero (ASCII 48). <code>'\0'</code> is the null terminator (ASCII 0, byte value 0). Mixing them up corrupts strings.</div>
+    </div>
+  </section>
+
+  <!-- 8. Naming Conventions -->
+  <section class="section" id="naming">
+    <div class="section-header"><span class="section-num">08</span><h2>Identifiers &amp; Naming Conventions</h2></div>
+    <div class="section-body">
+      <p>Identifiers may use letters, digits, and <code>_</code> — but <strong>cannot start with a digit</strong>. C naming is more relaxed than Java (no enforced standard), but common conventions are:</p>
+      <div class="naming-list" style="margin-top:1.2rem">
+        <div class="naming-row">
+          <span class="naming-pill np-cyan">snake_case</span>
+          <span class="naming-example">my_variable, calc_sum()</span>
+          <span class="naming-desc">→ Variables, functions (almost everything)</span>
+        </div>
+        <div class="naming-row">
+          <span class="naming-pill np-green">UPPER_CASE</span>
+          <span class="naming-example">MAX_SIZE, PI</span>
+          <span class="naming-desc">→ Constants & macros (#define)</span>
+        </div>
+        <div class="naming-row">
+          <span class="naming-pill np-orange">PascalCase</span>
+          <span class="naming-example">LinkedList, Point</span>
+          <span class="naming-desc">→ Struct / union names (some styles)</span>
+        </div>
+        <div class="naming-row">
+          <span class="naming-pill np-indigo">_t suffix</span>
+          <span class="naming-example">size_t, uint8_t</span>
+          <span class="naming-desc">→ Type aliases (typedef)</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9. Operators & Expressions -->
+  <section class="section" id="operators">
+    <div class="section-header"><span class="section-num">09</span><h2>Operators &amp; Expressions</h2></div>
+    <div class="section-body">
+      <div class="cards">
+        <div class="card"><span class="card-label">Arithmetic</span><div class="card-title">+ - * / %</div><p>Standard math. Division on integers truncates: <code>7/2 = 3</code>.</p></div>
+        <div class="card"><span class="card-label">Assignment</span><div class="card-title">= += -= …</div><p>Assignment is also an <em>expression</em> (has a value). Enables patterns like <code>while(c = getchar()){…}</code>.</p></div>
+        <div class="card"><span class="card-label">Comparison</span><div class="card-title">== != > >= …</div><p>Returns <code>1</code> (true) or <code>0</code> (false). No boolean type in old C.</p></div>
+        <div class="card"><span class="card-label">Logical</span><div class="card-title">&amp;&amp; || !</div><p>Any <strong>non-zero</strong> value is truthy — unlike Java which requires strict booleans.</p></div>
+        <div class="card"><span class="card-label">Conditional</span><div class="card-title">cond ? a : b</div><p>Ternary — compact inline if/else.</p></div>
+        <div class="card"><span class="card-label">Increment</span><div class="card-title">++ --</div><p>Pre vs post matters: <code>++x</code> increments before using, <code>x++</code> uses then increments.</p></div>
+      </div>
+
+      <hr>
+      <p><strong>Pointer-related operators</strong> (more detail in the pointers lecture):</p>
+      <div class="cards" style="margin-top:0.5rem">
+        <div class="card"><span class="card-label">Operator</span><div class="card-title">&amp; — address of</div><p>Gets the memory address of a variable. <code>&amp;x</code> gives a pointer to <code>x</code>.</p></div>
+        <div class="card"><span class="card-label">Operator</span><div class="card-title">* — dereference</div><p>Follows a pointer to get its value. <code>*ptr</code> reads the value stored at the address in <code>ptr</code>.</p></div>
+        <div class="card"><span class="card-label">Operator</span><div class="card-title">-&gt; member access</div><p>Access a struct member through a pointer: <code>ptr-&gt;field</code> is shorthand for <code>(*ptr).field</code>.</p></div>
+      </div>
+
+      <div class="warn" style="margin-top:1.2rem"><strong>⚠ C truthy/falsy:</strong> In C, any non-zero integer is "truthy". This allows <code>while(c = getchar())</code> — the assignment itself is the condition. This would be a bug in Java.</div>
+    </div>
+  </section>
+
+  <!-- 10. Statements & Control Flow -->
+  <section class="section" id="statements">
+    <div class="section-header"><span class="section-num">10</span><h2>Statements &amp; Control Flow</h2></div>
+    <div class="section-body">
+      <div class="two-col">
+        <div class="col-box cyan">
+          <h4>if-else</h4>
+          <pre><code><span class="ty">int</span> num = <span class="nu">-5</span>;
+<span class="kw">if</span> (num > <span class="nu">0</span>) {
+  <span class="fn">printf</span>(<span class="st">"Positive"</span>);
+} <span class="kw">else if</span> (num == <span class="nu">0</span>) {
+  <span class="fn">printf</span>(<span class="st">"Zero"</span>);
+} <span class="kw">else</span> {
+  <span class="fn">printf</span>(<span class="st">"Negative"</span>);
+}
+<span class="cm">// {} optional for single-line blocks</span></code></pre>
+        </div>
+        <div class="col-box indigo">
+          <h4>switch</h4>
+          <pre><code><span class="ty">int</span> day = <span class="nu">3</span>;
+<span class="kw">switch</span> (day) {
+  <span class="kw">case</span> <span class="nu">6</span>:
+    <span class="fn">printf</span>(<span class="st">"Saturday"</span>);
+    <span class="kw">break</span>;      <span class="cm">// ← required!</span>
+  <span class="kw">case</span> <span class="nu">7</span>:
+    <span class="fn">printf</span>(<span class="st">"Sunday"</span>);
+    <span class="kw">break</span>;
+  <span class="kw">default</span>:
+    <span class="fn">printf</span>(<span class="st">"Weekday"</span>);
+}</code></pre>
+        </div>
+      </div>
+      <div class="warn" style="margin-top:1rem"><strong>⚠ switch fallthrough:</strong> Without <code>break</code>, execution "falls through" into the next case. This is sometimes intentional, but is a common bug.</div>
+
+      <hr>
+      <div class="two-col">
+        <div class="col-box green">
+          <h4>for loop</h4>
+          <pre><code><span class="ty">int</span> arr[] = {<span class="nu">10</span>,<span class="nu">20</span>,<span class="nu">30</span>,<span class="nu">40</span>};
+<span class="ty">int</span> n = <span class="kw">sizeof</span>(arr) / <span class="kw">sizeof</span>(arr[<span class="nu">0</span>]);
+
+<span class="kw">for</span> (<span class="ty">int</span> i=<span class="nu">0</span>; i&lt;n; i++) {
+  <span class="fn">printf</span>(<span class="st">"%d "</span>, arr[i]);
+}
+<span class="cm">// No for-each in C!</span>
+<span class="cm">// sizeof evaluated at COMPILE time</span></code></pre>
+        </div>
+        <div class="col-box orange">
+          <h4>while / do-while</h4>
+          <pre><code><span class="ty">int</span> count = <span class="nu">5</span>;
+<span class="kw">while</span> (count > <span class="nu">0</span>) {
+  <span class="fn">printf</span>(<span class="st">"%d\n"</span>, count);
+  count--;
+}
+
+<span class="ty">int</span> sum=<span class="nu">0</span>, i=<span class="nu">1</span>;
+<span class="kw">do</span> {
+  sum += i++;
+} <span class="kw">while</span> (i &lt;= <span class="nu">5</span>);
+<span class="cm">// do-while always runs at least once</span></code></pre>
+        </div>
+      </div>
+      <div class="callout"><strong>No for-each loop in C.</strong> C has no built-in collection types or iterators, and array size is not stored at runtime. You must manually track the size (using <code>sizeof</code> at compile time, or passing it as a parameter).</div>
+    </div>
+  </section>
+
+  <!-- 11. Functions -->
+  <section class="section" id="functions">
+    <div class="section-header"><span class="section-num">11</span><h2>Functions</h2></div>
+    <div class="section-body">
+      <p>Functions must be declared or defined before they are called. There are no default parameter values or keyword arguments in C.</p>
+      <span class="code-label">C</span>
+      <pre><code><span class="cm">// Return type | name | parameters</span>
+<span class="ty">int</span> <span class="fn">square</span>(<span class="ty">int</span> x) {
+  <span class="kw">return</span> x * x;
+}
+
+<span class="cm">// void = no return value</span>
+<span class="ty">void</span> <span class="fn">greet</span>(<span class="ty">char</span> name[], <span class="ty">char</span> message[]) {
+  <span class="fn">printf</span>(<span class="st">"%s, %s!"</span>, name, message);
+}
+
+<span class="ty">int</span> <span class="fn">main</span>() {
+  <span class="ty">int</span> result = <span class="fn">square</span>(<span class="nu">5</span>);         <span class="cm">// → 25</span>
+  <span class="fn">greet</span>(<span class="st">"Alice"</span>, <span class="st">"Good morning"</span>);
+  <span class="kw">return</span> <span class="nu">0</span>;
+}</code></pre>
+      <div class="info"><strong>Arrays as parameters:</strong> When you pass an array to a function, C passes only a pointer to the first element — not a copy. The function does not know the array's length, so you must pass the size separately.</div>
+    </div>
+  </section>
+
+  <!-- 12. Struct & Union -->
+  <section class="section" id="struct">
+    <div class="section-header"><span class="section-num">12</span><h2>Struct &amp; Union</h2></div>
+    <div class="section-body">
+      <p><strong>Struct</strong> — like a class with only public fields and no methods. Each member has its <em>own</em> memory slot.</p>
+      <div class="two-col">
+        <div class="col-box cyan">
+          <h4>struct (verbose)</h4>
+          <pre><code><span class="kw">struct</span> <span class="cl">Point</span> {
+  <span class="ty">double</span> x;
+  <span class="ty">double</span> y;
+};
+
+<span class="kw">struct</span> <span class="cl">Point</span> p1;
+p1.x = <span class="nu">10.1</span>;
+p1.y = <span class="nu">11.2</span>;</code></pre>
+        </div>
+        <div class="col-box orange">
+          <h4>typedef (cleaner)</h4>
+          <pre><code><span class="kw">typedef struct</span> {
+  <span class="ty">double</span> x;
+  <span class="ty">double</span> y;
+} <span class="cl">Point</span>;
+
+<span class="cl">Point</span> p1;   <span class="cm">// no "struct" needed</span>
+p1.x = <span class="nu">10.1</span>;
+p1.y = <span class="nu">11.2</span>;</code></pre>
+        </div>
+      </div>
+
+      <hr>
+      <p><strong>Union</strong> — all members <em>share the same memory location</em>. Only one member is "active" at a time. Memory allocated = size of the largest member.</p>
+      <div class="two-col">
+        <div class="col-box indigo">
+          <h4>union definition</h4>
+          <pre><code><span class="kw">union</span> <span class="cl">Data</span> {
+  <span class="ty">int</span>   i;    <span class="cm">// 4 bytes</span>
+  <span class="ty">float</span> f;    <span class="cm">// 4 bytes</span>
+  <span class="ty">char</span>  c;    <span class="cm">// 1 byte</span>
+};
+<span class="cm">// Total size = 4 bytes (max member)</span>
+
+<span class="kw">union</span> <span class="cl">Data</span> d;
+d.i = <span class="nu">10</span>;   <span class="cm">// sets int</span>
+d.f = <span class="nu">11.2</span>; <span class="cm">// overwrites — d.i now garbage</span></code></pre>
+        </div>
+        <div class="col-box green">
+          <h4>Struct vs Union</h4>
+          <pre><code><span class="cm">// Struct: separate slots</span>
+<span class="kw">struct</span> { <span class="ty">int</span> a; <span class="ty">float</span> b; };
+<span class="cm">// Memory: [a a a a][b b b b] = 8 bytes</span>
+
+<span class="cm">// Union: shared slot</span>
+<span class="kw">union</span> { <span class="ty">int</span> a; <span class="ty">float</span> b; };
+<span class="cm">// Memory: [a/b a/b a/b a/b] = 4 bytes</span></code></pre>
+        </div>
+      </div>
+
+      <hr>
+      <p><strong>Real-world example:</strong> A network message that can carry different payload types:</p>
+      <pre><code><span class="kw">enum</span> <span class="cl">DataType</span> { TYPE_INT, TYPE_FLOAT, TYPE_STRING };
+
+<span class="kw">union</span> <span class="cl">Payload</span> {
+  <span class="ty">int</span>  i;
+  <span class="ty">float</span> f;
+  <span class="ty">char</span> str[<span class="nu">20</span>];
+};
+
+<span class="kw">struct</span> <span class="cl">Message</span> {
+  <span class="kw">enum</span> <span class="cl">DataType</span> type;   <span class="cm">// tells us which field is active</span>
+  <span class="kw">union</span> <span class="cl">Payload</span> data;   <span class="cm">// only uses memory for the largest case</span>
+};</code></pre>
+    </div>
+  </section>
+
+  <!-- 13. Libraries & Header Files -->
+  <section class="section" id="libraries">
+    <div class="section-header"><span class="section-num">13</span><h2>Libraries &amp; Header Files</h2></div>
+    <div class="section-body">
+      <p>C splits a library into two parts: the <strong>implementation</strong> (.c files) and the <strong>API declaration</strong> (.h header file). Users <code>#include</code> the header and link against the compiled library.</p>
+
+      <div class="file-diagram">
+        <div class="file-box">
+          <div class="file-header fh-cyan">math_utils.h</div>
+          <pre><code><span class="pp">#ifndef</span> MATH_UTILS_H
+<span class="pp">#define</span> MATH_UTILS_H
+
+<span class="ty">int</span> <span class="fn">add</span>(<span class="ty">int</span> x, <span class="ty">int</span> y);
+<span class="ty">int</span> <span class="fn">subtract</span>(<span class="ty">int</span> x, <span class="ty">int</span> y);
+
+<span class="pp">#endif</span></code></pre>
+        </div>
+        <div class="file-box">
+          <div class="file-header fh-indigo">math_utils.c</div>
+          <pre><code><span class="pp">#include</span> <span class="st">"math_utils.h"</span>
+
+<span class="ty">int</span> <span class="fn">add</span>(<span class="ty">int</span> x, <span class="ty">int</span> y) {
+  <span class="kw">return</span> x + y;
+}
+<span class="ty">int</span> <span class="fn">subtract</span>(<span class="ty">int</span> x, <span class="ty">int</span> y) {
+  <span class="kw">return</span> x - y;
+}</code></pre>
+        </div>
+        <div class="file-box">
+          <div class="file-header fh-orange">app.c</div>
+          <pre><code><span class="pp">#include</span> &lt;stdio.h&gt;
+<span class="pp">#include</span> <span class="st">"math_utils.h"</span>
+
+<span class="ty">int</span> <span class="fn">main</span>() {
+  <span class="ty">int</span> s = <span class="fn">add</span>(<span class="nu">3</span>, <span class="nu">4</span>);
+  <span class="fn">printf</span>(<span class="st">"Sum: %d\n"</span>, s);
+}</code></pre>
+        </div>
+      </div>
+
+      <div class="callout" style="margin-top:1.2rem"><strong>Angle brackets vs quotes:</strong> <code>#include &lt;stdio.h&gt;</code> — system library (compiler looks in standard paths). <code>#include "math_utils.h"</code> — your own file (compiler looks in current directory first).</div>
+
+      <hr>
+      <p><strong>Compile &amp; link pipeline:</strong></p>
+      <div class="pipeline">
+        <div class="pipe-step">app.c</div>
+        <div class="pipe-arrow">+</div>
+        <div class="pipe-step">math_utils.c</div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-step highlight">gcc compile</div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-step">app.o + math_utils.o</div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-step highlight">gcc link</div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-step">./app</div>
+      </div>
+      <span class="code-label">Terminal</span>
+      <pre><code>gcc app.c math_utils.c -o app    <span class="cm"># compile + link in one step</span></code></pre>
+
+      <hr>
+      <p><strong>Header Guard</strong> — prevents the same header from being included more than once (causes duplicate declaration errors):</p>
+      <pre><code><span class="pp">#ifndef</span> MATH_UTILS_H    <span class="cm">// if MATH_UTILS_H is not yet defined…</span>
+<span class="pp">#define</span> MATH_UTILS_H    <span class="cm">// …define it (so future includes are skipped)</span>
+
+<span class="ty">int</span> <span class="fn">add</span>(<span class="ty">int</span> x, <span class="ty">int</span> y);
+<span class="ty">int</span> <span class="fn">subtract</span>(<span class="ty">int</span> x, <span class="ty">int</span> y);
+
+<span class="pp">#endif</span>                   <span class="cm">// end of the guard</span></code></pre>
+      <div class="info"><strong>Modern alternative:</strong> Many compilers support <code>#pragma once</code> as a one-liner that does the same thing, though it's not officially in the C standard.</div>
+    </div>
+  </section>
+
+</div>
+</body>
+</html>
