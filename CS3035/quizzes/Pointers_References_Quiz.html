@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pointers & References Quiz — CS3035</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Fira+Code:wght@400;500&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #13161e;
+    --surface2: #1a1e2a;
+    --border: #252a38;
+    --accent: #a78bfa;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --code-bg: #080b10;
+    --correct: #34d399;
+    --correct-bg: rgba(52,211,153,0.1);
+    --wrong: #f87171;
+    --wrong-bg: rgba(248,113,113,0.1);
+    --neutral: #60a5fa;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Lora', serif;
+    line-height: 1.7;
+    min-height: 100vh;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 55% 40% at 12% 8%, rgba(167,139,250,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 50% at 88% 88%, rgba(96,165,250,0.05) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 5rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ── Header ── */
+  header {
+    text-align: center;
+    padding: 3rem 0 2.5rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 2.5rem;
+  }
+
+  .course-tag {
+    display: inline-block;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.15em;
+    color: var(--accent);
+    background: rgba(167,139,250,0.09);
+    border: 1px solid rgba(167,139,250,0.22);
+    padding: 0.3rem 0.9rem;
+    border-radius: 2px;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+  }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    font-weight: 800;
+    background: linear-gradient(135deg, #e2e8f0 0%, #94a3b8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.6rem;
+  }
+
+  header p { color: var(--muted); font-size: 0.9rem; }
+
+  /* ── Progress ── */
+  .progress-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1rem 1.5rem;
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+  }
+
+  .progress-bar-outer {
+    flex: 1;
+    height: 6px;
+    background: var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .progress-bar-inner {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), #c4b5fd);
+    border-radius: 10px;
+    transition: width 0.4s ease;
+    width: 0%;
+  }
+
+  .progress-label { font-family: 'Fira Code', monospace; font-size: 0.78rem; color: var(--muted); white-space: nowrap; }
+  .score-label    { font-family: 'Fira Code', monospace; font-size: 0.78rem; color: var(--accent); white-space: nowrap; }
+
+  /* ── Card ── */
+  .quiz-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    animation: fadeUp 0.35s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .card-header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    flex-wrap: wrap;
+  }
+
+  .q-number {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.7rem;
+    color: var(--accent);
+    background: rgba(167,139,250,0.1);
+    border: 1px solid rgba(167,139,250,0.2);
+    padding: 0.2rem 0.6rem;
+    border-radius: 3px;
+  }
+
+  .q-topic { font-family: 'Fira Code', monospace; font-size: 0.7rem; color: var(--muted); }
+
+  .q-type {
+    margin-left: auto;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.68rem;
+    color: var(--neutral);
+    background: rgba(96,165,250,0.08);
+    border: 1px solid rgba(96,165,250,0.15);
+    padding: 0.15rem 0.5rem;
+    border-radius: 3px;
+  }
+
+  .card-body { padding: 1.4rem 1.5rem; }
+
+  .question-text {
+    font-size: 1rem;
+    color: var(--text);
+    margin-bottom: 1.2rem;
+    line-height: 1.65;
+  }
+
+  .question-text code {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.88em;
+    background: var(--surface2);
+    padding: 0.1rem 0.4rem;
+    border-radius: 3px;
+    color: #c4b5fd;
+  }
+
+  /* ── Code block ── */
+  .q-code {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.9rem 1.2rem;
+    margin-bottom: 1.2rem;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.82rem;
+    line-height: 1.95;
+    color: #c9d1d9;
+    overflow-x: auto;
+  }
+
+  .kw  { color: #ff7b72; }
+  .ty  { color: #79c0ff; }
+  .fn  { color: #d2a8ff; }
+  .st  { color: #a5d6ff; }
+  .cm  { color: #8b949e; font-style: italic; }
+  .nu  { color: #f0883e; }
+  .op  { color: #a78bfa; font-weight: 600; }
+  .ann { color: #6ee7b7; font-style: italic; }
+
+  /* ── Options ── */
+  .options { display: flex; flex-direction: column; gap: 0.6rem; }
+
+  .option-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    text-align: left;
+    color: var(--text);
+    font-family: 'Lora', serif;
+    font-size: 0.93rem;
+    line-height: 1.5;
+    transition: border-color 0.15s, background 0.15s;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.8rem;
+    width: 100%;
+  }
+
+  .option-btn:hover:not(:disabled) { border-color: var(--accent); background: rgba(167,139,250,0.07); }
+  .option-btn:disabled { cursor: default; }
+  .option-btn.correct { border-color: var(--correct); background: var(--correct-bg); color: #d1fae5; }
+  .option-btn.wrong   { border-color: var(--wrong);   background: var(--wrong-bg);   color: #fee2e2; }
+  .option-btn.reveal  { border-color: var(--correct); background: var(--correct-bg); color: #d1fae5; opacity: 0.65; }
+
+  .opt-letter {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.75rem;
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 3px;
+    color: var(--muted);
+  }
+
+  .option-btn.correct .opt-letter { color: var(--correct); }
+  .option-btn.wrong   .opt-letter { color: var(--wrong); }
+  .option-btn.reveal  .opt-letter { color: var(--correct); }
+
+  .option-btn code {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.85em;
+    background: rgba(255,255,255,0.06);
+    padding: 0.1rem 0.3rem;
+    border-radius: 3px;
+  }
+
+  /* ── True/False ── */
+  .tf-options { display: flex; gap: 0.8rem; }
+  .tf-options .option-btn { flex: 1; justify-content: center; }
+
+  /* ── Explanation ── */
+  .explanation {
+    margin-top: 1rem;
+    border-left: 3px solid var(--neutral);
+    background: rgba(96,165,250,0.07);
+    border-radius: 0 6px 6px 0;
+    padding: 0.85rem 1.1rem;
+    font-size: 0.88rem;
+    color: #93c5fd;
+    display: none;
+    line-height: 1.65;
+  }
+
+  .explanation.show { display: block; animation: fadeUp 0.3s ease; }
+  .explanation strong { color: var(--neutral); font-family: 'Syne', sans-serif; }
+  .explanation code {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.85em;
+    background: rgba(96,165,250,0.1);
+    padding: 0.1rem 0.3rem;
+    border-radius: 3px;
+    color: #bfdbfe;
+  }
+
+  /* ── Nav ── */
+  .nav-row { display: flex; justify-content: flex-end; margin-top: 1rem; }
+
+  .next-btn {
+    background: var(--accent);
+    color: #0d0f14;
+    border: none;
+    border-radius: 6px;
+    padding: 0.6rem 1.6rem;
+    font-family: 'Syne', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    display: none;
+  }
+
+  .next-btn.show { display: block; }
+  .next-btn:hover { opacity: 0.82; }
+
+  /* ── Results ── */
+  #results-screen {
+    display: none;
+    text-align: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 3rem 2rem;
+    animation: fadeUp 0.5s ease;
+  }
+
+  .result-score { font-family: 'Syne', sans-serif; font-size: 5rem; font-weight: 800; line-height: 1; margin-bottom: 0.5rem; }
+  .result-score.great { color: var(--correct); }
+  .result-score.ok    { color: #fbbf24; }
+  .result-score.poor  { color: var(--wrong); }
+  .result-label { font-size: 1.1rem; color: var(--muted); margin-bottom: 0.5rem; }
+  .result-msg   { font-size: 1.05rem; color: var(--text); margin-bottom: 2rem; }
+
+  .result-breakdown { display: flex; justify-content: center; gap: 2rem; margin-bottom: 2rem; }
+  .rb-item { text-align: center; }
+  .rb-num { font-family: 'Syne', sans-serif; font-size: 1.8rem; font-weight: 700; }
+  .rb-num.green  { color: var(--correct); }
+  .rb-num.red    { color: var(--wrong); }
+  .rb-num.violet { color: var(--accent); }
+  .rb-label { font-size: 0.82rem; color: var(--muted); font-family: 'Fira Code', monospace; }
+
+  .restart-btn {
+    background: var(--accent);
+    color: #0d0f14;
+    border: none;
+    border-radius: 6px;
+    padding: 0.75rem 2.5rem;
+    font-family: 'Syne', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .restart-btn:hover { opacity: 0.82; }
+
+  @media (max-width: 600px) {
+    .tf-options { flex-direction: column; }
+    .result-breakdown { gap: 1rem; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="course-tag">CS3035 — Pointers &amp; References</div>
+    <h1>Quiz: Pointers &amp; References</h1>
+    <p>25 questions · Value &amp; Reference Semantics · Pointer Syntax · Arrays · Dynamic Memory · Dangers</p>
+  </header>
+
+  <div class="progress-wrap">
+    <span class="progress-label" id="prog-label">Question 1 of 25</span>
+    <div class="progress-bar-outer"><div class="progress-bar-inner" id="prog-bar"></div></div>
+    <span class="score-label" id="score-label">Score: 0</span>
+  </div>
+
+  <div id="quiz-area"></div>
+  <div id="results-screen"></div>
+
+</div>
+
+<script>
+const ALL_QUESTIONS = [
+
+  // ── Value Semantics ───────────────────────────────────────
+  {
+    topic: "Value Semantics",
+    type: "multiple-choice",
+    q: "What is <strong>value semantics</strong>?",
+    options: [
+      "Variables store references (addresses) to data stored elsewhere in memory",
+      "Variables store the actual data, and assignment creates an independent copy",
+      "Variables share the same memory location to save space",
+      "Variables are immutable once assigned"
+    ],
+    answer: 1,
+    explanation: "<strong>Value semantics</strong> means a variable holds the data directly. When you assign it to another variable or pass it to a function, an <em>independent copy</em> is made. Changes to one do not affect the other. Examples: Python immutable types (int, str, tuple) and Java primitives (int, double)."
+  },
+  {
+    topic: "Value Semantics",
+    type: "multiple-choice",
+    q: `What are the printed values of <code>x</code> and <code>y</code>?
+<div class="q-code">x = <span class="nu">10</span>
+y = x
+x += <span class="nu">1</span>
+<span class="fn">print</span>(x, y)</div>`,
+    options: [
+      "<code>11 11</code> — both change because they share the same data",
+      "<code>11 10</code> — <code>y</code> got an independent copy of <code>x</code>",
+      "<code>10 10</code> — assignment never changes the original",
+      "<code>10 11</code> — <code>x</code> is incremented before assignment"
+    ],
+    answer: 1,
+    explanation: "Python integers use <strong>value semantics</strong>. When <code>y = x</code> is executed, <code>y</code> gets its own copy of the value <code>10</code>. When <code>x</code> is later incremented to <code>11</code>, <code>y</code> is unaffected and remains <code>10</code>."
+  },
+  {
+    topic: "Value Semantics",
+    type: "true-false",
+    q: "Java primitive types (e.g. <code>int</code>, <code>double</code>) use <strong>value semantics</strong>.",
+    options: ["True", "False"],
+    answer: 0,
+    explanation: "<strong>True.</strong> Java primitives use value semantics — the variable stores the data directly, and assignment creates a copy. Java <em>class types</em> (objects) use reference semantics — the variable stores a reference (address) pointing to the object on the heap."
+  },
+
+  // ── Reference Semantics ───────────────────────────────────
+  {
+    topic: "Reference Semantics",
+    type: "multiple-choice",
+    q: "What is <strong>reference semantics</strong>?",
+    options: [
+      "Variables store the actual data value directly",
+      "Variables store a reference (address) to the data, so multiple variables can point to the same object",
+      "Variables are read-only once initialised",
+      "Variables are automatically freed when they go out of scope"
+    ],
+    answer: 1,
+    explanation: "<strong>Reference semantics</strong> means a variable holds a <em>reference</em> (memory address) pointing to data elsewhere. Assigning to another variable copies the <em>reference</em>, not the data — so both variables point to the same object. Mutating through one is visible through the other."
+  },
+  {
+    topic: "Reference Semantics",
+    type: "multiple-choice",
+    q: `What are the printed values of <code>a</code> and <code>b</code>?
+<div class="q-code">a = [<span class="nu">10</span>]
+b = a
+a[<span class="nu">0</span>] += <span class="nu">1</span>
+<span class="fn">print</span>(a, b)</div>`,
+    options: [
+      "<code>[11] [10]</code> — <code>b</code> has its own copy of the list",
+      "<code>[10] [10]</code> — lists are immutable in Python",
+      "<code>[11] [11]</code> — both point to the same list object",
+      "<code>[10] [11]</code> — assignment swaps the values"
+    ],
+    answer: 2,
+    explanation: "Python lists use <strong>reference semantics</strong>. <code>b = a</code> copies the <em>reference</em>, not the list itself — so both <code>a</code> and <code>b</code> point to the same list object. Mutating it through <code>a[0] += 1</code> is visible through <code>b</code> as well. Both print <code>[11]</code>."
+  },
+  {
+    topic: "Reference Semantics",
+    type: "true-false",
+    q: "Python mutable types (list, dict, set) use <strong>reference semantics</strong>.",
+    options: ["True", "False"],
+    answer: 0,
+    explanation: "<strong>True.</strong> Python mutable objects (list, dict, set, most class instances) use reference semantics — variables store references to objects. Java class types work the same way. Python <em>immutable</em> types (int, str, tuple) effectively behave with value semantics."
+  },
+
+  // ── Value vs Reference Comparison ────────────────────────
+  {
+    topic: "Value vs Reference",
+    type: "multiple-choice",
+    q: "Which statement about value semantics vs reference semantics is <strong>correct</strong>?",
+    options: [
+      "Value semantics is more memory-efficient for large data structures",
+      "Reference semantics always prevents side effects",
+      "Reference semantics is more memory-efficient for large data because only an address is copied",
+      "Value semantics allows multiple variables to share and modify the same data"
+    ],
+    answer: 2,
+    explanation: "<strong>Reference semantics is more memory-efficient for large data</strong> — copying an address (4 or 8 bytes) is cheap regardless of data size. Value semantics copies the entire data, which is expensive for large structs. The trade-off: reference semantics enables side effects (aliasing), value semantics does not."
+  },
+  {
+    topic: "Value vs Reference",
+    type: "multiple-choice",
+    q: "What is a <strong>side effect</strong> in the context of reference semantics?",
+    options: [
+      "A function returning an unexpected type",
+      "A change made through one reference being visible through another reference to the same data",
+      "A memory leak caused by forgetting to free a pointer",
+      "An integer overflow from arithmetic"
+    ],
+    answer: 1,
+    explanation: "A <strong>side effect</strong> here means modifying shared data through one variable causes unexpected changes visible through another variable pointing to the same object. Reference semantics enables this. It can be a feature (efficient sharing) or a bug (accidental mutation)."
+  },
+
+  // ── C Pointers — Basics ───────────────────────────────────
+  {
+    topic: "C Pointers",
+    type: "multiple-choice",
+    q: "How do you declare a <strong>pointer to an <code>int</code></strong> in C?",
+    options: [
+      "<code>int p;</code>",
+      "<code>int &p;</code>",
+      "<code>int *p;</code>",
+      "<code>pointer int p;</code>"
+    ],
+    answer: 2,
+    explanation: "A pointer to <code>int</code> is declared with the <strong><code>*</code> before the variable name</strong>: <code>int *p;</code>. The <code>*</code> in a declaration means \"pointer to\". After declaration, <code>p</code> can hold the memory address of an <code>int</code> variable."
+  },
+  {
+    topic: "C Pointers",
+    type: "multiple-choice",
+    q: `What are the final values of <code>x</code> and <code>y</code>?
+<div class="q-code"><span class="ty">int</span> x = <span class="nu">10</span>;
+<span class="ty">int</span> <span class="op">*</span>p = <span class="op">&amp;</span>x;
+<span class="ty">int</span> y = <span class="op">*</span>p;
+<span class="op">*</span>p = <span class="nu">20</span>;</div>`,
+    options: [
+      "<code>x = 10, y = 10</code>",
+      "<code>x = 20, y = 10</code>",
+      "<code>x = 20, y = 20</code>",
+      "<code>x = 10, y = 20</code>"
+    ],
+    answer: 1,
+    explanation: "Step by step: <code>x = 10</code> → <code>p</code> points to <code>x</code> → <code>y = *p</code> reads <code>x</code>'s value at that moment (<code>10</code>) → <code>*p = 20</code> writes 20 to <code>x</code>'s memory location. So <code>x</code> becomes <code>20</code>, but <code>y</code> already captured the old value <code>10</code> and is unaffected."
+  },
+  {
+    topic: "C Pointers",
+    type: "multiple-choice",
+    q: "What does the <strong>address-of operator <code>&amp;</code></strong> do in C?",
+    options: [
+      "It dereferences a pointer to get the value it points to",
+      "It returns the memory address of a variable",
+      "It performs a bitwise AND operation",
+      "It declares a reference variable"
+    ],
+    answer: 1,
+    explanation: "The <strong><code>&amp;</code> (address-of) operator</strong> returns the memory address of a variable. For example, <code>&amp;x</code> gives you the address where <code>x</code> is stored in memory. This address can be stored in a pointer: <code>int *p = &amp;x;</code>. Note: <code>&amp;</code> also means bitwise AND, but only when used between two values, not before a single variable."
+  },
+  {
+    topic: "C Pointers",
+    type: "multiple-choice",
+    q: "What does the <strong>dereference operator <code>*</code></strong> do when applied to a pointer?",
+    options: [
+      "It declares a new pointer variable",
+      "It multiplies the pointer's address by a value",
+      "It follows the pointer and accesses (reads or writes) the value at the stored address",
+      "It frees the memory the pointer points to"
+    ],
+    answer: 2,
+    explanation: "The <strong><code>*</code> (dereference) operator</strong> follows a pointer and accesses the value stored at that address. <code>*p</code> reads the value. <code>*p = 20</code> writes a new value. This is distinct from <code>*</code> in a declaration (<code>int *p</code>), which just means \"pointer to\"."
+  },
+  {
+    topic: "C Pointers",
+    type: "true-false",
+    q: "All C types — including <code>int</code>, <code>char</code>, and <code>struct</code> — use <strong>value semantics</strong> by default. Pointers are the way to achieve reference-like behaviour.",
+    options: ["True", "False"],
+    answer: 0,
+    explanation: "<strong>True.</strong> Unlike Java or Python, every C type uses value semantics by default — assignment always copies. To share data or modify variables from another scope, you must explicitly use <strong>pointers</strong>, which store and pass memory addresses."
+  },
+
+  // ── Pointer Operators ─────────────────────────────────────
+  {
+    topic: "Pointer Operators",
+    type: "multiple-choice",
+    q: `Given a pointer to a struct, what does <code>p-&gt;x</code> mean?
+<div class="q-code"><span class="kw">typedef struct</span> { <span class="ty">int</span> x; <span class="ty">int</span> y; } Point;
+Point p1 = {<span class="nu">1</span>, <span class="nu">2</span>};
+Point <span class="op">*</span>p = <span class="op">&amp;</span>p1;</div>`,
+    options: [
+      "It compares <code>p</code> to <code>x</code>",
+      "It accesses the field <code>x</code> of the struct that <code>p</code> points to — shorthand for <code>(*p).x</code>",
+      "It subtracts <code>x</code> from <code>p</code>",
+      "It declares a new pointer named <code>x</code>"
+    ],
+    answer: 1,
+    explanation: "The <strong><code>-&gt;</code> (arrow) operator</strong> accesses a struct member through a pointer. <code>p-&gt;x</code> is exactly equivalent to <code>(*p).x</code> — dereference the pointer to get the struct, then access field <code>x</code>. The arrow operator is just cleaner syntax and is used everywhere in C code dealing with pointers to structs."
+  },
+  {
+    topic: "Pointer Operators",
+    type: "true-false",
+    q: "<code>p-&gt;field</code> and <code>(*p).field</code> are exactly equivalent in C.",
+    options: ["True", "False"],
+    answer: 0,
+    explanation: "<strong>True.</strong> They are completely identical. The arrow operator <code>-&gt;</code> was introduced as syntactic sugar to make struct-pointer access more readable and less error-prone than writing <code>(*p).field</code> every time."
+  },
+
+  // ── Pointers & Arrays ─────────────────────────────────────
+  {
+    topic: "Pointers & Arrays",
+    type: "multiple-choice",
+    q: `What does the array name <code>arr</code> evaluate to when assigned to a pointer?
+<div class="q-code"><span class="ty">int</span> arr[] = {<span class="nu">1</span>, <span class="nu">2</span>, <span class="nu">3</span>};
+<span class="ty">int</span> <span class="op">*</span>p = arr;</div>`,
+    options: [
+      "A copy of all elements in the array",
+      "The total size in bytes of the array",
+      "A pointer to the first element of the array (<code>&amp;arr[0]</code>)",
+      "The number of elements in the array"
+    ],
+    answer: 2,
+    explanation: "In C, an array name <strong>\"decays\"</strong> into a pointer to its first element. So <code>int *p = arr;</code> is equivalent to <code>int *p = &amp;arr[0];</code>. This is why arrays can be passed to functions that accept pointers — but it also means the function loses the array's size information."
+  },
+  {
+    topic: "Pointers & Arrays",
+    type: "multiple-choice",
+    q: "Which of the following expressions is <strong>NOT</strong> a valid way to access the first element of <code>arr</code> via a pointer <code>p = arr</code>?",
+    options: [
+      "<code>*p</code>",
+      "<code>p[0]</code>",
+      "<code>*(p + 0)</code>",
+      "<code>p-&gt;0</code>"
+    ],
+    answer: 3,
+    explanation: "<code>p-&gt;0</code> is <strong>invalid syntax</strong>. The arrow operator accesses <em>named struct fields</em>, not array indices. The valid ways to access the first element are: <code>*p</code>, <code>p[0]</code>, and <code>*(p + 0)</code> — all three are equivalent when <code>p</code> points to an array."
+  },
+  {
+    topic: "Pointers & Arrays",
+    type: "true-false",
+    q: "When an array is passed to a C function, the function receives a full copy of the array.",
+    options: ["True", "False"],
+    answer: 1,
+    explanation: "<strong>False.</strong> When you pass an array to a function, it decays to a <strong>pointer to the first element</strong> — only the address is passed. The function can modify the original array's contents through this pointer, and it has no way to determine the array's length without an explicit size parameter."
+  },
+
+  // ── When to Use Pointers ──────────────────────────────────
+  {
+    topic: "When to Use Pointers",
+    type: "multiple-choice",
+    q: `What does the <strong>correct</strong> version of this function do differently from the broken one?
+<div class="q-code"><span class="cm">// Broken</span>
+<span class="ty">void</span> <span class="fn">bad_inc</span>(<span class="ty">int</span> x)  { x++; }
+
+<span class="cm">// Correct</span>
+<span class="ty">void</span> <span class="fn">good_inc</span>(<span class="ty">int</span> <span class="op">*</span>x) { (<span class="op">*</span>x)++; }</div>`,
+    options: [
+      "The correct version returns the new value; the broken one returns void",
+      "The correct version uses a pointer so it modifies the original variable; the broken one only modifies a local copy",
+      "They are functionally identical — both increment the caller's variable",
+      "The correct version is faster because pointer access skips the stack"
+    ],
+    answer: 1,
+    explanation: "<code>bad_inc</code> receives a <strong>copy</strong> of the integer (value semantics). Incrementing it changes only the local copy — the caller's variable is unaffected. <code>good_inc</code> receives a <strong>pointer</strong> to the original variable. <code>(*x)++</code> dereferences the pointer and increments the actual value in the caller's scope. This is called <em>call-by-reference</em> in C."
+  },
+  {
+    topic: "When to Use Pointers",
+    type: "multiple-choice",
+    q: "Which is <strong>not</strong> a typical reason to use pointers in C?",
+    options: [
+      "To allow a function to modify a variable in the caller's scope (call-by-reference)",
+      "To efficiently pass large structs without copying them",
+      "To build dynamic data structures like linked lists and trees",
+      "To make integer arithmetic faster"
+    ],
+    answer: 3,
+    explanation: "Pointers don't make integer arithmetic faster — they add a layer of indirection. The three main reasons to use pointers are: <strong>(1)</strong> call-by-reference / modifying caller's data, <strong>(2)</strong> memory efficiency for large data, <strong>(3)</strong> dynamic data structures (linked lists, trees, graphs) and dynamic memory allocation."
+  },
+
+  // ── Dynamic Memory ────────────────────────────────────────
+  {
+    topic: "Dynamic Memory",
+    type: "multiple-choice",
+    q: "What does <code>malloc(n * sizeof(int))</code> do?",
+    options: [
+      "Creates a static array of <code>n</code> integers on the stack",
+      "Allocates <code>n * sizeof(int)</code> bytes on the heap and returns a pointer to the first byte",
+      "Initialises <code>n</code> integers to zero",
+      "Frees <code>n</code> integers from memory"
+    ],
+    answer: 1,
+    explanation: "<strong><code>malloc</code></strong> (memory allocate) requests a block of bytes from the <em>heap</em> at runtime and returns a pointer to the first byte — or <code>NULL</code> if allocation fails. The programmer must later call <code>free()</code> to release it. Unlike stack arrays, the size can be any runtime value."
+  },
+  {
+    topic: "Dynamic Memory",
+    type: "true-false",
+    q: "Memory allocated with <code>malloc()</code> is automatically freed when the function that called it returns.",
+    options: ["True", "False"],
+    answer: 1,
+    explanation: "<strong>False.</strong> Heap memory allocated with <code>malloc()</code> persists until explicitly freed with <code>free()</code> — regardless of function scope. This is a fundamental difference from stack memory (local variables), which is automatically reclaimed when a function returns. Forgetting <code>free()</code> causes a <em>memory leak</em>."
+  },
+  {
+    topic: "Dynamic Memory",
+    type: "multiple-choice",
+    q: "What should you always do immediately after calling <code>free(p)</code> to avoid a dangling pointer?",
+    options: [
+      "Call <code>malloc()</code> again to reallocate",
+      "Set <code>p = NULL</code> so it no longer points to freed memory",
+      "Call <code>sizeof(p)</code> to verify the size was freed",
+      "Nothing — <code>free()</code> handles everything"
+    ],
+    answer: 1,
+    explanation: "After <code>free(p)</code>, the pointer <code>p</code> still holds the old address — it becomes a <strong>dangling pointer</strong>. Setting <code>p = NULL</code> immediately after ensures that any accidental future use of <code>p</code> (e.g. <code>*p</code> or <code>free(p)</code> again) can be detected (it will crash cleanly on a NULL dereference rather than silently corrupting memory)."
+  },
+
+  // ── Pointer Arithmetic ────────────────────────────────────
+  {
+    topic: "Pointer Arithmetic",
+    type: "multiple-choice",
+    q: `If <code>p</code> points to an <code>int</code> at address <code>0x200</code>, what address does <code>p + 1</code> represent on a system where <code>sizeof(int) == 4</code>?`,
+    options: [
+      "<code>0x201</code>",
+      "<code>0x202</code>",
+      "<code>0x204</code>",
+      "<code>0x208</code>"
+    ],
+    answer: 2,
+    explanation: "<strong>Pointer arithmetic scales by the size of the pointed-to type.</strong> <code>p + 1</code> moves forward by <code>1 × sizeof(int)</code> = 4 bytes. So from <code>0x200</code> → <code>0x204</code>. This is what makes pointer arithmetic useful for walking through arrays — <code>*(p + i)</code> correctly accesses element <code>i</code> regardless of the element size."
+  },
+  {
+    topic: "Pointer Arithmetic",
+    type: "true-false",
+    q: "Pointer arithmetic (e.g. <code>p + 1</code>, <code>p++</code>) is available in Java and Python as well as C.",
+    options: ["True", "False"],
+    answer: 1,
+    explanation: "<strong>False.</strong> Pointer arithmetic is a <strong>unique feature of C and C++</strong>. Java and Python do not expose memory addresses to the programmer at all — references are managed by the runtime and cannot be manually incremented or offset. This is a major safety distinction between C and higher-level languages."
+  },
+
+  // ── Dangers of Pointers ───────────────────────────────────
+  {
+    topic: "Dangers",
+    type: "multiple-choice",
+    q: "What is a <strong>dangling pointer</strong>?",
+    options: [
+      "A pointer that has never been initialised and contains a random address",
+      "A pointer that still holds the address of memory that has already been freed",
+      "A pointer that points past the end of an array",
+      "A pointer stored inside a struct"
+    ],
+    answer: 1,
+    explanation: "A <strong>dangling pointer</strong> holds the address of memory that has been <code>free()</code>d. That memory may have been reallocated for something else. Dereferencing a dangling pointer causes undefined behaviour — crashes, data corruption, or silent security vulnerabilities. Always set pointers to <code>NULL</code> after freeing."
+  },
+  {
+    topic: "Dangers",
+    type: "multiple-choice",
+    q: "Which pointer danger is the root cause of real-world exploits like <strong>Heartbleed</strong> and the <strong>Morris Worm</strong>?",
+    options: [
+      "Dangling pointer",
+      "Memory leak",
+      "Buffer overflow",
+      "Wild (uninitialised) pointer"
+    ],
+    answer: 2,
+    explanation: "<strong>Buffer overflow</strong> — writing past the end of an allocated array — overwrites adjacent memory, potentially including return addresses or security-critical data. This has been weaponised in countless real-world exploits. C provides no automatic bounds checking, making this trivially easy to accidentally introduce."
+  },
+  {
+    topic: "Dangers",
+    type: "multiple-choice",
+    q: "Which of the following describes a <strong>memory leak</strong>?",
+    options: [
+      "Reading from an uninitialised pointer",
+      "Writing past the end of an array",
+      "Allocating memory with <code>malloc()</code> but never calling <code>free()</code>, causing memory to remain allocated for the life of the program",
+      "Decrementing a pointer below the start of an array"
+    ],
+    answer: 2,
+    explanation: "A <strong>memory leak</strong> occurs when heap memory is allocated but never freed. The program's memory footprint grows until it exhausts available RAM or is terminated. Long-running programs (servers, daemons) are especially vulnerable. Tools like Valgrind and AddressSanitizer can detect leaks automatically."
+  }
+];
+
+// ── Engine ─────────────────────────────────────────────────────────────────
+let current = 0, score = 0, shuffled = [];
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function init() {
+  current = 0; score = 0;
+  shuffled = shuffle(ALL_QUESTIONS.map((_, i) => i));
+  document.getElementById('results-screen').style.display = 'none';
+  document.getElementById('quiz-area').style.display = '';
+  updateProgress();
+  renderQuestion();
+}
+
+function updateProgress() {
+  const total = ALL_QUESTIONS.length;
+  document.getElementById('prog-bar').style.width = ((current / total) * 100) + '%';
+  document.getElementById('prog-label').textContent = `Question ${current + 1} of ${total}`;
+  document.getElementById('score-label').textContent = `Score: ${score}`;
+}
+
+function renderQuestion() {
+  const idx  = shuffled[current];
+  const q    = ALL_QUESTIONS[idx];
+  const area = document.getElementById('quiz-area');
+  const isTF = q.type === 'true-false';
+  const L    = ['A','B','C','D'];
+
+  const optsHtml = isTF
+    ? `<div class="tf-options">${q.options.map((o,i) => `<button class="option-btn" onclick="handleAnswer(${i},this)"><span class="opt-letter">${o[0]}</span>${o}</button>`).join('')}</div>`
+    : `<div class="options">${q.options.map((o,i) => `<button class="option-btn" onclick="handleAnswer(${i},this)"><span class="opt-letter">${L[i]}</span><span>${o}</span></button>`).join('')}</div>`;
+
+  area.innerHTML = `
+    <div class="quiz-card">
+      <div class="card-header">
+        <span class="q-number">Q${current + 1}</span>
+        <span class="q-topic">${q.topic}</span>
+        <span class="q-type">${isTF ? 'True / False' : 'Multiple Choice'}</span>
+      </div>
+      <div class="card-body">
+        <p class="question-text">${q.q}</p>
+        ${optsHtml}
+        <div class="explanation" id="explanation">${q.explanation}</div>
+        <div class="nav-row">
+          <button class="next-btn" id="next-btn" onclick="nextQuestion()">
+            ${current + 1 < ALL_QUESTIONS.length ? 'Next Question →' : 'See Results →'}
+          </button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function handleAnswer(chosen, btn) {
+  const q    = ALL_QUESTIONS[shuffled[current]];
+  const btns = document.getElementById('quiz-area').querySelectorAll('.option-btn');
+  btns.forEach(b => b.disabled = true);
+  btns.forEach((b, i) => {
+    if (i === q.answer) b.classList.add(chosen === q.answer ? 'correct' : 'reveal');
+  });
+  if (chosen !== q.answer) btn.classList.add('wrong');
+  if (chosen === q.answer) score++;
+  document.getElementById('explanation').classList.add('show');
+  document.getElementById('next-btn').classList.add('show');
+  updateProgress();
+}
+
+function nextQuestion() {
+  current++;
+  if (current >= ALL_QUESTIONS.length) { showResults(); return; }
+  updateProgress();
+  renderQuestion();
+}
+
+function showResults() {
+  document.getElementById('quiz-area').style.display = 'none';
+  const rs    = document.getElementById('results-screen');
+  rs.style.display = 'block';
+  const total = ALL_QUESTIONS.length;
+  const pct   = Math.round((score / total) * 100);
+  const wrong = total - score;
+  let grade, msg, cls;
+  if (pct >= 85)      { grade = '🎉'; msg = 'Excellent! You have a strong grasp of Pointers & References.'; cls = 'great'; }
+  else if (pct >= 60) { grade = '👍'; msg = 'Good effort! Review the topics you missed and try again.'; cls = 'ok'; }
+  else                { grade = '📖'; msg = 'Keep studying! Re-read the Pointers & References notes and retake the quiz.'; cls = 'poor'; }
+
+  rs.innerHTML = `
+    <div class="result-score ${cls}">${pct}%</div>
+    <p class="result-label">${score} / ${total} correct</p>
+    <p class="result-msg">${grade} ${msg}</p>
+    <div class="result-breakdown">
+      <div class="rb-item"><div class="rb-num green">${score}</div><div class="rb-label">correct</div></div>
+      <div class="rb-item"><div class="rb-num red">${wrong}</div><div class="rb-label">incorrect</div></div>
+      <div class="rb-item"><div class="rb-num violet">${pct}%</div><div class="rb-label">score</div></div>
+    </div>
+    <button class="restart-btn" onclick="init()">Retake Quiz</button>`;
+}
+
+init();
+</script>
+</body>
+</html>

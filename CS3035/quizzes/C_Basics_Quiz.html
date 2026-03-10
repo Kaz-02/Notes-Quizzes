@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>C Basics Quiz — CS3035</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Fira+Code:wght@400;500&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #13161e;
+    --surface2: #1a1e2a;
+    --border: #252a38;
+    --accent: #22d3ee;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --code-bg: #080b10;
+    --correct: #34d399;
+    --correct-bg: rgba(52,211,153,0.1);
+    --wrong: #f87171;
+    --wrong-bg: rgba(248,113,113,0.1);
+    --neutral: #fb923c;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Lora', serif;
+    line-height: 1.7;
+    min-height: 100vh;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 55% 40% at 12% 8%, rgba(34,211,238,0.07) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 50% at 88% 88%, rgba(251,146,60,0.05) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 5rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ── Header ── */
+  header {
+    text-align: center;
+    padding: 3rem 0 2.5rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 2.5rem;
+  }
+
+  .course-tag {
+    display: inline-block;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.15em;
+    color: var(--accent);
+    background: rgba(34,211,238,0.09);
+    border: 1px solid rgba(34,211,238,0.22);
+    padding: 0.3rem 0.9rem;
+    border-radius: 2px;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+  }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    font-weight: 800;
+    background: linear-gradient(135deg, #e2e8f0 0%, #94a3b8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.6rem;
+  }
+
+  header p { color: var(--muted); font-size: 0.9rem; }
+
+  /* ── Progress ── */
+  .progress-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1rem 1.5rem;
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+  }
+
+  .progress-bar-outer {
+    flex: 1;
+    height: 6px;
+    background: var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .progress-bar-inner {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), #67e8f9);
+    border-radius: 10px;
+    transition: width 0.4s ease;
+    width: 0%;
+  }
+
+  .progress-label { font-family: 'Fira Code', monospace; font-size: 0.78rem; color: var(--muted); white-space: nowrap; }
+  .score-label    { font-family: 'Fira Code', monospace; font-size: 0.78rem; color: var(--accent); white-space: nowrap; }
+
+  /* ── Card ── */
+  .quiz-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    animation: fadeUp 0.35s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .card-header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    flex-wrap: wrap;
+  }
+
+  .q-number {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.7rem;
+    color: var(--accent);
+    background: rgba(34,211,238,0.1);
+    border: 1px solid rgba(34,211,238,0.2);
+    padding: 0.2rem 0.6rem;
+    border-radius: 3px;
+  }
+
+  .q-topic { font-family: 'Fira Code', monospace; font-size: 0.7rem; color: var(--muted); }
+
+  .q-type {
+    margin-left: auto;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.68rem;
+    color: var(--neutral);
+    background: rgba(251,146,60,0.08);
+    border: 1px solid rgba(251,146,60,0.15);
+    padding: 0.15rem 0.5rem;
+    border-radius: 3px;
+  }
+
+  .card-body { padding: 1.4rem 1.5rem; }
+
+  .question-text {
+    font-size: 1rem;
+    color: var(--text);
+    margin-bottom: 1.2rem;
+    line-height: 1.65;
+  }
+
+  .question-text code {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.88em;
+    background: var(--surface2);
+    padding: 0.1rem 0.4rem;
+    border-radius: 3px;
+    color: #67e8f9;
+  }
+
+  /* ── Code block ── */
+  .q-code {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.9rem 1.2rem;
+    margin-bottom: 1.2rem;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.82rem;
+    line-height: 1.9;
+    color: #c9d1d9;
+    overflow-x: auto;
+  }
+
+  .kw { color: #ff7b72; }
+  .ty { color: #79c0ff; }
+  .fn { color: #d2a8ff; }
+  .st { color: #a5d6ff; }
+  .cm { color: #8b949e; font-style: italic; }
+  .nu { color: #f0883e; }
+  .pp { color: #22d3ee; }
+  .blank { color: #fbbf24; font-weight: 700; text-decoration: underline dotted; }
+
+  /* ── Options ── */
+  .options { display: flex; flex-direction: column; gap: 0.6rem; }
+
+  .option-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    text-align: left;
+    color: var(--text);
+    font-family: 'Lora', serif;
+    font-size: 0.93rem;
+    line-height: 1.5;
+    transition: border-color 0.15s, background 0.15s;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.8rem;
+    width: 100%;
+  }
+
+  .option-btn:hover:not(:disabled) { border-color: var(--accent); background: rgba(34,211,238,0.06); }
+  .option-btn:disabled { cursor: default; }
+  .option-btn.correct { border-color: var(--correct); background: var(--correct-bg); color: #d1fae5; }
+  .option-btn.wrong   { border-color: var(--wrong);   background: var(--wrong-bg);   color: #fee2e2; }
+  .option-btn.reveal  { border-color: var(--correct); background: var(--correct-bg); color: #d1fae5; opacity: 0.65; }
+
+  .opt-letter {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.75rem;
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 3px;
+    color: var(--muted);
+  }
+
+  .option-btn.correct .opt-letter { color: var(--correct); }
+  .option-btn.wrong   .opt-letter { color: var(--wrong); }
+  .option-btn.reveal  .opt-letter { color: var(--correct); }
+
+  .option-btn code {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.85em;
+    background: rgba(255,255,255,0.05);
+    padding: 0.1rem 0.3rem;
+    border-radius: 3px;
+  }
+
+  /* ── True/False ── */
+  .tf-options { display: flex; gap: 0.8rem; }
+  .tf-options .option-btn { flex: 1; justify-content: center; }
+
+  /* ── Explanation ── */
+  .explanation {
+    margin-top: 1rem;
+    border-left: 3px solid var(--neutral);
+    background: rgba(251,146,60,0.07);
+    border-radius: 0 6px 6px 0;
+    padding: 0.85rem 1.1rem;
+    font-size: 0.88rem;
+    color: #fdba74;
+    display: none;
+    line-height: 1.6;
+  }
+
+  .explanation.show { display: block; animation: fadeUp 0.3s ease; }
+  .explanation strong { color: var(--neutral); font-family: 'Syne', sans-serif; }
+  .explanation code {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.85em;
+    background: rgba(251,146,60,0.1);
+    padding: 0.1rem 0.3rem;
+    border-radius: 3px;
+    color: #fed7aa;
+  }
+
+  /* ── Nav ── */
+  .nav-row { display: flex; justify-content: flex-end; margin-top: 1rem; }
+
+  .next-btn {
+    background: var(--accent);
+    color: #0d0f14;
+    border: none;
+    border-radius: 6px;
+    padding: 0.6rem 1.6rem;
+    font-family: 'Syne', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    display: none;
+  }
+
+  .next-btn.show { display: block; }
+  .next-btn:hover { opacity: 0.82; }
+
+  /* ── Results ── */
+  #results-screen {
+    display: none;
+    text-align: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 3rem 2rem;
+    animation: fadeUp 0.5s ease;
+  }
+
+  .result-score { font-family: 'Syne', sans-serif; font-size: 5rem; font-weight: 800; line-height: 1; margin-bottom: 0.5rem; }
+  .result-score.great { color: var(--correct); }
+  .result-score.ok    { color: #fbbf24; }
+  .result-score.poor  { color: var(--wrong); }
+  .result-label { font-size: 1.1rem; color: var(--muted); margin-bottom: 0.5rem; }
+  .result-msg   { font-size: 1.05rem; color: var(--text); margin-bottom: 2rem; }
+
+  .result-breakdown { display: flex; justify-content: center; gap: 2rem; margin-bottom: 2rem; }
+  .rb-item { text-align: center; }
+  .rb-num { font-family: 'Syne', sans-serif; font-size: 1.8rem; font-weight: 700; }
+  .rb-num.green { color: var(--correct); }
+  .rb-num.red   { color: var(--wrong); }
+  .rb-num.cyan  { color: var(--accent); }
+  .rb-label { font-size: 0.82rem; color: var(--muted); font-family: 'Fira Code', monospace; }
+
+  .restart-btn {
+    background: var(--accent);
+    color: #0d0f14;
+    border: none;
+    border-radius: 6px;
+    padding: 0.75rem 2.5rem;
+    font-family: 'Syne', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .restart-btn:hover { opacity: 0.82; }
+
+  @media (max-width: 600px) {
+    .tf-options { flex-direction: column; }
+    .result-breakdown { gap: 1rem; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="course-tag">CS3035 — C Basics</div>
+    <h1>Quiz: C Basics</h1>
+    <p>25 questions · Types · Arrays · Strings · Control Flow · Functions · Struct · Libraries</p>
+  </header>
+
+  <div class="progress-wrap">
+    <span class="progress-label" id="prog-label">Question 1 of 25</span>
+    <div class="progress-bar-outer"><div class="progress-bar-inner" id="prog-bar"></div></div>
+    <span class="score-label" id="score-label">Score: 0</span>
+  </div>
+
+  <div id="quiz-area"></div>
+  <div id="results-screen"></div>
+
+</div>
+
+<script>
+const ALL_QUESTIONS = [
+
+  // ── About C & Standards ───────────────────────────────────
+  {
+    topic: "About C",
+    type: "multiple-choice",
+    q: "Which C standard first introduced <strong>single-line <code>//</code> comments</strong> and the <code>bool</code> type?",
+    options: ["C89 / C90", "C99", "C11", "C17"],
+    answer: 1,
+    explanation: "<strong>C99</strong> modernised C significantly, adding <code>//</code> single-line comments (previously only <code>/* */</code> existed), <code>&lt;stdbool.h&gt;</code> for <code>bool</code>, variable-length arrays, and inline functions among other features."
+  },
+  {
+    topic: "About C",
+    type: "true-false",
+    q: "C is a high-level language with built-in memory safety features that prevent buffer overflows.",
+    options: ["True", "False"],
+    answer: 1,
+    explanation: "<strong>False.</strong> C is a <em>low-level</em> language with <em>no built-in memory safety</em>. The programmer is fully responsible for memory management. This is the root cause of famous vulnerabilities like the Morris Worm and Heartbleed."
+  },
+
+  // ── Hello World & printf ──────────────────────────────────
+  {
+    topic: "Hello World",
+    type: "multiple-choice",
+    q: `What will this program print?
+<div class="q-code"><span class="pp">#include</span> &lt;stdio.h&gt;
+<span class="ty">int</span> <span class="fn">main</span>() {
+  <span class="fn">printf</span>(<span class="st">"Hello\\n"</span>);
+  <span class="fn">printf</span>(<span class="st">"World"</span>);
+  <span class="kw">return</span> <span class="nu">0</span>;
+}</div>`,
+    options: [
+      "<code>Hello World</code> on one line",
+      "<code>Hello</code> then <code>World</code> on separate lines",
+      "<code>Hello\\nWorld</code> literally",
+      "Nothing — it won't compile without <code>\\n</code> on every line"
+    ],
+    answer: 1,
+    explanation: "<code>\\n</code> is the newline escape sequence. The first <code>printf</code> prints <code>Hello</code> then moves to a new line. The second prints <code>World</code> on that new line with no trailing newline. Unlike Python's <code>print()</code>, <code>printf()</code> never adds a newline automatically."
+  },
+  {
+    topic: "Hello World",
+    type: "multiple-choice",
+    q: "Which <code>printf</code> format specifier is used to print an <strong>unsigned integer</strong>?",
+    options: ["<code>%d</code>", "<code>%s</code>", "<code>%u</code>", "<code>%f</code>"],
+    answer: 2,
+    explanation: "<code>%u</code> prints an <strong>unsigned decimal integer</strong>. <code>%d</code> = signed int, <code>%s</code> = string (char array), <code>%f</code> = float/double, <code>%c</code> = char, <code>%p</code> = pointer address."
+  },
+  {
+    topic: "Hello World",
+    type: "multiple-choice",
+    q: "What does <code>return 0;</code> signify in a C <code>main()</code> function?",
+    options: [
+      "The program returned no output",
+      "The program exited successfully",
+      "The program's memory was freed",
+      "The program will restart"
+    ],
+    answer: 1,
+    explanation: "In C, <code>main()</code> returns an <strong>exit code</strong> to the operating system. <code>0</code> means success. Any non-zero value signals an error. Scripts and CI tools use this to detect whether a program succeeded."
+  },
+
+  // ── Static vs Dynamic Typing ──────────────────────────────
+  {
+    topic: "Static Typing",
+    type: "true-false",
+    q: "In C, types are checked at <strong>runtime</strong> rather than at compile time.",
+    options: ["True", "False"],
+    answer: 1,
+    explanation: "<strong>False.</strong> C is a <em>statically typed</em> language — all type checking happens at <strong>compile time</strong>. This leads to earlier error detection and generally faster performance compared to dynamically typed languages like Python."
+  },
+
+  // ── Types ─────────────────────────────────────────────────
+  {
+    topic: "Basic Types",
+    type: "multiple-choice",
+    q: "Which of the following types does C <strong>not</strong> have as a built-in?",
+    options: ["<code>int</code>", "<code>double</code>", "<code>bool</code>", "<code>char</code>"],
+    answer: 2,
+    explanation: "<code>bool</code> is <strong>not</strong> a built-in C type. C99 added <code>&lt;stdbool.h&gt;</code> which provides <code>bool</code> as a macro, but natively C uses integers for booleans: <code>0</code> is false and any non-zero value is true. Java and Python have dedicated boolean types."
+  },
+  {
+    topic: "Basic Types",
+    type: "multiple-choice",
+    q: "What is the typical size of an <code>int</code> in C on a modern 64-bit system?",
+    options: ["1 byte", "2 bytes", "4 bytes", "8 bytes"],
+    answer: 2,
+    explanation: "On most modern platforms, <code>int</code> is <strong>4 bytes (32 bits)</strong>. However, the C standard only guarantees it's <em>at least</em> 16 bits — the actual size is implementation-defined. This is why C has so many numeric types: precise control over memory size matters in systems programming."
+  },
+  {
+    topic: "Basic Types",
+    type: "multiple-choice",
+    q: "Which type would you use in C to guarantee a <strong>64-bit integer</strong>?",
+    options: ["<code>int</code>", "<code>long</code>", "<code>long long</code>", "<code>short</code>"],
+    answer: 2,
+    explanation: "<strong><code>long long</code></strong> is guaranteed to be at least 64 bits by the C99 standard. <code>long</code> is only 4 bytes on Windows (32-bit) but 8 bytes on most Unix/Linux systems — it's platform-dependent."
+  },
+
+  // ── Literals ─────────────────────────────────────────────
+  {
+    topic: "Literals",
+    type: "multiple-choice",
+    q: "What is the value of the integer literal <code>010</code> in C?",
+    options: ["10", "8", "2", "16"],
+    answer: 1,
+    explanation: "In C, a leading <code>0</code> means <strong>octal (base 8)</strong>. So <code>010</code> = 1×8 + 0 = <strong>8</strong>. Leading <code>0x</code> means hexadecimal, and <code>0b</code> means binary (C23/GCC extension). This is a common source of bugs — avoid leading zeros in integer literals unless intentionally using octal."
+  },
+  {
+    topic: "Literals",
+    type: "multiple-choice",
+    q: "What is the difference between the character literals <code>'0'</code> and <code>'\\0'</code> in C?",
+    options: [
+      "They are identical — both represent the null terminator",
+      "<code>'0'</code> is the digit character (ASCII 48); <code>'\\0'</code> is the null byte (ASCII 0)",
+      "<code>'0'</code> is the null byte; <code>'\\0'</code> is the digit zero",
+      "Both represent the integer value 0"
+    ],
+    answer: 1,
+    explanation: "<code>'0'</code> is the <strong>character digit zero</strong> (ASCII value 48). <code>'\\0'</code> is the <strong>null terminator</strong> (byte value 0, used to end strings). Confusing them is a classic C bug — for example, using <code>'0'</code> instead of <code>'\\0'</code> to terminate a string will corrupt it."
+  },
+  {
+    topic: "Literals",
+    type: "true-false",
+    q: "In C, a floating-point literal like <code>3.14</code> is treated as a <code>float</code> by default.",
+    options: ["True", "False"],
+    answer: 1,
+    explanation: "<strong>False.</strong> In C (like Java), an unadorned floating-point literal like <code>3.14</code> defaults to <strong><code>double</code></strong>. To make it a <code>float</code>, append <code>f</code>: <code>3.14f</code>. For <code>long double</code> use <code>3.14l</code>."
+  },
+
+  // ── Arrays ────────────────────────────────────────────────
+  {
+    topic: "Arrays",
+    type: "multiple-choice",
+    q: `What are the values stored in array <code>b</code> after this declaration?
+<div class="q-code"><span class="ty">int</span> b[<span class="nu">5</span>] = {<span class="nu">1</span>, <span class="nu">2</span>, <span class="nu">3</span>};</div>`,
+    options: [
+      "<code>{1, 2, 3, garbage, garbage}</code>",
+      "<code>{1, 2, 3, 0, 0}</code>",
+      "Compile error — size and initializer must match exactly",
+      "<code>{1, 2, 3, 1, 2}</code> — the list wraps around"
+    ],
+    answer: 1,
+    explanation: "When an array has a partial initializer, C <strong>zero-fills the remaining elements</strong>. So <code>int b[5] = {1, 2, 3};</code> → <code>{1, 2, 3, 0, 0}</code>. This only applies when at least one initializer is given — an uninitialised local array (<code>int c[5];</code>) contains garbage values."
+  },
+  {
+    topic: "Arrays",
+    type: "multiple-choice",
+    q: "Which of the following array declarations is a <strong>syntax error</strong> in C?",
+    options: [
+      "<code>int a[] = {1, 2, 3};</code>",
+      "<code>int b[6] = {0};</code>",
+      "<code>int c[6];</code>",
+      "<code>int[] d;</code>"
+    ],
+    answer: 3,
+    explanation: "<code>int[] d;</code> is <strong>invalid C syntax</strong>. In C, the brackets go after the variable name: <code>int d[];</code> — but even that requires either a size or an initializer. The Java-style <code>int[]</code> placement is not valid in C."
+  },
+
+  // ── Strings ───────────────────────────────────────────────
+  {
+    topic: "Strings",
+    type: "multiple-choice",
+    q: "How is a string represented in C?",
+    options: [
+      "Using a built-in <code>String</code> class",
+      "As an array of <code>char</code> terminated by a null byte (<code>'\\0'</code>)",
+      "As a linked list of characters",
+      "Using the <code>string</code> typedef from <code>&lt;string.h&gt;</code>"
+    ],
+    answer: 1,
+    explanation: "C has no <code>String</code> type. A string is simply an <strong>array of <code>char</code> ending with the null terminator <code>'\\0'</code></strong> (byte value 0). So <code>\"hello\"</code> occupies 6 bytes: <code>h e l l o \\0</code>. Functions in <code>&lt;string.h&gt;</code> (like <code>strlen</code>, <code>strcpy</code>) rely on this convention."
+  },
+  {
+    topic: "Strings",
+    type: "true-false",
+    q: "<code>char s1[] = \"hello\";</code> and <code>char s2[] = {'h','e','l','l','o','\\0'};</code> are equivalent in C.",
+    options: ["True", "False"],
+    answer: 0,
+    explanation: "<strong>True.</strong> Both declare a 6-byte char array containing the same characters including the null terminator. The string literal form is just shorthand — the compiler generates the same <code>{'h','e','l','l','o','\\0'}</code> representation."
+  },
+
+  // ── Naming Conventions ────────────────────────────────────
+  {
+    topic: "Naming",
+    type: "multiple-choice",
+    q: "According to C naming conventions, which style is used for <strong>constants</strong> (e.g. <code>#define</code> macros)?",
+    options: [
+      "<code>camelCase</code>",
+      "<code>PascalCase</code>",
+      "<code>UPPER_CASE_WITH_UNDERSCORES</code>",
+      "<code>lower_case_with_underscores</code>"
+    ],
+    answer: 2,
+    explanation: "C convention: <strong>constants and macros → <code>UPPER_CASE</code></strong> (e.g. <code>MAX_SIZE</code>, <code>PI</code>). Variables and functions → <code>lower_case_with_underscores</code> (snake_case). Some styles use PascalCase for struct/union names, and a <code>_t</code> suffix for typedefs (e.g. <code>size_t</code>)."
+  },
+
+  // ── Operators & Expressions ───────────────────────────────
+  {
+    topic: "Operators",
+    type: "multiple-choice",
+    q: `What does this C code print?
+<div class="q-code"><span class="ty">int</span> x = <span class="nu">5</span>;
+<span class="fn">printf</span>(<span class="st">"%d\\n"</span>, x++);</div>`,
+    options: ["6", "5", "4", "Undefined behaviour"],
+    answer: 1,
+    explanation: "<code>x++</code> is <strong>post-increment</strong>: the current value of <code>x</code> (<code>5</code>) is used in the expression (passed to <code>printf</code>), <em>then</em> <code>x</code> is incremented to <code>6</code>. If you used <code>++x</code> (pre-increment), it would print <code>6</code>."
+  },
+  {
+    topic: "Operators",
+    type: "true-false",
+    q: "In C, the expression <code>while (c = getchar()) { … }</code> is valid — the assignment is used as the loop condition.",
+    options: ["True", "False"],
+    answer: 0,
+    explanation: "<strong>True.</strong> In C, assignment is an <em>expression</em> with a value. <code>c = getchar()</code> assigns the return value to <code>c</code> and evaluates to that value. Since any non-zero value is truthy, this loop continues until <code>getchar()</code> returns <code>0</code> (EOF). This pattern is common in C but would be a compile error in Java."
+  },
+
+  // ── Control Flow ─────────────────────────────────────────
+  {
+    topic: "Control Flow",
+    type: "multiple-choice",
+    q: `What does this <code>switch</code> statement print for <code>day = 2</code>?
+<div class="q-code"><span class="kw">switch</span> (day) {
+  <span class="kw">case</span> <span class="nu">1</span>: <span class="fn">printf</span>(<span class="st">"Mon"</span>);
+  <span class="kw">case</span> <span class="nu">2</span>: <span class="fn">printf</span>(<span class="st">"Tue"</span>);
+  <span class="kw">case</span> <span class="nu">3</span>: <span class="fn">printf</span>(<span class="st">"Wed"</span>); <span class="kw">break</span>;
+  <span class="kw">default</span>: <span class="fn">printf</span>(<span class="st">"???"</span>);
+}</div>`,
+    options: [
+      "<code>Tue</code>",
+      "<code>TueWed</code>",
+      "<code>MonTueWed</code>",
+      "Nothing — missing <code>break</code> causes a compile error"
+    ],
+    answer: 1,
+    explanation: "<strong>Fallthrough!</strong> With no <code>break</code> after <code>case 2</code>, execution falls through into <code>case 3</code>, printing <code>Tue</code> then <code>Wed</code>, then stopping at the <code>break</code>. Missing <code>break</code> is one of the most common C bugs. Always add <code>break</code> unless fallthrough is intentional."
+  },
+  {
+    topic: "Control Flow",
+    type: "true-false",
+    q: "C has a built-in <strong>for-each loop</strong> for iterating over arrays, similar to Java's enhanced for loop.",
+    options: ["True", "False"],
+    answer: 1,
+    explanation: "<strong>False.</strong> C has no for-each loop. C is a minimal, low-level language with no built-in collection types or iterators. Array size is not stored at runtime, so you must manually track it. Use a regular <code>for</code> loop with an index."
+  },
+  {
+    topic: "Control Flow",
+    type: "multiple-choice",
+    q: "How do you correctly get the number of elements in a C array at <strong>compile time</strong>?",
+    options: [
+      "<code>arr.length</code>",
+      "<code>len(arr)</code>",
+      "<code>sizeof(arr) / sizeof(arr[0])</code>",
+      "<code>arr.size()</code>"
+    ],
+    answer: 2,
+    explanation: "<strong><code>sizeof(arr) / sizeof(arr[0])</code></strong> gives the element count — it divides the total byte size of the array by the byte size of one element. This is evaluated at <em>compile time</em> and only works when the array is in scope (not after it decays to a pointer in a function call)."
+  },
+
+  // ── Functions ────────────────────────────────────────────
+  {
+    topic: "Functions",
+    type: "true-false",
+    q: "C functions support <strong>default parameter values</strong>, e.g. <code>void greet(char name[] = \"World\")</code>.",
+    options: ["True", "False"],
+    answer: 1,
+    explanation: "<strong>False.</strong> C does <em>not</em> support default parameter values or keyword arguments. Every argument must be passed explicitly. C++ adds this feature, but standard C does not have it."
+  },
+  {
+    topic: "Functions",
+    type: "multiple-choice",
+    q: "When you pass an array to a C function, what does the function actually receive?",
+    options: [
+      "A full copy of the array",
+      "A pointer to the first element",
+      "The array's length",
+      "A constant reference to the array"
+    ],
+    answer: 1,
+    explanation: "Arrays <strong>decay to a pointer</strong> when passed to a function — the function receives a <strong>pointer to the first element</strong>, not a copy. This means the function can modify the original array's contents, and it has no way of knowing the array's length without being told separately."
+  },
+
+  // ── Struct & Union ────────────────────────────────────────
+  {
+    topic: "Struct & Union",
+    type: "multiple-choice",
+    q: "What is the key memory difference between a <code>struct</code> and a <code>union</code> in C?",
+    options: [
+      "A <code>struct</code> can only hold one value at a time; a <code>union</code> can hold many",
+      "A <code>struct</code> allocates separate memory for each field; a <code>union</code>'s fields all share the same memory location",
+      "A <code>union</code> is larger because it stores all values simultaneously",
+      "There is no memory difference — they are functionally identical"
+    ],
+    answer: 1,
+    explanation: "In a <strong><code>struct</code></strong>, every field has its own memory slot — total size = sum of all fields. In a <strong><code>union</code></strong>, all fields share the same memory — total size = size of the <em>largest</em> field. Only one union field is valid at a time. Unions are used for memory efficiency in low-level programming."
+  },
+  {
+    topic: "Struct & Union",
+    type: "multiple-choice",
+    q: `What is the benefit of the <code>typedef struct</code> pattern shown here?
+<div class="q-code"><span class="kw">typedef struct</span> {
+  <span class="ty">double</span> x;
+  <span class="ty">double</span> y;
+} Point;</div>`,
+    options: [
+      "It makes the struct's fields public",
+      "It allows the struct to have methods",
+      "You can use <code>Point</code> directly as a type name instead of writing <code>struct Point</code> every time",
+      "It allocates the struct on the heap automatically"
+    ],
+    answer: 2,
+    explanation: "Using <strong><code>typedef struct { … } Point;</code></strong> creates a type alias so you can write <code>Point p1;</code> instead of <code>struct Point p1;</code>. Without <code>typedef</code>, you must always include the <code>struct</code> keyword when declaring variables of that type."
+  },
+
+  // ── Libraries & Headers ───────────────────────────────────
+  {
+    topic: "Libraries & Headers",
+    type: "multiple-choice",
+    q: "What is the purpose of a <strong>header guard</strong> (<code>#ifndef / #define / #endif</code>) in a C header file?",
+    options: [
+      "To prevent the functions from being called outside the file",
+      "To ensure the header file's contents are included only once, preventing duplicate declarations",
+      "To hide the implementation details from users",
+      "To automatically link the compiled library"
+    ],
+    answer: 1,
+    explanation: "A <strong>header guard</strong> prevents a header file from being included more than once in the same translation unit. Without it, if two files both include the same header, the declarations would appear twice, causing compiler errors. The pattern is: <code>#ifndef MY_HEADER_H</code> → <code>#define MY_HEADER_H</code> → contents → <code>#endif</code>."
+  },
+  {
+    topic: "Libraries & Headers",
+    type: "multiple-choice",
+    q: "What is the difference between <code>#include &lt;stdio.h&gt;</code> and <code>#include \"mylib.h\"</code>?",
+    options: [
+      "Angle brackets are for C++ headers; quotes are for C headers",
+      "Angle brackets search the system include paths; quotes search the current directory first",
+      "Angle brackets include the implementation; quotes include only declarations",
+      "There is no difference — they are interchangeable"
+    ],
+    answer: 1,
+    explanation: "<strong>Angle brackets <code>&lt;&gt;</code></strong> tell the compiler to search standard/system include paths (e.g. <code>/usr/include</code>). <strong>Quotes <code>\"\"</code></strong> tell it to look in the current directory first, then fall back to system paths. Use <code>&lt;&gt;</code> for standard/third-party libraries, <code>\"\"</code> for your own headers."
+  }
+];
+
+// ── Engine ─────────────────────────────────────────────────────────────────
+let current = 0, score = 0, shuffled = [];
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function init() {
+  current = 0; score = 0;
+  shuffled = shuffle(ALL_QUESTIONS.map((_, i) => i));
+  document.getElementById('results-screen').style.display = 'none';
+  document.getElementById('quiz-area').style.display = '';
+  updateProgress();
+  renderQuestion();
+}
+
+function updateProgress() {
+  const total = ALL_QUESTIONS.length;
+  document.getElementById('prog-bar').style.width = ((current / total) * 100) + '%';
+  document.getElementById('prog-label').textContent = `Question ${current + 1} of ${total}`;
+  document.getElementById('score-label').textContent = `Score: ${score}`;
+}
+
+function renderQuestion() {
+  const idx  = shuffled[current];
+  const q    = ALL_QUESTIONS[idx];
+  const area = document.getElementById('quiz-area');
+  const isTF = q.type === 'true-false';
+  const L    = ['A','B','C','D'];
+
+  const optsHtml = isTF
+    ? `<div class="tf-options">${q.options.map((o,i) => `<button class="option-btn" onclick="handleAnswer(${i},this)"><span class="opt-letter">${o[0]}</span>${o}</button>`).join('')}</div>`
+    : `<div class="options">${q.options.map((o,i) => `<button class="option-btn" onclick="handleAnswer(${i},this)"><span class="opt-letter">${L[i]}</span><span>${o}</span></button>`).join('')}</div>`;
+
+  area.innerHTML = `
+    <div class="quiz-card">
+      <div class="card-header">
+        <span class="q-number">Q${current + 1}</span>
+        <span class="q-topic">${q.topic}</span>
+        <span class="q-type">${isTF ? 'True / False' : 'Multiple Choice'}</span>
+      </div>
+      <div class="card-body">
+        <p class="question-text">${q.q}</p>
+        ${optsHtml}
+        <div class="explanation" id="explanation">${q.explanation}</div>
+        <div class="nav-row">
+          <button class="next-btn" id="next-btn" onclick="nextQuestion()">
+            ${current + 1 < ALL_QUESTIONS.length ? 'Next Question →' : 'See Results →'}
+          </button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function handleAnswer(chosen, btn) {
+  const q    = ALL_QUESTIONS[shuffled[current]];
+  const btns = document.getElementById('quiz-area').querySelectorAll('.option-btn');
+  btns.forEach(b => b.disabled = true);
+  btns.forEach((b, i) => {
+    if (i === q.answer) b.classList.add(chosen === q.answer ? 'correct' : 'reveal');
+  });
+  if (chosen !== q.answer) btn.classList.add('wrong');
+  if (chosen === q.answer) score++;
+  document.getElementById('explanation').classList.add('show');
+  document.getElementById('next-btn').classList.add('show');
+  updateProgress();
+}
+
+function nextQuestion() {
+  current++;
+  if (current >= ALL_QUESTIONS.length) { showResults(); return; }
+  updateProgress();
+  renderQuestion();
+}
+
+function showResults() {
+  document.getElementById('quiz-area').style.display = 'none';
+  const rs    = document.getElementById('results-screen');
+  rs.style.display = 'block';
+  const total = ALL_QUESTIONS.length;
+  const pct   = Math.round((score / total) * 100);
+  const wrong = total - score;
+  let grade, msg, cls;
+  if (pct >= 85)      { grade = '🎉'; msg = 'Excellent! You have a solid command of C Basics.'; cls = 'great'; }
+  else if (pct >= 60) { grade = '👍'; msg = 'Good effort! Review the topics you missed and try again.'; cls = 'ok'; }
+  else                { grade = '📖'; msg = 'Keep studying! Re-read the C Basics notes and retake the quiz.'; cls = 'poor'; }
+
+  rs.innerHTML = `
+    <div class="result-score ${cls}">${pct}%</div>
+    <p class="result-label">${score} / ${total} correct</p>
+    <p class="result-msg">${grade} ${msg}</p>
+    <div class="result-breakdown">
+      <div class="rb-item"><div class="rb-num green">${score}</div><div class="rb-label">correct</div></div>
+      <div class="rb-item"><div class="rb-num red">${wrong}</div><div class="rb-label">incorrect</div></div>
+      <div class="rb-item"><div class="rb-num cyan">${pct}%</div><div class="rb-label">score</div></div>
+    </div>
+    <button class="restart-btn" onclick="init()">Retake Quiz</button>`;
+}
+
+init();
+</script>
+</body>
+</html>
