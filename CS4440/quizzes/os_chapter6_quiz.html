@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chapter 6 Quiz – Synchronization Tools</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e0a;
+    --bg2: #0d120d;
+    --green: #33ff66;
+    --green-dim: #1a8c36;
+    --green-dark: #0d4a1d;
+    --green-faint: #0f1f12;
+    --amber: #ffb800;
+    --red: #ff4444;
+    --cyan: #00ffcc;
+    --white: #ccffcc;
+    --border: #1f4a2a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--green);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 15px;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* Scanlines */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background: repeating-linear-gradient(
+      0deg, transparent, transparent 2px,
+      rgba(0,0,0,0.18) 2px, rgba(0,0,0,0.18) 4px
+    );
+    pointer-events: none;
+    z-index: 100;
+  }
+
+  /* CRT flicker */
+  @keyframes flicker {
+    0%,100% { opacity: 1; }
+    92% { opacity: 1; }
+    93% { opacity: 0.92; }
+    94% { opacity: 1; }
+    96% { opacity: 0.96; }
+  }
+  body { animation: flicker 8s infinite; }
+
+  /* Cursor blink */
+  @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+  .cursor { display: inline-block; animation: blink 1s step-end infinite; }
+
+  /* ── HEADER ── */
+  .header {
+    background: var(--bg2);
+    border-bottom: 2px solid var(--green-dim);
+    padding: 1.5rem 2rem 1rem;
+    text-align: center;
+  }
+  .header .ascii-top {
+    font-family: 'VT323', monospace;
+    font-size: 0.75rem;
+    color: var(--green-dim);
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+    white-space: pre;
+  }
+  .header h1 {
+    font-family: 'VT323', monospace;
+    font-size: clamp(2rem, 6vw, 3.5rem);
+    color: var(--green);
+    text-shadow: 0 0 20px rgba(51,255,102,0.5);
+    letter-spacing: 0.1em;
+    line-height: 1.1;
+  }
+  .header .subtitle {
+    font-size: 0.8rem;
+    color: var(--green-dim);
+    margin-top: 0.4rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+
+  /* ── STATUS BAR ── */
+  .status-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--green-dark);
+    border-bottom: 1px solid var(--border);
+    padding: 0.4rem 2rem;
+    font-size: 0.78rem;
+    color: var(--green-dim);
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .status-bar .score-display { color: var(--amber); font-weight: bold; }
+
+  /* ── PROGRESS BAR ── */
+  .progress-wrap {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 0.5rem 2rem;
+  }
+  .progress-label {
+    font-size: 0.72rem;
+    color: var(--green-dim);
+    margin-bottom: 0.3rem;
+    display: flex;
+    justify-content: space-between;
+  }
+  .progress-track {
+    height: 6px;
+    background: var(--green-dark);
+    border-radius: 3px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--green);
+    box-shadow: 0 0 8px rgba(51,255,102,0.6);
+    transition: width 0.4s ease;
+    border-radius: 3px;
+  }
+
+  /* ── MAIN ── */
+  .container {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+  }
+
+  /* ── SCREEN: START ── */
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  .start-screen {
+    text-align: center;
+    padding: 3rem 1rem;
+  }
+  .start-screen .big-text {
+    font-family: 'VT323', monospace;
+    font-size: clamp(1.5rem, 5vw, 2.8rem);
+    color: var(--cyan);
+    text-shadow: 0 0 15px rgba(0,255,204,0.4);
+    margin-bottom: 1.5rem;
+    line-height: 1.3;
+  }
+  .start-screen .info-block {
+    background: var(--green-faint);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1.2rem;
+    margin: 1rem auto;
+    max-width: 500px;
+    text-align: left;
+  }
+  .start-screen .info-block p {
+    color: var(--white);
+    font-size: 0.85rem;
+    line-height: 1.6;
+    margin-bottom: 0.4rem;
+  }
+  .start-screen .info-block p:last-child { margin-bottom: 0; }
+  .prompt-line {
+    color: var(--green-dim);
+    font-size: 0.8rem;
+    margin: 1.5rem 0 0.5rem;
+  }
+
+  /* ── BUTTONS ── */
+  .btn {
+    display: inline-block;
+    background: transparent;
+    border: 2px solid var(--green);
+    color: var(--green);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 1rem;
+    padding: 0.6rem 2rem;
+    cursor: pointer;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    transition: all 0.15s;
+    border-radius: 2px;
+    text-shadow: 0 0 8px rgba(51,255,102,0.4);
+    box-shadow: 0 0 10px rgba(51,255,102,0.1);
+  }
+  .btn:hover {
+    background: var(--green);
+    color: var(--bg);
+    box-shadow: 0 0 20px rgba(51,255,102,0.4);
+    text-shadow: none;
+  }
+  .btn-amber {
+    border-color: var(--amber);
+    color: var(--amber);
+    text-shadow: 0 0 8px rgba(255,184,0,0.4);
+  }
+  .btn-amber:hover {
+    background: var(--amber);
+    color: var(--bg);
+    box-shadow: 0 0 20px rgba(255,184,0,0.4);
+  }
+  .btn-sm {
+    font-size: 0.8rem;
+    padding: 0.4rem 1.2rem;
+    letter-spacing: 0.1em;
+  }
+
+  /* ── QUESTION CARD ── */
+  .q-screen { display: none; }
+  .q-screen.active { display: block; }
+
+  .q-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+  .q-num {
+    font-family: 'VT323', monospace;
+    font-size: 1.5rem;
+    color: var(--cyan);
+    white-space: nowrap;
+  }
+  .q-tag {
+    font-size: 0.7rem;
+    color: var(--amber);
+    background: rgba(255,184,0,0.1);
+    border: 1px solid rgba(255,184,0,0.3);
+    padding: 0.15em 0.6em;
+    border-radius: 20px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .q-box {
+    background: var(--green-faint);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1.5rem;
+    margin-bottom: 1.2rem;
+  }
+  .q-box .q-text {
+    color: var(--white);
+    font-size: 1rem;
+    line-height: 1.65;
+    margin-bottom: 0.5rem;
+  }
+  .q-box .q-code {
+    background: #050a05;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 0.8rem 1rem;
+    margin-top: 0.8rem;
+    font-size: 0.82rem;
+    color: #a8d8a8;
+    line-height: 1.6;
+    overflow-x: auto;
+  }
+  .q-code .kw { color: #ffb800; }
+  .q-code .cm { color: #4a7a4a; font-style: italic; }
+  .q-code .st { color: #00ffcc; }
+  .q-code .err { color: #ff4444; font-weight: bold; }
+
+  /* ── OPTIONS ── */
+  .options { display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 1.2rem; }
+  .opt {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.8rem;
+    transition: all 0.12s;
+    color: var(--white);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    text-align: left;
+  }
+  .opt:hover:not(.disabled) {
+    border-color: var(--green);
+    background: var(--green-faint);
+    box-shadow: inset 0 0 8px rgba(51,255,102,0.05);
+  }
+  .opt .opt-key {
+    color: var(--green-dim);
+    font-weight: bold;
+    flex-shrink: 0;
+    min-width: 1.4rem;
+  }
+  .opt.correct {
+    border-color: var(--green);
+    background: rgba(51,255,102,0.08);
+    box-shadow: 0 0 12px rgba(51,255,102,0.15);
+  }
+  .opt.correct .opt-key { color: var(--green); }
+  .opt.wrong {
+    border-color: var(--red);
+    background: rgba(255,68,68,0.07);
+  }
+  .opt.wrong .opt-key { color: var(--red); }
+  .opt.disabled { cursor: default; }
+
+  /* ── FEEDBACK ── */
+  .feedback {
+    display: none;
+    border-radius: 4px;
+    padding: 1rem 1.2rem;
+    margin-bottom: 1rem;
+    font-size: 0.88rem;
+    line-height: 1.6;
+  }
+  .feedback.show { display: block; }
+  .feedback.correct-fb {
+    background: rgba(51,255,102,0.07);
+    border: 1px solid var(--green-dim);
+  }
+  .feedback.wrong-fb {
+    background: rgba(255,68,68,0.07);
+    border: 1px solid rgba(255,68,68,0.4);
+  }
+  .feedback .fb-title {
+    font-family: 'VT323', monospace;
+    font-size: 1.3rem;
+    margin-bottom: 0.4rem;
+  }
+  .feedback.correct-fb .fb-title { color: var(--green); }
+  .feedback.wrong-fb .fb-title { color: var(--red); }
+  .feedback .fb-body { color: var(--white); }
+  .feedback .fb-body code {
+    background: rgba(51,255,102,0.1);
+    color: var(--cyan);
+    padding: 0.1em 0.4em;
+    border-radius: 2px;
+    font-size: 0.9em;
+  }
+
+  /* ── NAV ── */
+  .q-nav { display: flex; justify-content: flex-end; gap: 0.8rem; }
+
+  /* ── RESULT SCREEN ── */
+  .result-screen { text-align: center; padding: 2rem 1rem; }
+  .result-screen .big-score {
+    font-family: 'VT323', monospace;
+    font-size: clamp(4rem, 12vw, 7rem);
+    line-height: 1;
+    margin: 1rem 0;
+    text-shadow: 0 0 30px currentColor;
+  }
+  .score-s { color: var(--green); }
+  .score-a { color: var(--cyan); }
+  .score-b { color: var(--amber); }
+  .score-c { color: #ff8800; }
+  .score-f { color: var(--red); }
+
+  .result-screen .grade-label {
+    font-family: 'VT323', monospace;
+    font-size: 1.8rem;
+    margin-bottom: 0.5rem;
+  }
+  .result-screen .grade-msg {
+    color: var(--white);
+    font-size: 0.9rem;
+    margin-bottom: 2rem;
+    line-height: 1.6;
+  }
+  .review-list {
+    text-align: left;
+    background: var(--green-faint);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1rem 1.2rem;
+    margin: 1rem 0 1.5rem;
+    max-height: 260px;
+    overflow-y: auto;
+  }
+  .review-list h3 {
+    font-size: 0.8rem;
+    color: var(--green-dim);
+    margin-bottom: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .review-item {
+    display: flex;
+    gap: 0.6rem;
+    align-items: flex-start;
+    margin-bottom: 0.5rem;
+    font-size: 0.82rem;
+    color: var(--white);
+    line-height: 1.4;
+  }
+  .review-item .ri-icon { flex-shrink: 0; width: 1.2rem; }
+  .review-item.ri-ok .ri-icon { color: var(--green); }
+  .review-item.ri-ng .ri-icon { color: var(--red); }
+
+  .result-btns { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--green-dark); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- STATUS BAR -->
+<div class="status-bar" id="statusBar" style="display:none;">
+  <span>OS-QUIZ &gt; CH06 &gt; SYNC_TOOLS<span class="cursor">_</span></span>
+  <span class="score-display" id="statusScore">SCORE: 0 / 0</span>
+  <span id="statusQ">Q 0 / 12</span>
+</div>
+
+<!-- PROGRESS -->
+<div class="progress-wrap" id="progressWrap" style="display:none;">
+  <div class="progress-label">
+    <span>PROGRESS</span>
+    <span id="pctLabel">0%</span>
+  </div>
+  <div class="progress-track">
+    <div class="progress-fill" id="progressFill" style="width:0%"></div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- ══════════ START SCREEN ══════════ -->
+  <div class="screen start-screen active" id="screenStart">
+    <div class="header" style="margin:-2rem -1.5rem 2rem; padding:2rem 1.5rem;">
+      <div class="ascii-top">▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄</div>
+      <h1>CHAPTER 6 QUIZ</h1>
+      <div class="subtitle">Synchronization Tools: Taming Concurrency</div>
+    </div>
+    <div class="big-text">SYSTEM BOOT...<span class="cursor">_</span></div>
+    <div class="info-block">
+      <p>▶ 問題数: <strong style="color:var(--amber)">12問</strong></p>
+      <p>▶ 範囲: Race Condition / Critical Section / Peterson's / Hardware / Mutex / Semaphore / Monitor / Liveness</p>
+      <p>▶ 即時フィードバックと解説あり</p>
+      <p>▶ 最後にスコア・復習リストを表示</p>
+    </div>
+    <div class="prompt-line">&gt; PRESS START TO INITIALIZE QUIZ MODULE<span class="cursor">_</span></div>
+    <button class="btn" onclick="startQuiz()">[ START ]</button>
+  </div>
+
+  <!-- ══════════ QUIZ SCREEN ══════════ -->
+  <div class="screen" id="screenQuiz">
+    <div id="questionContainer"></div>
+  </div>
+
+  <!-- ══════════ RESULT SCREEN ══════════ -->
+  <div class="screen" id="screenResult">
+    <div class="result-screen">
+      <div style="font-family:'VT323',monospace;font-size:1rem;color:var(--green-dim);letter-spacing:0.1em;">QUIZ COMPLETE — FINAL REPORT</div>
+      <div class="big-score" id="resultScore">0/12</div>
+      <div class="grade-label" id="resultGrade"></div>
+      <div class="grade-msg" id="resultMsg"></div>
+      <div class="review-list" id="reviewList"></div>
+      <div class="result-btns">
+        <button class="btn btn-amber" onclick="retryQuiz()">[ RETRY ]</button>
+        <button class="btn" onclick="backToStart()">[ MENU ]</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const questions = [
+  {
+    tag: "Race Condition",
+    text: "count = 5 の状態で Producer が count++ を、Consumer が count-- を同時に実行した場合、Race Condition が発生すると count の値としてあり得ないのはどれか？",
+    opts: ["4", "5", "6", "3"],
+    answer: 3,
+    explanation: "Race Condition が起きた場合、実行順序によって count は <code>4</code>（正解より-1）、<code>5</code>（正解・両操作が正しく完了）、<code>6</code>（正解より+1）のどれにもなり得る。<code>3</code> は count++ と count-- の組み合わせでは生じない値なので、これが「あり得ない」結果。"
+  },
+  {
+    tag: "Atomic Operation",
+    text: "count++ という操作が Race Condition を起こしやすい根本的な理由は何か？",
+    opts: [
+      "count++ は高レベル言語でしか使えないから",
+      "count++ は実際には3つの機械語命令（読み取り・加算・書き戻し）に展開され、途中で割り込まれる可能性があるから",
+      "count++ はオーバーフローを引き起こすことがあるから",
+      "count++ はコンパイラが最適化できないから"
+    ],
+    answer: 1,
+    explanation: "count++ は <code>register = count</code> → <code>register = register + 1</code> → <code>count = register</code> の3ステップ。CPU がこの途中でプロセスを切り替えると、別プロセスが古い値を読んでしまい結果が壊れる。これが Race Condition の本質。"
+  },
+  {
+    tag: "Critical Section",
+    text: "Critical Section Problem の有効な解が必ず満たすべき3条件を正しく述べているのはどれか？",
+    opts: [
+      "Mutual Exclusion・Progress・Bounded Waiting",
+      "Atomicity・Consistency・Isolation",
+      "Fairness・Efficiency・Safety",
+      "Deadlock Freedom・Starvation Freedom・Liveness"
+    ],
+    answer: 0,
+    explanation: "<strong>Mutual Exclusion</strong>（相互排除：同時に1プロセスのみ CS に入れる）、<strong>Progress</strong>（CS が空いているとき選択を無限延期しない）、<strong>Bounded Waiting</strong>（待機回数に上限がある）の3条件が必須。"
+  },
+  {
+    tag: "Critical Section",
+    text: "Critical Section において「Bounded Waiting（有界待機）」が保証することはどれか？",
+    opts: [
+      "プロセスが critical section に入る時間に上限がある",
+      "あるプロセスが要求を出してから許可されるまでに、他プロセスが割り込める回数に上限がある",
+      "critical section 内でのメモリアクセス回数に上限がある",
+      "同時に待機できるプロセス数に上限がある"
+    ],
+    answer: 1,
+    explanation: "Bounded Waiting は <strong>Starvation（飢餓状態）</strong>を防ぐための条件。あるプロセスが何度も後回しにされ続ける（無限に待たされる）ことがないよう、割り込みの回数に有限の上限を設ける。"
+  },
+  {
+    tag: "Peterson's Solution",
+    text: "Peterson's Solution で使われる2つの共有変数の役割として正しいものはどれか？",
+    opts: [
+      "lock はロック状態、queue は待機キュー",
+      "turn は誰のターンかを示し、flag[i] はプロセス i が CS に入る準備ができたことを示す",
+      "turn はタイムスタンプ、flag はプロセスの優先度",
+      "counter はリソース数、flag はブロック状態"
+    ],
+    answer: 1,
+    explanation: "<code>int turn</code> は「どちらのプロセスが CS に入れるか」を示す。<code>boolean flag[2]</code> は各プロセスの「入る意志」を示す。Pᵢ は <code>flag[i]=true; turn=j;</code> とすることで「入りたいが、競合したら相手を優先する」と宣言する。これが Mutual Exclusion の鍵。"
+  },
+  {
+    tag: "Hardware",
+    text: "現代のプロセッサやコンパイラが命令をリオーダー（並べ替え）することで、Peterson's Solution が壊れる可能性がある。以下のコードで何が問題になるか？\n\n// Thread 2\nflag[i] = true;\nturn = j;",
+    opts: [
+      "flag と turn の型が違うためコンパイルエラーになる",
+      "リオーダーにより turn=j が先に実行され、flag[i]=true が後になると、両プロセスが同時に CS に入れてしまう可能性がある",
+      "turn=j の代入が不正な値を設定する",
+      "flag 配列のインデックスが範囲外になる"
+    ],
+    answer: 1,
+    explanation: "CPU/コンパイラがデータ依存のない命令を並べ替えると、<code>turn=j</code> が <code>flag[i]=true</code> より先に実行される場合がある。この場合、もう一方のプロセスが条件チェック時に <code>flag[i]=false</code> と <code>turn=j</code> を見て CS に入ってしまい、Mutual Exclusion が破れる。"
+  },
+  {
+    tag: "Hardware",
+    text: "test_and_set(&lock) がロックの取得に成功する（= Critical Section に入れる）のは、この関数がどの値を返したときか？",
+    opts: [
+      "true（ロックが既にセットされていたとき）",
+      "false（ロックが解放されていたとき）",
+      "null（ロックが存在しなかったとき）",
+      "1（ロックのカウントが増えたとき）"
+    ],
+    answer: 1,
+    explanation: "<code>test_and_set()</code> は元の値を返しながら lock を <code>true</code> にセットする。元の値が <code>false</code>（ロック未取得）なら、その呼び出し元だけが lock を <code>true</code> にでき、CS に入れる。<code>true</code> が返ってくるなら他が保持中 → spin（待機）。"
+  },
+  {
+    tag: "Hardware",
+    text: "compare_and_swap(&lock, 0, 1) が「スワップに成功」するのはどのような条件か？",
+    opts: [
+      "*lock が 1 のとき（ロック中のとき）",
+      "*lock が 0（expected と一致）のとき",
+      "常にスワップする",
+      "lock が NULL のとき"
+    ],
+    answer: 1,
+    explanation: "CAS は <code>*lock == expected（=0）</code> のときだけ <code>*lock = new_value（=1）</code> に書き換える。lock=0 はアンロック状態なので、スワップ成功 = 誰も保持していない = CS に入れる。既に lock=1 なら不一致でスワップされず、spin 待機する。"
+  },
+  {
+    tag: "Mutex / Spinlock",
+    text: "Spinlock（Busy Waiting）は、どのような状況では Blocking Mutex よりも効率が良いか？",
+    opts: [
+      "シングルコアのシステムで短時間待つ場合",
+      "ロック保持時間がコンテキストスイッチ2回分のオーバーヘッドより短い、マルチコアシステム",
+      "プロセスが長時間 critical section を保持する場合",
+      "メモリが少ないシステムで常に有効"
+    ],
+    answer: 1,
+    explanation: "ブロック（スリープ）には「スリープ時」と「起床時」の2回のコンテキストスイッチコストがかかる。ロック待ち時間がこのコストより短ければ、CPU でスピンした方が速い。マルチコアでは、あるコアがスピンしながら待つ間、別コアが CS の処理を進められるので特に有効。シングルコアには不適（スピン中は他のコアが CS を進めようがない）。"
+  },
+  {
+    tag: "Semaphore",
+    text: "Semaphore S=3 で3つのリソースを管理している。P1, P2, P3 が wait(S) を呼んだ後、P4 が wait(S) を呼んだ。この時点での S の値と P4 の状態はどうなるか？",
+    opts: [
+      "S=0, P4 は正常に CS に入る",
+      "S=-1, P4 はブロックされる（または S=0 で P4 がブロック）",
+      "S=3 のまま、P4 は拒否される",
+      "S=1, P4 は待機キューに入らずスピンする"
+    ],
+    answer: 1,
+    explanation: "P1,P2,P3 が <code>wait()</code> を呼ぶと S は 3→2→1→0 と減る。P4 が <code>wait(S)</code> を呼んだとき S=0 ≤ 0 なので P4 はブロックされ待機キューへ。実装によって S が -1 になる場合と 0 のままの場合がある。P1 が <code>signal(S)</code> を呼ぶとP4がunblockされる。"
+  },
+  {
+    tag: "Monitor",
+    text: "Monitor が Semaphore より「安全」とされる主な理由はどれか？",
+    opts: [
+      "Monitor はハードウェア命令を直接使うためより高速だから",
+      "Monitor は Mutual Exclusion をコンパイラが自動的に強制するため、プログラマが wait()/signal() を手動で管理する必要がないから",
+      "Monitor は Deadlock が起きても自動で回復するから",
+      "Monitor は複数のプロセスが同時に critical section に入ることを許可するから"
+    ],
+    answer: 1,
+    explanation: "Semaphore のバグ（順序の誤り・signal と wait の混同・省略）はプログラマのミスに起因し、Deadlock や Mutual Exclusion 違反を引き起こす。Monitor はコンパイラが排他制御を組み込むため、プログラマが <code>wait()</code>/<code>signal()</code> を明示的に呼ぶ必要がなく、ミスが入り込みにくい。"
+  },
+  {
+    tag: "Liveness",
+    text: "1997年 Mars Pathfinder の Sojourner 探査機で発生した問題の解決策として正しいものはどれか？",
+    opts: [
+      "高優先度タスクを削除して全タスクを同じ優先度にした",
+      "Priority Inheritance Protocol を有効にし、ロックを保持する低優先度タスクが一時的に高優先度タスクの優先度を引き継ぐようにした",
+      "Semaphore を Mutex に置き換えた",
+      "Critical Section の長さを短くするようコードを書き直した"
+    ],
+    answer: 1,
+    explanation: "これは <strong>Priority Inversion</strong>（優先度逆転）の実例。高優先度の bc_dist が、低優先度の ASI/MET が保持する mutex を待つ間、中優先度タスクに preempt され続けた。VxWorks RTOS の <strong>Priority Inheritance Protocol</strong> フラグを地球からコマンドで有効化。ロック保持中の低優先度タスクが高優先度を一時的に引き継ぎ、中優先度タスクに preempt されなくなった。"
+  }
+];
+
+let current = 0;
+let score = 0;
+let answered = [];
+let results = [];
+
+function startQuiz() {
+  current = 0; score = 0;
+  answered = new Array(questions.length).fill(false);
+  results = new Array(questions.length).fill(null);
+  document.getElementById('screenStart').classList.remove('active');
+  document.getElementById('screenQuiz').classList.add('active');
+  document.getElementById('statusBar').style.display = 'flex';
+  document.getElementById('progressWrap').style.display = 'block';
+  showQuestion(0);
+}
+
+function showQuestion(idx) {
+  const q = questions[idx];
+  updateStatus();
+  const container = document.getElementById('questionContainer');
+
+  const optsHtml = q.opts.map((o, i) => {
+    const keys = ['A','B','C','D'];
+    return `<button class="opt" id="opt_${i}" onclick="selectAnswer(${i})">
+      <span class="opt-key">${keys[i]}.</span>
+      <span>${o}</span>
+    </button>`;
+  }).join('');
+
+  // Check if text has a code block embedded (detect newline)
+  let qBody = '';
+  if (q.text.includes('\n')) {
+    const parts = q.text.split('\n\n');
+    qBody = `<div class="q-text">${parts[0]}</div>`;
+    if (parts[1]) qBody += `<div class="q-code">${parts.slice(1).join('\n\n').replace(/\n/g,'<br>')}</div>`;
+  } else {
+    qBody = `<div class="q-text">${q.text}</div>`;
+  }
+
+  container.innerHTML = `
+    <div class="q-header">
+      <div class="q-num">Q${String(idx+1).padStart(2,'0')} / ${questions.length}</div>
+      <div class="q-tag">${q.tag}</div>
+    </div>
+    <div class="q-box">${qBody}</div>
+    <div class="options" id="optList">${optsHtml}</div>
+    <div class="feedback" id="feedback"></div>
+    <div class="q-nav" id="qnav" style="display:none;">
+      ${idx < questions.length-1
+        ? `<button class="btn btn-sm" onclick="nextQuestion()">[ NEXT &gt; ]</button>`
+        : `<button class="btn btn-sm btn-amber" onclick="showResult()">[ FINISH ]</button>`}
+    </div>`;
+
+  // Restore state if already answered
+  if (answered[idx]) {
+    const sel = results[idx];
+    showFeedbackState(idx, sel);
+  }
+}
+
+function selectAnswer(sel) {
+  const idx = current;
+  if (answered[idx]) return;
+  answered[idx] = true;
+  results[idx] = sel;
+
+  const correct = sel === questions[idx].answer;
+  if (correct) score++;
+
+  showFeedbackState(idx, sel);
+  updateStatus();
+}
+
+function showFeedbackState(idx, sel) {
+  const q = questions[idx];
+  const correct = sel === q.answer;
+  const opts = document.querySelectorAll('.opt');
+  opts.forEach((o, i) => {
+    o.classList.add('disabled');
+    if (i === q.answer) o.classList.add('correct');
+    else if (i === sel && !correct) o.classList.add('wrong');
+  });
+
+  const fb = document.getElementById('feedback');
+  fb.className = `feedback show ${correct ? 'correct-fb' : 'wrong-fb'}`;
+  fb.innerHTML = `
+    <div class="fb-title">${correct ? '✓ CORRECT' : '✗ INCORRECT'}</div>
+    <div class="fb-body">${q.explanation}</div>`;
+
+  document.getElementById('qnav').style.display = 'flex';
+}
+
+function nextQuestion() {
+  current++;
+  if (current < questions.length) showQuestion(current);
+}
+
+function updateStatus() {
+  const done = answered.filter(Boolean).length;
+  const pct = Math.round((done / questions.length) * 100);
+  document.getElementById('statusScore').textContent = `SCORE: ${score} / ${done}`;
+  document.getElementById('statusQ').textContent = `Q ${current+1} / ${questions.length}`;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('pctLabel').textContent = pct + '%';
+}
+
+function showResult() {
+  document.getElementById('screenQuiz').classList.remove('active');
+  document.getElementById('screenResult').classList.add('active');
+
+  const pct = Math.round((score / questions.length) * 100);
+  const scoreEl = document.getElementById('resultScore');
+  const gradeEl = document.getElementById('resultGrade');
+  const msgEl = document.getElementById('resultMsg');
+
+  scoreEl.textContent = `${score}/${questions.length}`;
+
+  let grade, cls, msg;
+  if (pct >= 92) { grade='S'; cls='score-s'; msg='完璧！同期ツールを完全に習得しました。'; }
+  else if (pct >= 83) { grade='A'; cls='score-a'; msg='素晴らしい！Race Condition から Monitor まで理解できています。'; }
+  else if (pct >= 67) { grade='B'; cls='score-b'; msg='良好です。いくつかの概念を復習しましょう。'; }
+  else if (pct >= 50) { grade='C'; cls='score-c'; msg='基礎は押さえられています。ハードウェア命令と Semaphore を中心に復習を。'; }
+  else { grade='F'; cls='score-f'; msg='もう一度ノートを確認して再挑戦しましょう！'; }
+
+  scoreEl.className = `big-score ${cls}`;
+  gradeEl.textContent = `GRADE: ${grade}  (${pct}%)`;
+  gradeEl.style.color = `var(--${cls.replace('score-','')})`;
+  msgEl.textContent = msg;
+
+  // Review list
+  const reviewEl = document.getElementById('reviewList');
+  let reviewHtml = '<h3>▶ 問題別結果</h3>';
+  questions.forEach((q, i) => {
+    const ok = results[i] === q.answer;
+    reviewHtml += `<div class="review-item ${ok?'ri-ok':'ri-ng'}">
+      <span class="ri-icon">${ok?'✓':'✗'}</span>
+      <span>Q${i+1} [${q.tag}] ${q.text.split('\n')[0].slice(0,55)}…</span>
+    </div>`;
+  });
+  reviewEl.innerHTML = reviewHtml;
+
+  document.getElementById('statusScore').textContent = `SCORE: ${score} / ${questions.length}`;
+  document.getElementById('progressFill').style.width = '100%';
+  document.getElementById('pctLabel').textContent = '100%';
+}
+
+function retryQuiz() {
+  document.getElementById('screenResult').classList.remove('active');
+  startQuiz();
+}
+
+function backToStart() {
+  document.getElementById('screenResult').classList.remove('active');
+  document.getElementById('statusBar').style.display = 'none';
+  document.getElementById('progressWrap').style.display = 'none';
+  document.getElementById('screenStart').classList.add('active');
+}
+</script>
+</body>
+</html>
