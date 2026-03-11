@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Control Flow — CS3035 Notes</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f0ede8;
+    --paper: #faf8f5;
+    --surface: #ffffff;
+    --border: #ddd8cf;
+    --text: #1c1917;
+    --muted: #78716c;
+    --ink: #292524;
+
+    --blue: #1d4ed8;
+    --blue-soft: #eff6ff;
+    --blue-border: #bfdbfe;
+
+    --amber: #b45309;
+    --amber-soft: #fffbeb;
+    --amber-border: #fde68a;
+
+    --rose: #be123c;
+    --rose-soft: #fff1f2;
+    --rose-border: #fecdd3;
+
+    --emerald: #065f46;
+    --emerald-soft: #ecfdf5;
+    --emerald-border: #a7f3d0;
+
+    --violet: #5b21b6;
+    --violet-soft: #f5f3ff;
+    --violet-border: #ddd6fe;
+
+    --code-bg: #1e1b18;
+    --code-text: #e7e5e4;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Outfit', sans-serif;
+    font-weight: 400;
+    line-height: 1.7;
+  }
+
+  /* ── Decorative top bar ── */
+  .topbar {
+    height: 6px;
+    background: repeating-linear-gradient(
+      90deg,
+      #1d4ed8 0px, #1d4ed8 60px,
+      #b45309 60px, #b45309 120px,
+      #be123c 120px, #be123c 180px,
+      #065f46 180px, #065f46 240px,
+      #5b21b6 240px, #5b21b6 300px
+    );
+  }
+
+  /* ── Header ── */
+  header {
+    background: var(--paper);
+    border-bottom: 1px solid var(--border);
+    padding: 3rem 2rem 2.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  header::before {
+    content: '';
+    position: absolute;
+    right: -60px; top: -60px;
+    width: 320px; height: 320px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(29,78,216,0.07) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .header-inner {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .eyebrow {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--blue);
+    margin-bottom: 0.6rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .eyebrow::before {
+    content: '';
+    display: inline-block;
+    width: 20px; height: 2px;
+    background: var(--blue);
+  }
+
+  header h1 {
+    font-family: 'Instrument Serif', Georgia, serif;
+    font-size: clamp(2.2rem, 5vw, 3.4rem);
+    font-weight: 400;
+    line-height: 1.1;
+    color: var(--ink);
+    letter-spacing: -0.02em;
+  }
+
+  header h1 em {
+    font-style: italic;
+    color: var(--blue);
+  }
+
+  .header-meta {
+    margin-top: 0.8rem;
+    font-size: 0.9rem;
+    color: var(--muted);
+  }
+
+  /* ── TOC ── */
+  .toc-wrap {
+    background: var(--paper);
+    border-bottom: 1px solid var(--border);
+    padding: 1.5rem 2rem;
+  }
+
+  .toc-inner {
+    max-width: 900px;
+    margin: 0 auto;
+    display: flex;
+    gap: 2rem;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .toc-label {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    padding-top: 0.15rem;
+    white-space: nowrap;
+  }
+
+  .toc-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .toc-links a {
+    font-size: 0.82rem;
+    color: var(--ink);
+    text-decoration: none;
+    background: var(--border);
+    padding: 0.25em 0.75em;
+    border-radius: 999px;
+    transition: background 0.15s, color 0.15s;
+  }
+
+  .toc-links a:hover {
+    background: var(--blue);
+    color: #fff;
+  }
+
+  /* ── Main ── */
+  main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 3rem 2rem 6rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  /* ── Section card ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    animation: rise 0.4s ease both;
+  }
+
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .card:nth-child(1) { animation-delay: 0.05s; }
+  .card:nth-child(2) { animation-delay: 0.1s; }
+  .card:nth-child(3) { animation-delay: 0.15s; }
+  .card:nth-child(4) { animation-delay: 0.2s; }
+  .card:nth-child(5) { animation-delay: 0.25s; }
+  .card:nth-child(6) { animation-delay: 0.3s; }
+  .card:nth-child(7) { animation-delay: 0.35s; }
+  .card:nth-child(8) { animation-delay: 0.4s; }
+  .card:nth-child(9) { animation-delay: 0.45s; }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.3rem 1.8rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .card-num {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.68rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.2em 0.6em;
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+
+  .card-title {
+    font-family: 'Instrument Serif', Georgia, serif;
+    font-size: 1.4rem;
+    font-weight: 400;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+
+  .card-body {
+    padding: 1.6rem 1.8rem;
+  }
+
+  p { margin-bottom: 0.8rem; font-size: 1rem; }
+  p:last-child { margin-bottom: 0; }
+
+  ul, ol {
+    padding-left: 1.5rem;
+    margin-bottom: 0.8rem;
+  }
+
+  li { margin-bottom: 0.35rem; font-size: 0.98rem; }
+
+  strong { font-weight: 600; }
+
+  /* ── Code block ── */
+  pre {
+    background: var(--code-bg);
+    color: var(--code-text);
+    border-radius: 10px;
+    padding: 1.2rem 1.5rem;
+    margin: 1rem 0;
+    overflow-x: auto;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.83rem;
+    line-height: 1.8;
+    position: relative;
+  }
+
+  pre[data-lang]::after {
+    content: attr(data-lang);
+    position: absolute;
+    top: 0.6rem; right: 0.9rem;
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #78716c;
+  }
+
+  .kw  { color: #93c5fd; }
+  .fn  { color: #86efac; }
+  .str { color: #fde68a; }
+  .cm  { color: #57534e; font-style: italic; }
+  .num { color: #f9a8d4; }
+  .op  { color: #fb923c; }
+
+  /* ── Inline code ── */
+  code {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.85em;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 0.1em 0.4em;
+    color: var(--blue);
+  }
+
+  /* ── Callout boxes ── */
+  .callout {
+    border-radius: 10px;
+    padding: 1rem 1.2rem;
+    margin: 1rem 0;
+    font-size: 0.96rem;
+    line-height: 1.6;
+  }
+
+  .callout-blue   { background: var(--blue-soft);    border-left: 3px solid var(--blue);    color: #1e3a8a; }
+  .callout-amber  { background: var(--amber-soft);   border-left: 3px solid var(--amber);   color: #78350f; }
+  .callout-rose   { background: var(--rose-soft);    border-left: 3px solid var(--rose);    color: #9f1239; }
+  .callout-emerald{ background: var(--emerald-soft); border-left: 3px solid var(--emerald); color: #064e3b; }
+  .callout-violet { background: var(--violet-soft);  border-left: 3px solid var(--violet);  color: #4c1d95; }
+
+  .callout strong { display: block; margin-bottom: 0.3rem; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em; }
+
+  /* ── Table ── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.93rem;
+    margin: 1rem 0;
+  }
+
+  th {
+    background: var(--bg);
+    padding: 0.7rem 1rem;
+    text-align: left;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    border-bottom: 2px solid var(--border);
+  }
+
+  td {
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--bg); }
+
+  /* ── Two columns ── */
+  .cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin: 1rem 0;
+  }
+
+  .col-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem 1.2rem;
+  }
+
+  .col-card h4 {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-bottom: 0.6rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .col-card ul { padding-left: 1.2rem; }
+  .col-card li { font-size: 0.92rem; }
+
+  /* ── Precedence ladder ── */
+  .ladder {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin: 1rem 0;
+  }
+
+  .ladder-row {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+  }
+
+  .ladder-badge {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.75rem;
+    padding: 0.35em 0.85em;
+    border-radius: 6px;
+    font-weight: 500;
+    min-width: 110px;
+    text-align: center;
+  }
+
+  .ladder-arrow {
+    font-size: 1.2rem;
+    color: var(--muted);
+  }
+
+  .badge-high   { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+  .badge-mid    { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
+  .badge-low    { background: #f3e8ff; color: #6d28d9; border: 1px solid #ddd6fe; }
+  .badge-lowest { background: #fce7f3; color: #9d174d; border: 1px solid #fbcfe8; }
+
+  /* ── output box ── */
+  .output {
+    background: #111827;
+    color: #86efac;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.82rem;
+    border-radius: 8px;
+    padding: 0.9rem 1.2rem;
+    margin: 0.8rem 0;
+    border: 1px solid #1f2937;
+  }
+
+  .output::before {
+    content: '$ output';
+    display: block;
+    color: #4b5563;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 0.4rem;
+  }
+
+  @media(max-width:600px) {
+    .cols { grid-template-columns: 1fr; }
+    main { padding: 1.5rem 1rem 5rem; }
+    .card-body { padding: 1.2rem; }
+    .card-header { padding: 1rem 1.2rem; }
+  }
+
+  /* ── Section color accents via border-top ── */
+  .accent-blue   { border-top: 3px solid var(--blue); }
+  .accent-amber  { border-top: 3px solid var(--amber); }
+  .accent-rose   { border-top: 3px solid var(--rose); }
+  .accent-emerald{ border-top: 3px solid var(--emerald); }
+  .accent-violet { border-top: 3px solid var(--violet); }
+</style>
+</head>
+<body>
+
+<div class="topbar"></div>
+
+<header>
+  <div class="header-inner">
+    <div class="eyebrow">CS3035 · Programming Paradigms</div>
+    <h1>Control <em>Flow</em></h1>
+    <div class="header-meta">Chengyu Sun &nbsp;·&nbsp; California State University, Los Angeles &nbsp;·&nbsp; Textbook Chapter 5</div>
+  </div>
+</header>
+
+<div class="toc-wrap">
+  <div class="toc-inner">
+    <span class="toc-label">Contents</span>
+    <div class="toc-links">
+      <a href="#operators">Operators</a>
+      <a href="#precedence">Precedence</a>
+      <a href="#associativity">Associativity</a>
+      <a href="#short-circuit">Short Circuiting</a>
+      <a href="#compound">Compound Assignment</a>
+      <a href="#structured">Structured Control</a>
+      <a href="#unstructured">GOTO</a>
+      <a href="#exceptions">Exceptions</a>
+      <a href="#best">Best Practices</a>
+    </div>
+  </div>
+</div>
+
+<main>
+
+  <!-- 1. Operators & Arity -->
+  <div class="card accent-blue" id="operators">
+    <div class="card-header">
+      <span class="card-num">01</span>
+      <span class="card-title">Operators & Arity</span>
+    </div>
+    <div class="card-body">
+      <p><strong>Arity</strong> refers to how many operands an operator takes.</p>
+
+      <table>
+        <thead><tr><th>Arity</th><th>Description</th><th>Examples</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Unary</strong></td><td>Takes one operand</td><td><code>not x</code>, <code>-x</code> (note: <code>++</code> does NOT exist in Python)</td></tr>
+          <tr><td><strong>Binary</strong></td><td>Takes two operands</td><td><code>+</code>, <code>-</code>, <code>*</code>, <code>/</code></td></tr>
+          <tr><td><strong>Ternary</strong></td><td>Takes three operands</td><td>The conditional operator</td></tr>
+        </tbody>
+      </table>
+
+      <p>Python's ternary (conditional) operator differs from Java's <code>?:</code> syntax:</p>
+
+      <div class="cols">
+        <div class="col-card">
+          <h4>Java</h4>
+          <pre style="margin:0; border-radius:6px; padding:0.8rem 1rem;"><code>x = a + b > 10 <span class="op">?</span> 1 <span class="op">:</span> -1;</code></pre>
+        </div>
+        <div class="col-card">
+          <h4>Python</h4>
+          <pre style="margin:0; border-radius:6px; padding:0.8rem 1rem;"><code>x = 1 <span class="kw">if</span> a + b > 10 <span class="kw">else</span> -1</code></pre>
+        </div>
+      </div>
+
+      <div class="callout callout-blue">
+        <strong>🧠 Try it</strong>
+        Given <code>a = 10; b = 20</code>, trace through:
+        <pre style="margin-top:0.7rem; border-radius:8px; padding:0.9rem 1.1rem;" data-lang="python"><code>x = y = <span class="num">100</span> + a * b <span class="kw">if not</span> (a + b &lt; <span class="num">100</span>) <span class="kw">else</span> a * b - <span class="num">100</span>
+x += y
+<span class="fn">print</span>(x)</code></pre>
+        Step-by-step: <code>a + b = 30</code>, so <code>not (30 &lt; 100)</code> = <code>not True</code> = <code>False</code> → takes the <code>else</code> branch → <code>a * b - 100 = 200 - 100 = 100</code>. So <code>x = y = 100</code>, then <code>x += y</code> → <code>x = 200</code>.
+        <div class="output">200</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Precedence -->
+  <div class="card accent-amber" id="precedence">
+    <div class="card-header">
+      <span class="card-num">02</span>
+      <span class="card-title">Precedence</span>
+    </div>
+    <div class="card-body">
+      <p>Precedence determines <strong>which operator is evaluated first</strong> when multiple operators appear in an expression.</p>
+
+      <div class="ladder">
+        <div class="ladder-row">
+          <span class="ladder-badge badge-high">Unary</span>
+          <span class="ladder-arrow">↓ higher priority</span>
+        </div>
+        <div class="ladder-row">
+          <span class="ladder-badge badge-mid">Arithmetic</span>
+        </div>
+        <div class="ladder-row">
+          <span class="ladder-badge badge-mid">Comparison</span>
+        </div>
+        <div class="ladder-row">
+          <span class="ladder-badge badge-low">Logical</span>
+        </div>
+        <div class="ladder-row">
+          <span class="ladder-badge badge-lowest">Ternary</span>
+          <span class="ladder-arrow">↓ lower priority</span>
+        </div>
+      </div>
+
+      <p>So in <code>x = a + b > 10 ? 1 : -1</code>, <code>+</code> (arithmetic) runs before <code>></code> (comparison) which runs before <code>?:</code> (ternary).</p>
+
+      <div class="callout callout-amber">
+        <strong>💡 Rule of thumb</strong>
+        When in doubt, use <strong>parentheses</strong> to make the evaluation order explicit and your code more readable.
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Associativity -->
+  <div class="card accent-rose" id="associativity">
+    <div class="card-header">
+      <span class="card-num">03</span>
+      <span class="card-title">Associativity</span>
+    </div>
+    <div class="card-body">
+      <p>When operators have the <strong>same precedence</strong>, associativity determines evaluation order.</p>
+
+      <div class="cols">
+        <div class="col-card">
+          <h4>Left-associative (most operators)</h4>
+          <ul>
+            <li>Evaluated left → right</li>
+            <li><code>10 - 5 - 2</code> = <code>(10 - 5) - 2</code> = <code>3</code></li>
+          </ul>
+        </div>
+        <div class="col-card">
+          <h4>Right-associative (Python)</h4>
+          <ul>
+            <li><code>=</code> assignment</li>
+            <li><code>**</code> exponentiation</li>
+            <li>Evaluated right → left</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="callout callout-rose">
+        <strong>🔍 Trace this</strong>
+        <pre style="margin-top:0.6rem; border-radius:8px; padding:0.9rem 1.1rem;" data-lang="python"><code>x = <span class="num">10</span>
+y = x = <span class="num">10</span> - <span class="num">5</span> - <span class="num">2</span></code></pre>
+        <p style="margin-top:0.6rem;">Assignment <code>=</code> is <strong>right-associative</strong>. The RHS <code>10 - 5 - 2</code> is left-associative → evaluates to <code>3</code>. Then <code>x = 3</code>, then <code>y = x</code> = <code>3</code>.</p>
+        <div class="output">x = 3, y = 3</div>
+      </div>
+
+      <h4 style="margin: 1rem 0 0.5rem; font-size:1.05rem; font-weight:600;">Non-Associative operators</h4>
+      <p>Some operators can't be chained — they're <strong>non-associative</strong>:</p>
+      <div class="cols">
+        <div class="col-card">
+          <h4>Java — Error!</h4>
+          <pre style="margin:0; border-radius:6px; padding:0.8rem 1rem;"><code>a < b < c  <span class="cm">// TypeError</span></code></pre>
+        </div>
+        <div class="col-card">
+          <h4>Python — Valid!</h4>
+          <pre style="margin:0; border-radius:6px; padding:0.8rem 1rem;"><code>a < b < c
+<span class="cm"># means: a < b and b < c</span></code></pre>
+        </div>
+      </div>
+      <p>Python supports <strong>chained comparisons</strong> natively — a uniquely Python-friendly feature.</p>
+    </div>
+  </div>
+
+  <!-- 4. Short Circuiting -->
+  <div class="card accent-emerald" id="short-circuit">
+    <div class="card-header">
+      <span class="card-num">04</span>
+      <span class="card-title">Short Circuiting</span>
+    </div>
+    <div class="card-body">
+      <p>Short circuiting is a compiler/interpreter optimization where <strong>evaluation of a boolean expression stops as soon as the final result is determined</strong>.</p>
+
+      <table>
+        <thead><tr><th>Expression</th><th>Stops early when…</th></tr></thead>
+        <tbody>
+          <tr><td><code>A and B</code></td><td>A is <strong>False</strong> — B is never evaluated</td></tr>
+          <tr><td><code>A or B</code></td><td>A is <strong>True</strong> — B is never evaluated</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout callout-emerald">
+        <strong>🛡️ The Guard Pattern</strong>
+        Short circuiting enables a safe access pattern — check for <code>None</code> before accessing attributes:
+        <pre style="margin-top:0.7rem; border-radius:8px; padding:0.9rem 1.1rem;" data-lang="python"><code><span class="kw">if</span> obj <span class="kw">is not</span> <span class="kw">None</span> <span class="kw">and</span> obj.value > <span class="num">0</span>:
+    <span class="fn">print</span>(obj.value)
+<span class="cm"># If obj is None, obj.value is never accessed — no crash!</span></code></pre>
+      </div>
+
+      <div class="callout callout-blue">
+        <strong>🧠 Trace this</strong>
+        <pre style="margin-top:0.6rem; border-radius:8px; padding:0.9rem 1.1rem;" data-lang="python"><code><span class="kw">def</span> <span class="fn">foo</span>(x):
+    <span class="fn">print</span>(x)
+    <span class="kw">return</span> x * x
+
+x = <span class="num">5</span>
+<span class="kw">if</span> x > <span class="num">10</span> <span class="kw">and</span> <span class="fn">foo</span>(x) < <span class="num">1000</span>:
+    <span class="fn">print</span>(x)</code></pre>
+        <p style="margin-top:0.6rem;"><code>x > 10</code> is <code>5 > 10</code> = <strong>False</strong>. Because of short circuiting, <code>foo(x)</code> is <strong>never called</strong>. Nothing is printed.</p>
+        <div class="output">(no output)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. Compound Assignment -->
+  <div class="card accent-violet" id="compound">
+    <div class="card-header">
+      <span class="card-num">05</span>
+      <span class="card-title">Compound Assignment</span>
+    </div>
+    <div class="card-body">
+      <p>Compound assignment (<code>+=</code>, <code>-=</code>, etc.) is <strong>not always equivalent</strong> to the expanded form.</p>
+
+      <table>
+        <thead><tr><th>Form</th><th>How many times x is evaluated</th></tr></thead>
+        <tbody>
+          <tr><td><code>x += 1</code></td><td><strong>Once</strong> — more efficient</td></tr>
+          <tr><td><code>x = x + 1</code></td><td><strong>Twice</strong> — x appears on both sides</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout callout-violet">
+        <strong>⚠️ Tricky Example</strong>
+        <pre style="margin-top:0.7rem; border-radius:8px; padding:0.9rem 1.1rem;" data-lang="python"><code><span class="kw">def</span> <span class="fn">foo</span>(values):
+    values.<span class="fn">append</span>(<span class="num">0</span>)
+    <span class="kw">return</span> values
+
+mylist = []
+<span class="fn">foo</span>(mylist)[<span class="num">0</span>] += <span class="num">1</span>          <span class="cm"># foo() called ONCE</span>
+<span class="fn">foo</span>(mylist)[<span class="num">0</span>] = <span class="fn">foo</span>(mylist)[<span class="num">0</span>] + <span class="num">1</span>  <span class="cm"># foo() called TWICE → two 0s appended!</span></code></pre>
+        <p style="margin-top:0.6rem;">The second form calls <code>foo()</code> twice, so the list gets two zeros appended before any increment happens. The results differ!</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. Structured Control -->
+  <div class="card accent-blue" id="structured">
+    <div class="card-header">
+      <span class="card-num">06</span>
+      <span class="card-title">Structured Control Statements</span>
+    </div>
+    <div class="card-body">
+      <div class="cols">
+        <div class="col-card">
+          <h4>🔀 Conditional (Branch)</h4>
+          <ul>
+            <li><code>if</code> / <code>elif</code> / <code>else</code></li>
+            <li><code>switch</code> / <code>match</code></li>
+          </ul>
+        </div>
+        <div class="col-card">
+          <h4>🔁 Repetition (Loop)</h4>
+          <ul>
+            <li><code>for</code></li>
+            <li><code>while</code></li>
+            <li><code>do-while</code> (not in Python)</li>
+            <li><code>break</code>, <code>continue</code>, <code>return</code></li>
+          </ul>
+        </div>
+      </div>
+      <div class="callout callout-amber">
+        <strong>💡 Key idea</strong>
+        Structured control statements are predictable and readable — they have a clear entry point and exit point. This is why they replaced <code>goto</code>.
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. GOTO -->
+  <div class="card accent-rose" id="unstructured">
+    <div class="card-header">
+      <span class="card-num">07</span>
+      <span class="card-title">Unstructured Control — GOTO</span>
+    </div>
+    <div class="card-body">
+      <p>The <strong>GOTO statement</strong> jumps execution to any arbitrary label in the code. It's considered harmful because it makes code hard to read, debug, and reason about.</p>
+
+      <pre data-lang="C"><code><span class="kw">int</span> x = <span class="num">0</span>;
+HERE: <span class="fn">printf</span>(<span class="str">"%d\n"</span>, x);
+x++;
+<span class="kw">goto</span> HERE;   <span class="cm">// jumps back to HERE — infinite loop</span></code></pre>
+
+      <div class="callout callout-rose">
+        <strong>📖 Historical Note</strong>
+        Edsger Dijkstra's famous 1968 letter <em>"Go To Statement Considered Harmful"</em> argued that overuse of GOTO makes programs difficult to understand and verify. This led to the shift toward structured programming. Python has no GOTO statement.
+      </div>
+    </div>
+  </div>
+
+  <!-- 8. Exceptions -->
+  <div class="card accent-emerald" id="exceptions">
+    <div class="card-header">
+      <span class="card-num">08</span>
+      <span class="card-title">Exceptions</span>
+    </div>
+    <div class="card-body">
+      <p>An <strong>exception</strong> is a mechanism for a program to <em>signal</em>, <em>propagate</em>, and <em>handle</em> errors in exceptional situations — outside the normal flow of execution.</p>
+
+      <div class="cols">
+        <div class="col-card">
+          <h4>Python</h4>
+          <pre style="margin:0; border-radius:6px; padding:0.9rem 1.1rem;" data-lang="python"><code><span class="kw">try</span>:
+    x = <span class="fn">int</span>(s)
+    <span class="fn">print</span>(x)
+<span class="kw">except</span> ValueError:
+    <span class="fn">print</span>(<span class="str">"Invalid number"</span>)</code></pre>
+        </div>
+        <div class="col-card">
+          <h4>Java</h4>
+          <pre style="margin:0; border-radius:6px; padding:0.9rem 1.1rem;" data-lang="java"><code><span class="kw">try</span> {
+  <span class="kw">int</span> x = Integer.<span class="fn">parseInt</span>(s);
+  System.out.<span class="fn">println</span>(x);
+} <span class="kw">catch</span> (NumberFormatException e) {
+  System.out.<span class="fn">println</span>(<span class="str">"Invalid"</span>);
+}</code></pre>
+        </div>
+      </div>
+
+      <h4 style="margin: 1.2rem 0 0.5rem; font-size:1.05rem; font-weight:600;">Why exceptions? — Separating error handling from normal logic</h4>
+
+      <div class="cols">
+        <div class="col-card">
+          <h4>❌ Without exceptions (nested error codes)</h4>
+          <pre style="margin:0; border-radius:6px; padding:0.9rem 1.1rem; font-size:0.78rem;"><code><span class="kw">if</span> fileIsOpen:
+  <span class="kw">if</span> gotLength:
+    <span class="kw">if</span> gotMemory:
+      <span class="kw">if not</span> readFailed:
+        ...
+      <span class="kw">else</span>: errorCode = -<span class="num">1</span>
+    <span class="kw">else</span>: errorCode = -<span class="num">2</span>
+  <span class="kw">else</span>: errorCode = -<span class="num">3</span>
+<span class="kw">else</span>: errorCode = -<span class="num">5</span></code></pre>
+        </div>
+        <div class="col-card">
+          <h4>✅ With exceptions (clean separation)</h4>
+          <pre style="margin:0; border-radius:6px; padding:0.9rem 1.1rem; font-size:0.78rem;"><code><span class="kw">try</span>:
+  open the file
+  determine its size
+  allocate memory
+  read file into memory
+  close the file
+<span class="kw">except</span> FileOpenFailed: ...
+<span class="kw">except</span> MemoryError: ...
+<span class="kw">except</span> ReadError: ...</code></pre>
+        </div>
+      </div>
+
+      <h4 style="margin: 1.2rem 0 0.5rem; font-size:1.05rem; font-weight:600;">Error propagation with exceptions</h4>
+      <pre data-lang="python"><code><span class="kw">def</span> <span class="fn">divide</span>(a, b):
+    <span class="kw">return</span> a / b               <span class="cm"># raises ZeroDivisionError if b == 0</span>
+
+<span class="kw">def</span> <span class="fn">compute</span>():
+    <span class="kw">return</span> <span class="fn">divide</span>(<span class="num">10</span>, <span class="num">0</span>)       <span class="cm"># doesn't need to handle it</span>
+
+<span class="kw">def</span> <span class="fn">main</span>():
+    <span class="kw">try</span>:
+        result = <span class="fn">compute</span>()
+        <span class="fn">print</span>(result)
+    <span class="kw">except</span> ZeroDivisionError:
+        <span class="fn">print</span>(<span class="str">"Cannot divide by zero"</span>)  <span class="cm"># handled here, once</span></code></pre>
+
+      <div class="callout callout-emerald">
+        <strong>✅ With exceptions</strong>
+        Errors propagate <strong>automatically</strong> up the call stack and are handled at the level of your choosing — no manual error code passing at every function level.
+      </div>
+
+      <div class="callout callout-amber">
+        <strong>⚠️ Know the difference</strong>
+        <em>"Cannot connect to database"</em> → exception (unexpected, hardware-level failure)<br>
+        <em>"Wrong password entered"</em> → normal error (expected user mistake, handle with if/else)
+      </div>
+    </div>
+  </div>
+
+  <!-- 9. Best Practices -->
+  <div class="card accent-violet" id="best">
+    <div class="card-header">
+      <span class="card-num">09</span>
+      <span class="card-title">Best Practices — Less Control Flow is Often Better</span>
+    </div>
+    <div class="card-body">
+      <p>Every branch and loop you add has a cost:</p>
+      <ul>
+        <li><strong>Repetition is expensive</strong> — loops consume CPU cycles</li>
+        <li><strong>Branching stalls CPU pipelines</strong> — the processor has to guess which branch to take; wrong guesses waste cycles</li>
+        <li><strong>More branches = more cognitive load</strong> — harder to read, test, and maintain</li>
+      </ul>
+
+      <h4 style="margin: 1.2rem 0 0.5rem; font-size:1.05rem; font-weight:600;">Eliminating branches with a lookup table</h4>
+      <div class="cols">
+        <div class="col-card">
+          <h4>❌ With if-elif chain</h4>
+          <pre style="margin:0; border-radius:6px; padding:0.9rem 1.1rem; font-size:0.79rem;"><code><span class="kw">def</span> <span class="fn">weekday</span>(n):
+    <span class="kw">if</span> n == <span class="num">1</span>: <span class="kw">return</span> <span class="str">"Monday"</span>
+    <span class="kw">elif</span> n == <span class="num">2</span>: <span class="kw">return</span> <span class="str">"Tuesday"</span>
+    <span class="kw">elif</span> n == <span class="num">3</span>: <span class="kw">return</span> <span class="str">"Wednesday"</span>
+    <span class="cm">...7 branches total</span></code></pre>
+        </div>
+        <div class="col-card">
+          <h4>✅ With a list (no branches)</h4>
+          <pre style="margin:0; border-radius:6px; padding:0.9rem 1.1rem; font-size:0.79rem;"><code>days = [<span class="str">"Monday"</span>, <span class="str">"Tuesday"</span>,
+        <span class="str">"Wednesday"</span>, <span class="str">"Thursday"</span>,
+        <span class="str">"Friday"</span>, <span class="str">"Saturday"</span>,
+        <span class="str">"Sunday"</span>]
+
+<span class="kw">def</span> <span class="fn">weekday</span>(n):
+    <span class="kw">return</span> days[n - <span class="num">1</span>]</code></pre>
+        </div>
+      </div>
+
+      <h4 style="margin: 1.2rem 0 0.5rem; font-size:1.05rem; font-weight:600;">Eliminating loops with a lookup table</h4>
+      <div class="cols">
+        <div class="col-card">
+          <h4>❌ With a while loop</h4>
+          <pre style="margin:0; border-radius:6px; padding:0.9rem 1.1rem; font-size:0.79rem;"><code><span class="kw">def</span> <span class="fn">count1s</span>(n):
+    <span class="cm">"""Count 1-bits in 4-bit int"""</span>
+    count = <span class="num">0</span>
+    <span class="kw">while</span> n:
+        count += n & <span class="num">1</span>
+        n >>= <span class="num">1</span>
+    <span class="kw">return</span> count</code></pre>
+        </div>
+        <div class="col-card">
+          <h4>✅ Lookup table (0–15 only)</h4>
+          <pre style="margin:0; border-radius:6px; padding:0.9rem 1.1rem; font-size:0.79rem;"><code>bits = [<span class="fn">bin</span>(i).<span class="fn">count</span>(<span class="str">'1'</span>)
+        <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">16</span>)]
+
+<span class="kw">def</span> <span class="fn">count1s</span>(n):
+    <span class="kw">return</span> bits[n]
+<span class="cm"># O(1) lookup — no loop at runtime!</span></code></pre>
+        </div>
+      </div>
+
+      <div class="callout callout-violet">
+        <strong>💡 Key takeaway</strong>
+        Lookup tables (lists, dicts) can replace both branches and loops, turning O(n) operations into O(1) lookups. This is a fundamental optimization pattern in software engineering.
+      </div>
+    </div>
+  </div>
+
+</main>
+
+</body>
+</html>

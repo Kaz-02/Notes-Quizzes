@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Python Basics — CS3035 Notes</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Fraunces:ital,wght@0,300;0,600;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #161b27;
+    --surface2: #1e2535;
+    --border: #2a3348;
+    --accent: #4ade80;
+    --accent2: #38bdf8;
+    --accent3: #f472b6;
+    --accent4: #fb923c;
+    --text: #e2e8f0;
+    --muted: #8896b3;
+    --code-bg: #0d1117;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 300;
+    line-height: 1.7;
+    min-height: 100vh;
+  }
+
+  /* Noise texture overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 3rem 2rem 6rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  header {
+    border-left: 3px solid var(--accent);
+    padding-left: 1.5rem;
+    margin-bottom: 4rem;
+    animation: fadeDown 0.6s ease both;
+  }
+
+  header .course {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    margin-bottom: 0.5rem;
+  }
+
+  header h1 {
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 600;
+    line-height: 1.1;
+    color: var(--text);
+  }
+
+  header .author {
+    font-style: italic;
+    color: var(--muted);
+    margin-top: 0.5rem;
+    font-size: 1rem;
+  }
+
+  /* Section cards */
+  .section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 2rem 2.2rem;
+    margin-bottom: 1.8rem;
+    animation: fadeUp 0.5s ease both;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .section::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 2px;
+    background: linear-gradient(90deg, var(--accent-line, var(--accent)), transparent);
+  }
+
+  .section:nth-child(2) { --accent-line: var(--accent); animation-delay: 0.05s; }
+  .section:nth-child(3) { --accent-line: var(--accent2); animation-delay: 0.1s; }
+  .section:nth-child(4) { --accent-line: var(--accent3); animation-delay: 0.15s; }
+  .section:nth-child(5) { --accent-line: var(--accent4); animation-delay: 0.2s; }
+  .section:nth-child(6) { --accent-line: var(--accent); animation-delay: 0.25s; }
+  .section:nth-child(7) { --accent-line: var(--accent2); animation-delay: 0.3s; }
+  .section:nth-child(8) { --accent-line: var(--accent3); animation-delay: 0.35s; }
+  .section:nth-child(9) { --accent-line: var(--accent4); animation-delay: 0.4s; }
+  .section:nth-child(10) { --accent-line: var(--accent); animation-delay: 0.45s; }
+  .section:nth-child(11) { --accent-line: var(--accent2); animation-delay: 0.5s; }
+  .section:nth-child(12) { --accent-line: var(--accent3); animation-delay: 0.55s; }
+  .section:nth-child(13) { --accent-line: var(--accent4); animation-delay: 0.6s; }
+
+  .section h2 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--muted);
+    margin-bottom: 0.6rem;
+  }
+
+  .section h3 {
+    font-size: 1.45rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    line-height: 1.2;
+  }
+
+  p { color: var(--text); margin-bottom: 0.75rem; font-size: 1.05rem; }
+
+  ul, ol {
+    padding-left: 1.4rem;
+    margin-bottom: 0.75rem;
+  }
+
+  li {
+    margin-bottom: 0.4rem;
+    font-size: 1.02rem;
+    color: var(--text);
+  }
+
+  li::marker { color: var(--accent); }
+
+  /* Code blocks */
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.2rem 1.4rem;
+    overflow-x: auto;
+    margin: 1rem 0;
+    position: relative;
+  }
+
+  pre::before {
+    content: attr(data-label);
+    position: absolute;
+    top: 0.5rem; right: 0.75rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.88rem;
+    line-height: 1.75;
+    color: #c9d1d9;
+  }
+
+  .kw { color: #ff7b72; }
+  .fn { color: #d2a8ff; }
+  .str { color: #a5d6ff; }
+  .cm { color: #8b949e; font-style: italic; }
+  .num { color: #79c0ff; }
+  .cls { color: #ffa657; }
+  .var { color: #c9d1d9; }
+
+  /* Inline code */
+  .ic {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.1em 0.4em;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85em;
+    color: var(--accent2);
+  }
+
+  /* Comparison table */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    font-size: 0.95rem;
+  }
+
+  th {
+    background: var(--surface2);
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+  }
+
+  td {
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--surface2); }
+
+  td code {
+    font-size: 0.82rem;
+    color: var(--accent2);
+  }
+
+  /* Tags / badges */
+  .badge {
+    display: inline-block;
+    padding: 0.15em 0.6em;
+    border-radius: 999px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-right: 0.4em;
+    margin-bottom: 0.3em;
+  }
+
+  .badge-green { background: rgba(74,222,128,0.12); color: var(--accent); border: 1px solid rgba(74,222,128,0.3); }
+  .badge-blue  { background: rgba(56,189,248,0.12); color: var(--accent2); border: 1px solid rgba(56,189,248,0.3); }
+  .badge-pink  { background: rgba(244,114,182,0.12); color: var(--accent3); border: 1px solid rgba(244,114,182,0.3); }
+  .badge-orange{ background: rgba(251,146,60,0.12); color: var(--accent4); border: 1px solid rgba(251,146,60,0.3); }
+
+  /* Tip box */
+  .tip {
+    background: rgba(74,222,128,0.06);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 8px 8px 0;
+    padding: 0.9rem 1.2rem;
+    margin: 1rem 0;
+    font-size: 0.97rem;
+  }
+
+  .warn {
+    background: rgba(251,146,60,0.07);
+    border-left: 3px solid var(--accent4);
+    border-radius: 0 8px 8px 0;
+    padding: 0.9rem 1.2rem;
+    margin: 1rem 0;
+    font-size: 0.97rem;
+  }
+
+  /* Animations */
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(22px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* TOC */
+  .toc {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem 1.8rem;
+    margin-bottom: 2.5rem;
+    animation: fadeDown 0.6s ease 0.1s both;
+  }
+
+  .toc h2 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--muted);
+    margin-bottom: 0.8rem;
+  }
+
+  .toc ol {
+    padding-left: 1.2rem;
+    column-count: 2;
+    column-gap: 1.5rem;
+  }
+
+  .toc li { font-size: 0.95rem; margin-bottom: 0.3rem; }
+  .toc a { color: var(--accent2); text-decoration: none; }
+  .toc a:hover { color: var(--accent); text-decoration: underline; }
+
+  @media (max-width: 600px) {
+    .toc ol { column-count: 1; }
+    .container { padding: 1.5rem 1.1rem 4rem; }
+  }
+
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  @media(max-width:650px) { .two-col { grid-template-columns: 1fr; } }
+
+  .sub-card {
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 1rem 1.2rem;
+    border: 1px solid var(--border);
+  }
+
+  .sub-card h4 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.5rem;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="course">CS3035 · Programming Paradigms</div>
+    <h1>Python Basics</h1>
+    <div class="author">Chengyu Sun — California State University, Los Angeles</div>
+  </header>
+
+  <!-- TOC -->
+  <div class="toc">
+    <h2>Contents</h2>
+    <ol>
+      <li><a href="#about">About Python</a></li>
+      <li><a href="#interpreted">Interpreted vs. Compiled</a></li>
+      <li><a href="#hello">Hello World</a></li>
+      <li><a href="#types">Types & Literals</a></li>
+      <li><a href="#variables">Variables & Naming</a></li>
+      <li><a href="#operators">Operators & Expressions</a></li>
+      <li><a href="#statements">Statements</a></li>
+      <li><a href="#functions">Functions</a></li>
+      <li><a href="#classes">Classes</a></li>
+      <li><a href="#modules">Modules & Packages</a></li>
+    </ol>
+  </div>
+
+  <!-- 1. About Python -->
+  <div class="section" id="about">
+    <h2>01 · Overview</h2>
+    <h3>About Python</h3>
+    <p>Python is currently <strong>#1 on the TIOBE Index</strong> and <strong>#4 in the 2025 Stack Overflow Developer Survey</strong>. It is considered the primary language for AI and machine learning.</p>
+    <ul>
+      <li>Has all the features of a modern programming language</li>
+      <li>Easy to use — even for non-programmers</li>
+      <li>An <em>interpreted</em> language (though technically hybrid — see below)</li>
+    </ul>
+  </div>
+
+  <!-- 2. Interpreted vs Compiled -->
+  <div class="section" id="interpreted">
+    <h2>02 · Execution Model</h2>
+    <h3>Interpreted vs. Compiled Languages</h3>
+    <div class="two-col" style="margin-bottom:1rem;">
+      <div class="sub-card">
+        <h4>🐍 Interpreted (Python, JS)</h4>
+        <ul>
+          <li>Translates source → binary <em>one instruction at a time</em></li>
+          <li>Interpreter runs alongside the program</li>
+          <li>Faster to develop; runs slower</li>
+        </ul>
+      </div>
+      <div class="sub-card">
+        <h4>⚙️ Compiled (C, Java)</h4>
+        <ul>
+          <li>Translates the <em>whole program</em> to binary first</li>
+          <li>No interpreter needed at runtime</li>
+          <li>Slower to develop; runs faster</li>
+        </ul>
+      </div>
+    </div>
+    <div class="tip">💡 Python and Java are actually <strong>hybrid</strong> — they compile source code to an intermediate <em>bytecode</em> format before execution.</div>
+  </div>
+
+  <!-- 3. Hello World -->
+  <div class="section" id="hello">
+    <h2>03 · Getting Started</h2>
+    <h3>Hello World</h3>
+    <p>The classic first program. It originated in <em>The C Programming Language</em> by Kernighan & Ritchie.</p>
+    <p><strong>Why write it?</strong> It verifies your dev environment works, shows you basic output syntax, and gives a feel for the language.</p>
+    <pre data-label="Python"><code><span class="fn">print</span>(<span class="str">"Hello, World!"</span>)</code></pre>
+    <pre data-label="Java (comparison)"><code><span class="kw">public class</span> <span class="cls">HelloWorld</span> {
+  <span class="kw">public static void</span> <span class="fn">main</span>(String[] args) {
+    System.out.<span class="fn">println</span>(<span class="str">"Hello, World!"</span>);
+  }
+}</code></pre>
+    <p>Notice how much more concise Python is — no class wrapper, no type declarations, no semicolons.</p>
+  </div>
+
+  <!-- 4. Types & Literals -->
+  <div class="section" id="types">
+    <h2>04 · Data</h2>
+    <h3>Types & Literals</h3>
+    <p>Python's common built-in types:</p>
+    <p>
+      <span class="badge badge-green">int, float</span>
+      <span class="badge badge-blue">bool</span>
+      <span class="badge badge-pink">str, range</span>
+      <span class="badge badge-orange">list, tuple, set, dict</span>
+      <span class="badge badge-green">None</span>
+    </p>
+    <pre data-label="Literals"><code><span class="cm"># Numeric</span>
+<span class="num">123</span>    <span class="num">-4.56</span>    <span class="num">1.5e3</span>    <span class="num">1_000_000</span>
+
+<span class="cm"># Boolean</span>
+<span class="kw">True</span>    <span class="kw">False</span>
+
+<span class="cm"># String (all equivalent styles)</span>
+<span class="str">'hello'</span>    <span class="str">"world"</span>    <span class="str">"""Multi-line string"""</span>
+
+<span class="cm"># None</span>
+<span class="kw">None</span></code></pre>
+
+    <h4 style="margin:1rem 0 0.5rem; font-size:1.1rem; font-weight:600;">f-strings (formatted string literals)</h4>
+    <pre data-label="f-string"><code>price = <span class="num">49.99</span>
+n     = <span class="num">3</span>
+total = price * n
+message = <span class="str">f"Total: </span>{total}<span class="str"> for </span>{n}<span class="str"> items"</span></code></pre>
+
+    <h4 style="margin:1rem 0 0.5rem; font-size:1.1rem; font-weight:600;">Collections</h4>
+    <pre data-label="list · tuple · range"><code>a = [<span class="num">1</span>, <span class="str">'hello'</span>, <span class="num">2</span>]        <span class="cm"># list — mutable, mixed types</span>
+b = (<span class="num">1</span>, <span class="str">'hello'</span>, <span class="num">2</span>)        <span class="cm"># tuple — immutable list</span>
+c = <span class="num">1</span>, <span class="str">'hello'</span>, <span class="num">2</span>          <span class="cm"># tuple — parentheses optional</span>
+d = <span class="fn">range</span>(<span class="num">10</span>)              <span class="cm"># 0, 1, 2, … 9</span>
+e = <span class="fn">range</span>(<span class="num">10</span>, <span class="num">20</span>, <span class="num">2</span>)       <span class="cm"># 10, 12, … 18</span></code></pre>
+
+    <pre data-label="set · dict"><code>a = {<span class="str">"red"</span>, <span class="str">"green"</span>, <span class="num">3</span>}                   <span class="cm"># set — no duplicates</span>
+b = {<span class="num">1</span>: <span class="str">"one"</span>, <span class="str">"pi"</span>: <span class="num">3.14</span>, (<span class="num">1</span>,<span class="num">2</span>): <span class="str">"tuple"</span>} <span class="cm"># dict</span>
+c = {}                                     <span class="cm"># empty dict</span>
+d = <span class="fn">set</span>()                                 <span class="cm"># empty set</span></code></pre>
+    <div class="tip">💡 <strong>Dictionary keys</strong> must be immutable (strings, numbers, tuples) and unique. <strong>Sets</strong> automatically remove duplicates.</div>
+  </div>
+
+  <!-- 5. Variables & Naming -->
+  <div class="section" id="variables">
+    <h2>05 · Identifiers</h2>
+    <h3>Variables & Naming Conventions</h3>
+    <p>Identifiers consist of letters, digits, and <span class="ic">_</span> — but cannot <em>start</em> with a digit.</p>
+    <table>
+      <thead>
+        <tr><th>Kind</th><th>Style</th><th>Example</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Variable</td><td>snake_case</td><td><code>first_name</code></td></tr>
+        <tr><td>Function</td><td>snake_case</td><td><code>load_data()</code></td></tr>
+        <tr><td>Class</td><td>PascalCase</td><td><code>StudentRecord</code></td></tr>
+        <tr><td>Constant</td><td>UPPER_CASE</td><td><code>MAX_SIZE</code></td></tr>
+        <tr><td>Module / Package</td><td>lower_case</td><td><code>math_utils</code></td></tr>
+        <tr><td>Special (dunder)</td><td>__double_under__</td><td><code>__init__</code></td></tr>
+        <tr><td>Internal</td><td>_single_leading</td><td><code>_thread</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 6. Operators & Expressions -->
+  <div class="section" id="operators">
+    <h2>06 · Expressions</h2>
+    <h3>Operators & Expressions</h3>
+    <p>Most operators work like Java/C. Python-specific ones to know:</p>
+    <table>
+      <thead><tr><th>Operator</th><th>Meaning</th><th>Example</th></tr></thead>
+      <tbody>
+        <tr><td><code>**</code></td><td>Exponentiation</td><td><code>2 ** 8  → 256</code></td></tr>
+        <tr><td><code>//</code></td><td>Floor division</td><td><code>7 // 2  → 3</code></td></tr>
+        <tr><td><code>and, or, not</code></td><td>Logical (words, not symbols)</td><td><code>x &gt; 0 and x &lt; 10</code></td></tr>
+        <tr><td><code>in</code></td><td>Membership test</td><td><code>"a" in ["a","b"]</code></td></tr>
+        <tr><td><code>x if c else y</code></td><td>Ternary / conditional</td><td><code>max = a if a &gt; b else b</code></td></tr>
+      </tbody>
+    </table>
+
+    <h4 style="margin:1rem 0 0.5rem; font-size:1.1rem; font-weight:600;">Python-specific expression features</h4>
+    <pre data-label="Expressions"><code><span class="cm"># Chain comparison (Python only)</span>
+<span class="num">1</span> &lt; x &lt; <span class="num">10</span>
+
+<span class="cm"># Negative indexing</span>
+a[-<span class="num">1</span>]   <span class="cm"># last element</span>
+a[-<span class="num">2</span>]   <span class="cm"># second-to-last</span></code></pre>
+
+    <h4 style="margin:1rem 0 0.5rem; font-size:1.1rem; font-weight:600;">Truthy & Falsy values</h4>
+    <p>Values treated as <strong>False</strong> in a Boolean context: <span class="ic">False</span>, <span class="ic">None</span>, <span class="ic">0</span>, empty sequences/collections (<span class="ic">""</span>, <span class="ic">[]</span>, <span class="ic">{}</span>, etc.). Everything else is truthy.</p>
+    <pre data-label="Example"><code>x = <span class="num">10</span> <span class="kw">if</span> [] <span class="kw">else</span> <span class="num">20</span>   <span class="cm"># x = 20, because [] is falsy</span></code></pre>
+  </div>
+
+  <!-- 7. Statements -->
+  <div class="section" id="statements">
+    <h2>07 · Control Flow</h2>
+    <h3>Statements</h3>
+    <p>Python uses <strong>indentation</strong> (4 spaces recommended) to define blocks — no curly braces or semicolons.</p>
+
+    <h4 style="margin:1rem 0 0.5rem; font-size:1.1rem; font-weight:600;">if · elif · else</h4>
+    <pre data-label="Branch"><code>num = -<span class="num">5</span>
+<span class="kw">if</span> num &gt; <span class="num">0</span>:
+    <span class="fn">print</span>(<span class="str">"Positive"</span>)
+<span class="kw">elif</span> num == <span class="num">0</span>:
+    <span class="fn">print</span>(<span class="str">"Zero"</span>)
+<span class="kw">else</span>:
+    <span class="fn">print</span>(<span class="str">"Negative"</span>)</code></pre>
+
+    <h4 style="margin:1rem 0 0.5rem; font-size:1.1rem; font-weight:600;">match (Python 3.10+)</h4>
+    <p>Like <span class="ic">switch</span> in Java/C but no <span class="ic">break</span> needed. <span class="ic">_</span> is the default case.</p>
+    <pre data-label="Match"><code>day = <span class="num">3</span>
+<span class="kw">match</span> day:
+    <span class="kw">case</span> <span class="num">1</span>: <span class="fn">print</span>(<span class="str">"Monday"</span>)
+    <span class="kw">case</span> <span class="num">2</span>: <span class="fn">print</span>(<span class="str">"Tuesday"</span>)
+    <span class="kw">case</span> <span class="num">3</span>: <span class="fn">print</span>(<span class="str">"Wednesday"</span>)
+    <span class="kw">case</span> _: <span class="fn">print</span>(<span class="str">"Invalid day"</span>)</code></pre>
+
+    <h4 style="margin:1rem 0 0.5rem; font-size:1.1rem; font-weight:600;">for loop</h4>
+    <p>Iterates over elements of any sequence or collection. There is no traditional <span class="ic">for(int i=0; i&lt;n; i++)</span> — use <span class="ic">range()</span> instead.</p>
+    <pre data-label="for"><code>fruits = [<span class="str">"apple"</span>, <span class="str">"banana"</span>, <span class="str">"cherry"</span>]
+
+<span class="kw">for</span> fruit <span class="kw">in</span> fruits:
+    <span class="fn">print</span>(fruit)
+
+<span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">3</span>):
+    <span class="fn">print</span>(fruits[i])</code></pre>
+
+    <h4 style="margin:1rem 0 0.5rem; font-size:1.1rem; font-weight:600;">while loop</h4>
+    <p>Note: there is no <span class="ic">do-while</span> loop in Python.</p>
+    <pre data-label="while"><code>count = <span class="num">5</span>
+<span class="kw">while</span> count &gt; <span class="num">0</span>:
+    <span class="fn">print</span>(count)
+    count -= <span class="num">1</span>
+<span class="fn">print</span>(<span class="str">"Liftoff!"</span>)</code></pre>
+  </div>
+
+  <!-- 8. Functions -->
+  <div class="section" id="functions">
+    <h2>08 · Functions</h2>
+    <h3>Defining & Calling Functions</h3>
+    <pre data-label="Basic"><code><span class="kw">def</span> <span class="fn">square</span>(x):
+    <span class="kw">return</span> x * x
+
+<span class="kw">def</span> <span class="fn">greet</span>(name, message):
+    <span class="fn">print</span>(<span class="str">f"</span>{message}<span class="str">, </span>{name}<span class="str">!"</span>)
+
+result = <span class="fn">square</span>(<span class="num">10</span>)   <span class="cm"># positional args</span>
+<span class="fn">greet</span>(message=<span class="str">"Hi"</span>, name=<span class="str">"Steve"</span>)  <span class="cm"># keyword args</span></code></pre>
+    <div class="tip">💡 If a function doesn't explicitly <span class="ic">return</span> a value, it implicitly returns <span class="ic">None</span>.</div>
+
+    <h4 style="margin:1rem 0 0.5rem; font-size:1.1rem; font-weight:600;">Default Parameter Values</h4>
+    <p>Parameters with defaults must come <em>after</em> those without defaults.</p>
+    <pre data-label="Defaults"><code><span class="kw">def</span> <span class="fn">greet</span>(name, message=<span class="str">"Hi"</span>):
+    <span class="fn">print</span>(<span class="str">f"</span>{message}<span class="str">, </span>{name}<span class="str">!"</span>)
+
+<span class="fn">greet</span>(<span class="str">"Steve"</span>)           <span class="cm"># → "Hi, Steve!"</span>
+<span class="fn">greet</span>(<span class="str">"John"</span>, <span class="str">"Hello"</span>)   <span class="cm"># → "Hello, John!"</span></code></pre>
+
+    <div class="warn">⚠️ <strong>Never use a mutable object (like a list) as a default value.</strong> Default values are evaluated <em>once</em> at function definition — not on each call. This causes bugs where state persists across calls.
+    <pre style="margin-top:0.8rem;" data-label="Bug example"><code><span class="kw">def</span> <span class="fn">add_to_list</span>(value, my_list=[]):  <span class="cm"># ❌ BAD</span>
+    my_list.<span class="fn">append</span>(value)
+    <span class="kw">return</span> my_list
+
+<span class="fn">print</span>(<span class="fn">add_to_list</span>(<span class="num">1</span>))  <span class="cm"># [1]</span>
+<span class="fn">print</span>(<span class="fn">add_to_list</span>(<span class="num">2</span>))  <span class="cm"># [1, 2]  ← unexpected!</span>
+<span class="fn">print</span>(<span class="fn">add_to_list</span>(<span class="num">3</span>))  <span class="cm"># [1, 2, 3] ← still accumulating!</span></code></pre></div>
+
+    <h4 style="margin:1rem 0 0.5rem; font-size:1.1rem; font-weight:600;">Docstrings</h4>
+    <p>Used to document functions, classes, and modules. Must be the first statement. It's a string, <em>not</em> a comment.</p>
+    <pre data-label="Docstring"><code><span class="kw">def</span> <span class="fn">greet</span>(name, message):
+    <span class="str">"""Display a simple greeting."""</span>
+    <span class="fn">print</span>(<span class="str">f"</span>{message}<span class="str">, </span>{name}<span class="str">!"</span>)</code></pre>
+  </div>
+
+  <!-- 9. Classes -->
+  <div class="section" id="classes">
+    <h2>09 · OOP</h2>
+    <h3>Classes & Objects</h3>
+    <pre data-label="Class definition"><code><span class="kw">class</span> <span class="cls">Dog</span>:
+    <span class="str">"""A simple attempt to model a dog."""</span>
+
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, name, age):   <span class="cm"># constructor</span>
+        self.name = name            <span class="cm"># instance variable</span>
+        self.age  = age
+
+    <span class="kw">def</span> <span class="fn">sit</span>(self):                  <span class="cm"># instance method</span>
+        <span class="fn">print</span>(<span class="str">f"</span>{self.name}<span class="str"> is now sitting."</span>)
+
+monty = <span class="cls">Dog</span>(<span class="str">"Monty"</span>, <span class="num">2</span>)  <span class="cm"># instantiation</span>
+monty.<span class="fn">sit</span>()</code></pre>
+    <ul>
+      <li>Objects of a class are called <strong>instances</strong></li>
+      <li>Functions inside a class are called <strong>methods</strong></li>
+      <li><span class="ic">__init__()</span> is the <strong>constructor</strong> — runs when an object is created</li>
+      <li><span class="ic">self</span> (the current object) must be the first parameter of every instance method</li>
+      <li><strong>Instance variables</strong> are defined inside the constructor</li>
+    </ul>
+  </div>
+
+  <!-- 10. Modules & Packages -->
+  <div class="section" id="modules">
+    <h2>10 · Modules & Packages</h2>
+    <h3>Organizing Code</h3>
+
+    <p>Every Python file is a <strong>module</strong>. A folder of modules is a <strong>package</strong> (usually marked with an <span class="ic">__init__.py</span>).</p>
+
+    <div class="two-col">
+      <div class="sub-card">
+        <h4>foo.py (module)</h4>
+        <pre style="margin:0;"><code><span class="kw">def</span> <span class="fn">add</span>(a, b):
+    <span class="kw">return</span> a + b
+
+PI = <span class="num">3.14159</span></code></pre>
+      </div>
+      <div class="sub-card">
+        <h4>bar.py (importer)</h4>
+        <pre style="margin:0;"><code><span class="kw">import</span> foo
+
+<span class="fn">print</span>(foo.<span class="fn">add</span>(<span class="num">2</span>, <span class="num">3</span>))
+<span class="fn">print</span>(foo.PI)</code></pre>
+      </div>
+    </div>
+
+    <h4 style="margin:1.2rem 0 0.5rem; font-size:1.1rem; font-weight:600;">Import styles</h4>
+    <table>
+      <thead><tr><th>Import statement</th><th>Usage</th></tr></thead>
+      <tbody>
+        <tr><td><code>import foo</code></td><td><code>foo.add(2,3)</code></td></tr>
+        <tr><td><code>import foo as f</code></td><td><code>f.add(2,3)</code></td></tr>
+        <tr><td><code>from foo import add</code></td><td><code>add(2,3)</code></td></tr>
+        <tr><td><code>from foo import *</code></td><td><code>add(2,3)</code></td></tr>
+        <tr><td><code>from foo import add as a</code></td><td><code>a(2,3)</code></td></tr>
+      </tbody>
+    </table>
+
+    <h4 style="margin:1rem 0 0.5rem; font-size:1.1rem; font-weight:600;">Package structure</h4>
+    <pre data-label="Directory layout"><code>my_app/
+├── main.py
+└── analytics/         <span class="cm"># ← package</span>
+    ├── __init__.py
+    ├── calculator.py
+    └── formatter.py</code></pre>
+
+    <pre data-label="Package import"><code><span class="cm"># From analytics/calculator.py</span>
+<span class="kw">def</span> <span class="fn">add</span>(a, b): <span class="kw">return</span> a + b
+
+<span class="cm"># In analytics/__init__.py — "raise" to package level</span>
+<span class="kw">from</span> .calculator <span class="kw">import</span> add
+
+<span class="cm"># In main.py — clean import</span>
+<span class="kw">from</span> analytics <span class="kw">import</span> add
+<span class="fn">add</span>(<span class="num">2</span>, <span class="num">3</span>)</code></pre>
+  </div>
+
+</div>
+</body>
+</html>

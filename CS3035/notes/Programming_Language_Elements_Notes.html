@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Elements of Programming Languages</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #0d0f14;
+      --surface: #13161d;
+      --surface2: #1a1e28;
+      --accent: #7fefbd;
+      --accent2: #ff6b6b;
+      --accent3: #ffd166;
+      --accent4: #74b9ff;
+      --text: #e8eaf0;
+      --muted: #7a8099;
+      --border: rgba(127,239,189,0.15);
+      --code-bg: #0a0c10;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Space Mono', monospace;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 2rem 1rem 5rem;
+      line-height: 1.7;
+    }
+
+    /* Background texture */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: radial-gradient(circle at 20% 20%, rgba(127,239,189,0.04) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 80%, rgba(116,185,255,0.04) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    header {
+      max-width: 860px;
+      margin: 0 auto 3rem;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid var(--border);
+      animation: fadeUp 0.6s ease both;
+    }
+
+    .course-tag {
+      display: inline-block;
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--accent);
+      border: 1px solid var(--accent);
+      padding: 0.25rem 0.75rem;
+      border-radius: 2px;
+      margin-bottom: 1rem;
+    }
+
+    h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      line-height: 1.15;
+      color: var(--text);
+      margin-bottom: 0.5rem;
+    }
+
+    h1 span { color: var(--accent); font-style: italic; }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+    }
+
+    .notes-grid {
+      max-width: 860px;
+      margin: 0 auto;
+      display: grid;
+      gap: 1.5rem;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+      animation: fadeUp 0.6s ease both;
+      transition: border-color 0.3s, transform 0.3s;
+    }
+
+    .card:hover {
+      border-color: rgba(127,239,189,0.35);
+      transform: translateY(-2px);
+    }
+
+    .card:nth-child(1) { animation-delay: 0.05s; }
+    .card:nth-child(2) { animation-delay: 0.1s; }
+    .card:nth-child(3) { animation-delay: 0.15s; }
+    .card:nth-child(4) { animation-delay: 0.2s; }
+    .card:nth-child(5) { animation-delay: 0.25s; }
+    .card:nth-child(6) { animation-delay: 0.3s; }
+    .card:nth-child(7) { animation-delay: 0.35s; }
+    .card:nth-child(8) { animation-delay: 0.4s; }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1.1rem 1.4rem;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .card-num {
+      font-size: 0.6rem;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      min-width: 2rem;
+    }
+
+    .card-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.3rem;
+      flex: 1;
+    }
+
+    .card-tag {
+      font-size: 0.6rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 0.2rem 0.6rem;
+      border-radius: 2px;
+      font-family: 'Space Mono', monospace;
+    }
+
+    .tag-lexical  { background: rgba(127,239,189,0.12); color: var(--accent); }
+    .tag-syntax   { background: rgba(116,185,255,0.12); color: var(--accent4); }
+    .tag-semantic { background: rgba(255,107,107,0.12); color: var(--accent2); }
+    .tag-structure{ background: rgba(255,209,102,0.12); color: var(--accent3); }
+
+    .card-body {
+      padding: 1.4rem;
+    }
+
+    .definition {
+      font-size: 0.85rem;
+      color: var(--text);
+      margin-bottom: 1.2rem;
+      padding-left: 1rem;
+      border-left: 2px solid var(--accent);
+      line-height: 1.8;
+    }
+
+    .definition.blue  { border-color: var(--accent4); }
+    .definition.red   { border-color: var(--accent2); }
+    .definition.yellow{ border-color: var(--accent3); }
+
+    /* Token table */
+    .token-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 0.75rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .token-item {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.75rem 1rem;
+    }
+
+    .token-item .t-label {
+      font-size: 0.6rem;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--muted);
+      margin-bottom: 0.35rem;
+    }
+
+    .token-item .t-examples {
+      font-size: 0.75rem;
+      color: var(--accent);
+    }
+
+    .token-item.kw  .t-examples { color: var(--accent4); }
+    .token-item.lit .t-examples { color: var(--accent3); }
+    .token-item.op  .t-examples { color: var(--accent2); }
+    .token-item.sep .t-examples { color: var(--accent); }
+    .token-item.var .t-examples { color: #c3a6ff; }
+
+    /* Code block */
+    pre {
+      background: var(--code-bg);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 4px;
+      padding: 1.1rem 1.3rem;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.78rem;
+      overflow-x: auto;
+      line-height: 1.9;
+      margin-bottom: 1rem;
+    }
+
+    .kw  { color: var(--accent4); }
+    .ty  { color: var(--accent); }
+    .nm  { color: #c3a6ff; }
+    .lit-c { color: var(--accent3); }
+    .op-c  { color: var(--accent2); }
+    .cm  { color: var(--muted); font-style: italic; }
+    .hi  { background: rgba(127,239,189,0.12); border-radius: 2px; padding: 0 2px; }
+    .hi2 { background: rgba(255,107,107,0.12);  border-radius: 2px; padding: 0 2px; }
+    .hi3 { background: rgba(255,209,102,0.12);  border-radius: 2px; padding: 0 2px; }
+
+    /* Key points list */
+    .points {
+      list-style: none;
+      font-size: 0.82rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .points li {
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-start;
+    }
+
+    .points li::before {
+      content: '◆';
+      color: var(--accent);
+      font-size: 0.6rem;
+      margin-top: 0.3rem;
+      flex-shrink: 0;
+    }
+
+    .points li.blue::before  { color: var(--accent4); }
+    .points li.red::before   { color: var(--accent2); }
+    .points li.yellow::before{ color: var(--accent3); }
+
+    .highlight-box {
+      background: var(--surface2);
+      border: 1px dashed rgba(127,239,189,0.2);
+      border-radius: 4px;
+      padding: 0.9rem 1.1rem;
+      margin-top: 1rem;
+      font-size: 0.78rem;
+    }
+
+    .highlight-box .hb-label {
+      font-size: 0.6rem;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--accent);
+      margin-bottom: 0.4rem;
+    }
+
+    /* Compare table */
+    .compare-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.78rem;
+      margin-top: 1rem;
+    }
+
+    .compare-table th {
+      background: var(--surface2);
+      padding: 0.6rem 1rem;
+      text-align: left;
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .compare-table td {
+      padding: 0.7rem 1rem;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      vertical-align: top;
+    }
+
+    .compare-table tr:last-child td { border-bottom: none; }
+
+    .badge {
+      display: inline-block;
+      font-size: 0.6rem;
+      padding: 0.15rem 0.5rem;
+      border-radius: 2px;
+      font-family: 'Space Mono', monospace;
+      letter-spacing: 0.05em;
+    }
+
+    .badge-green  { background: rgba(127,239,189,0.15); color: var(--accent); }
+    .badge-red    { background: rgba(255,107,107,0.15); color: var(--accent2); }
+    .badge-blue   { background: rgba(116,185,255,0.15); color: var(--accent4); }
+    .badge-yellow { background: rgba(255,209,102,0.15); color: var(--accent3); }
+
+    /* Example code banner (top) */
+    .example-banner {
+      max-width: 860px;
+      margin: 0 auto 2rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+      animation: fadeUp 0.5s ease both;
+      animation-delay: 0.02s;
+    }
+
+    .example-banner-header {
+      padding: 0.7rem 1.4rem;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .dot { width: 8px; height: 8px; border-radius: 50%; }
+    .dot.r { background: #ff5f57; }
+    .dot.y { background: #febc2e; }
+    .dot.g { background: #28c840; }
+
+    footer-note {
+      display: block;
+      max-width: 860px;
+      margin: 3rem auto 0;
+      text-align: center;
+      font-size: 0.7rem;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      .token-grid { grid-template-columns: 1fr 1fr; }
+      pre { font-size: 0.7rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="course-tag">CS3035 · Programming Paradigms</div>
+    <h1>Elements of <span>Programming Languages</span></h1>
+    <p class="subtitle">Chengyu Sun · California State University, Los Angeles</p>
+  </header>
+
+  <!-- Running Example -->
+  <div class="example-banner">
+    <div class="example-banner-header">
+      <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+      Running Example (Java)
+    </div>
+    <pre><span class="ty">int</span> <span class="nm">sum</span> <span class="op-c">=</span> <span class="lit-c">0</span>;
+<span class="kw">for</span>(<span class="ty">int</span> <span class="nm">i</span> <span class="op-c">=</span> <span class="lit-c">1</span> ; <span class="nm">i</span> <span class="op-c">&lt;=</span> <span class="lit-c">10</span> ; <span class="op-c">++</span><span class="nm">i</span>) {
+    <span class="nm">sum</span> <span class="op-c">=</span> <span class="nm">sum</span> <span class="op-c">+</span> <span class="nm">i</span>;
+}</pre>
+  </div>
+
+  <div class="notes-grid">
+
+    <!-- 1. Token -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-num">01</span>
+        <span class="card-title">Token (Lexical Structure)</span>
+        <span class="card-tag tag-lexical">Lexical</span>
+      </div>
+      <div class="card-body">
+        <p class="definition">The smallest meaningful unit in a program — the "words" and "punctuation" of a programming language. A lexer/tokenizer breaks raw source text into tokens.</p>
+
+        <div class="token-grid">
+          <div class="token-item kw">
+            <div class="t-label">Keyword</div>
+            <div class="t-examples">int, for</div>
+          </div>
+          <div class="token-item var">
+            <div class="t-label">Variable / Identifier</div>
+            <div class="t-examples">sum, i</div>
+          </div>
+          <div class="token-item lit">
+            <div class="t-label">Literal</div>
+            <div class="t-examples">0, 1, 10</div>
+          </div>
+          <div class="token-item op">
+            <div class="t-label">Operator</div>
+            <div class="t-examples">=, +, <=, ++</div>
+          </div>
+          <div class="token-item sep">
+            <div class="t-label">Separator</div>
+            <div class="t-examples">; , ( ) { }</div>
+          </div>
+        </div>
+
+        <pre><span class="cm">// Every piece below is a separate token:</span>
+<span class="ty hi">int</span> <span class="nm hi2">sum</span> <span class="op-c hi3">=</span> <span class="lit-c hi">0</span><span class="hi3">;</span></pre>
+      </div>
+    </div>
+
+    <!-- 2. Expression -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-num">02</span>
+        <span class="card-title">Expression</span>
+        <span class="card-tag tag-syntax">Syntax</span>
+      </div>
+      <div class="card-body">
+        <p class="definition blue">A syntactic construct that <strong>evaluates to a single value</strong>. Expressions produce a result but do not (on their own) cause actions to happen.</p>
+
+        <ul class="points">
+          <li class="blue">Can be a literal: <code>0</code>, <code>1</code>, <code>10</code></li>
+          <li class="blue">Can be a variable: <code>sum</code>, <code>i</code></li>
+          <li class="blue">Can be a compound expression: <code>sum + i</code>, <code>i &lt;= 10</code></li>
+          <li class="blue">Prefix increment <code>++i</code> is also an expression (it evaluates to the new value of <code>i</code>)</li>
+        </ul>
+
+        <div class="highlight-box">
+          <div class="hb-label">From the example</div>
+          <code>sum + i</code> evaluates to a number &nbsp;·&nbsp; <code>i &lt;= 10</code> evaluates to a boolean
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Statement -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-num">03</span>
+        <span class="card-title">Statement</span>
+        <span class="card-tag tag-semantic">Semantic</span>
+      </div>
+      <div class="card-body">
+        <p class="definition red">A single, complete instruction that tells the computer to perform a specific action (in an imperative language). Statements <em>execute</em>, they don't produce a value.</p>
+
+        <ul class="points">
+          <li class="red">Statements <strong>change program state</strong> — these changes are called <strong>side effects</strong></li>
+          <li class="red">An assignment like <code>sum = sum + i;</code> is a statement</li>
+          <li class="red">A declaration like <code>int sum = 0;</code> is a statement</li>
+        </ul>
+
+        <pre><span class="ty">int</span> <span class="nm">sum</span> <span class="op-c">=</span> <span class="lit-c">0</span>;      <span class="cm">← declaration statement</span>
+<span class="nm">sum</span> <span class="op-c">=</span> <span class="nm">sum</span> <span class="op-c">+</span> <span class="nm">i</span>;  <span class="cm">← assignment statement (side effect: mutates sum)</span></pre>
+      </div>
+    </div>
+
+    <!-- 4. Compound Statement -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-num">04</span>
+        <span class="card-title">Compound Statement</span>
+        <span class="card-tag tag-syntax">Syntax</span>
+      </div>
+      <div class="card-body">
+        <p class="definition">A statement <strong>composed of other statements and expressions</strong>. Allows multiple instructions to be grouped into one logical unit.</p>
+
+        <pre><span class="kw">for</span>(<span class="ty">int</span> <span class="nm">i</span> <span class="op-c">=</span> <span class="lit-c">1</span> ; <span class="nm">i</span> <span class="op-c">&lt;=</span> <span class="lit-c">10</span> ; <span class="op-c">++</span><span class="nm">i</span>) {  <span class="cm">← compound statement</span>
+    <span class="nm">sum</span> <span class="op-c">=</span> <span class="nm">sum</span> <span class="op-c">+</span> <span class="nm">i</span>;                     <span class="cm">← inner statement</span>
+}</pre>
+
+        <ul class="points">
+          <li>The <code>for</code> loop header contains <em>expressions</em>: init, condition, update</li>
+          <li>The body <code>{ sum = sum+i; }</code> is a <strong>block</strong> — another form of compound statement</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- 5. Expression Statement -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-num">05</span>
+        <span class="card-title">Expression Statement</span>
+        <span class="card-tag tag-semantic">Semantic</span>
+      </div>
+      <div class="card-body">
+        <p class="definition red">An expression that is <strong>also used as a statement</strong> — it both evaluates to a value AND has a side effect.</p>
+
+        <pre><span class="ty">int</span> <span class="nm">i</span> <span class="op-c">=</span> <span class="lit-c">100</span>;
+<span class="ty">int</span> <span class="nm">j</span> <span class="op-c">=</span> <span class="op-c">++</span><span class="nm">i</span>;  <span class="cm">← ++i used as expression (j = 101)</span>
+<span class="op-c">++</span><span class="nm">i</span>;         <span class="cm">← ++i used as statement (value discarded, i = 102)</span></pre>
+
+        <table class="compare-table">
+          <tr>
+            <th>Expression</th>
+            <th>Evaluates to</th>
+            <th>Side Effect</th>
+          </tr>
+          <tr>
+            <td><code>i + 1</code></td>
+            <td><span class="badge badge-blue">value (i+1)</span></td>
+            <td><span class="badge badge-red">none</span></td>
+          </tr>
+          <tr>
+            <td><code>++i</code></td>
+            <td><span class="badge badge-blue">value (i+1)</span></td>
+            <td><span class="badge badge-green">mutates i</span></td>
+          </tr>
+          <tr>
+            <td><code>++i;</code> (as stmt)</td>
+            <td><span class="badge badge-yellow">discarded</span></td>
+            <td><span class="badge badge-green">mutates i</span></td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- 6. Function -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-num">06</span>
+        <span class="card-title">Function</span>
+        <span class="card-tag tag-structure">Structure</span>
+      </div>
+      <div class="card-body">
+        <p class="definition yellow">Encapsulates a computation behind a <strong>defined interface</strong> — you call it with inputs, it returns an output, hiding the implementation details.</p>
+
+        <pre><span class="kw">def</span> <span class="nm">sum_to_n</span>(<span class="nm">n</span>):
+    <span class="nm">total</span> <span class="op-c">=</span> <span class="lit-c">0</span>
+    <span class="kw">for</span> <span class="nm">i</span> <span class="kw">in</span> <span class="nm">range</span>(<span class="lit-c">1</span>, <span class="nm">n</span> <span class="op-c">+</span> <span class="lit-c">1</span>):
+        <span class="nm">total</span> <span class="op-c">+=</span> <span class="nm">i</span>
+    <span class="kw">return</span> <span class="nm">total</span></pre>
+
+        <ul class="points">
+          <li class="yellow"><strong>Interface</strong>: function name + parameters (<code>n</code>) + return type</li>
+          <li class="yellow"><strong>Body</strong>: the implementation — a compound statement</li>
+          <li class="yellow">Callers use <code>sum_to_n(10)</code> without knowing <em>how</em> it works</li>
+          <li class="yellow">This is the same logic as the running Java example, abstracted into a reusable function</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- 7. Class and Object -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-num">07</span>
+        <span class="card-title">Class &amp; Object</span>
+        <span class="card-tag tag-structure">Structure</span>
+      </div>
+      <div class="card-body">
+        <p class="definition">Bundles <strong>data (fields/attributes)</strong> and <strong>operations (methods)</strong> together into a single unit — the foundation of Object-Oriented Programming.</p>
+
+        <pre><span class="kw">public class</span> <span class="ty">Car</span> {
+    <span class="ty">String</span> <span class="nm">brand</span>;         <span class="cm">← field (attribute)</span>
+    <span class="ty">String</span> <span class="nm">model</span>;         <span class="cm">← field (attribute)</span>
+    <span class="ty">int</span>    <span class="nm">currentSpeed</span>;   <span class="cm">← field (attribute)</span>
+
+    <span class="kw">public void</span> <span class="nm">accelerate</span>(<span class="ty">int</span> <span class="nm">increment</span>) { <span class="cm">← method</span>
+        <span class="nm">currentSpeed</span> <span class="op-c">+=</span> <span class="nm">increment</span>;
+    }
+}</pre>
+
+        <table class="compare-table">
+          <tr>
+            <th>Concept</th>
+            <th>What it is</th>
+            <th>Example</th>
+          </tr>
+          <tr>
+            <td><span class="badge badge-blue">Class</span></td>
+            <td>Blueprint / template</td>
+            <td><code>Car</code></td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-green">Object</span></td>
+            <td>Instance of a class</td>
+            <td><code>new Car()</code></td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-yellow">Field</span></td>
+            <td>Data stored in the object</td>
+            <td><code>brand, currentSpeed</code></td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-red">Method</span></td>
+            <td>Operation on the object</td>
+            <td><code>accelerate()</code></td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- 8. Module/Package/Library -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-num">08</span>
+        <span class="card-title">Module / Package / Library</span>
+        <span class="card-tag tag-structure">Structure</span>
+      </div>
+      <div class="card-body">
+        <p class="definition">A higher-level organizational unit that groups related code. Enables <strong>code reuse</strong> across multiple programs and enforces separation of concerns.</p>
+
+        <ul class="points">
+          <li><strong>Import</strong> — client code <em>uses</em> functionality from a module/library</li>
+          <li><strong>Export</strong> — the module <em>exposes</em> selected data and operations to the outside world</li>
+        </ul>
+
+        <pre><span class="cm"># Python examples</span>
+<span class="kw">import</span> <span class="nm">math</span>               <span class="cm">← import a standard library module</span>
+<span class="kw">from</span> <span class="nm">collections</span> <span class="kw">import</span> <span class="ty">Counter</span>  <span class="cm">← import specific export</span>
+
+<span class="cm">// Java</span>
+<span class="kw">import</span> <span class="nm">java.util.ArrayList</span>;  <span class="cm">← import from package</span></pre>
+
+        <div class="highlight-box">
+          <div class="hb-label">Key idea</div>
+          The <em>interface</em> (what's exported) is public. The <em>implementation</em> (how it works inside) is hidden. This is called <strong>encapsulation</strong>.
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <footer-note>CS3035 Programming Paradigms · Notes based on lecture slides · Readings: Textbook Chapter 3</footer-note>
+
+</body>
+</html>
