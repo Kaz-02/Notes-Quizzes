@@ -143,6 +143,7 @@
     font-weight: 600;
     line-height: 1.5;
     margin-bottom: 1.5rem;
+    color: #ffffff;
   }
 
   /* Options */
@@ -161,6 +162,7 @@
     font-size: 0.95rem;
     line-height: 1.45;
     text-align: left;
+    color: #ffffff;
   }
   .option:hover:not(.disabled) {
     border-color: var(--accent);
@@ -232,7 +234,7 @@
   .feedback.show { display: block; animation: fadeSlide 0.3s ease; }
   .feedback.correct-fb { background: rgba(61,255,192,0.08); border: 1px solid rgba(61,255,192,0.25); color: var(--correct); }
   .feedback.wrong-fb   { background: rgba(255,95,126,0.08);  border: 1px solid rgba(255,95,126,0.25);  color: #ff8fa3; }
-  .feedback strong { color: inherit; }
+  .feedback strong { color: inherit; font-family: 'Space Mono', monospace; font-size: 0.85rem; letter-spacing: 0.05em; }
 
   @keyframes fadeSlide {
     from { opacity: 0; transform: translateY(6px); }
