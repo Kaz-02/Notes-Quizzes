@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Quiz · Elements of Programming Languages</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #f5f0e8;
+    --card: #fffdf8;
+    --ink: #1a1410;
+    --muted: #7a6f62;
+    --border: #d9d0c0;
+    --accent: #c94f2a;
+    --accent2: #2a6fc9;
+    --green: #2a8a4a;
+    --red: #c94f2a;
+    --yellow: #e8a020;
+    --code-bg: #1a1410;
+    --code-text: #f5d08a;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family: 'Syne', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    padding: 2rem 1rem 6rem;
+    background-image:
+      repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(0,0,0,0.04) 39px, rgba(0,0,0,0.04) 40px),
+      repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(0,0,0,0.04) 39px, rgba(0,0,0,0.04) 40px);
+  }
+
+  /* ── HEADER ── */
+  .header {
+    max-width: 700px;
+    margin: 0 auto 2.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    animation: drop 0.5s ease both;
+  }
+
+  .header-label {
+    font-size: 0.65rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .header-label::before {
+    content: '';
+    display: inline-block;
+    width: 24px; height: 2px;
+    background: var(--accent);
+  }
+
+  h1 {
+    font-size: clamp(1.8rem, 5vw, 2.8rem);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+
+  h1 em {
+    font-style: normal;
+    color: var(--accent);
+    position: relative;
+  }
+
+  h1 em::after {
+    content: '';
+    position: absolute;
+    bottom: 2px; left: 0; right: 0;
+    height: 3px;
+    background: var(--accent);
+    opacity: 0.3;
+    border-radius: 2px;
+  }
+
+  .meta {
+    font-size: 0.75rem;
+    color: var(--muted);
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+  }
+
+  /* ── PROGRESS BAR ── */
+  .progress-wrap {
+    max-width: 700px;
+    margin: 0 auto 2rem;
+    animation: drop 0.5s 0.1s ease both;
+    opacity: 0;
+    animation-fill-mode: both;
+  }
+
+  .progress-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.4rem;
+  }
+
+  .progress-track {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.4s ease;
+    width: 0%;
+  }
+
+  /* ── QUIZ CARD ── */
+  .quiz-container {
+    max-width: 700px;
+    margin: 0 auto;
+  }
+
+  .question-card {
+    background: var(--card);
+    border: 2px solid var(--ink);
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 5px 5px 0 var(--ink);
+    animation: drop 0.4s ease both;
+    display: none;
+  }
+
+  .question-card.active { display: block; }
+
+  .q-header {
+    background: var(--ink);
+    color: var(--bg);
+    padding: 0.9rem 1.4rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .q-num {
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    opacity: 0.5;
+  }
+
+  .q-topic {
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-left: auto;
+    padding: 0.15rem 0.6rem;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 2px;
+    color: rgba(255,255,255,0.7);
+  }
+
+  .q-body {
+    padding: 1.6rem 1.4rem 1.2rem;
+  }
+
+  .q-text {
+    font-size: 1.05rem;
+    font-weight: 600;
+    line-height: 1.5;
+    margin-bottom: 0.5rem;
+  }
+
+  .q-code {
+    background: var(--code-bg);
+    color: var(--code-text);
+    font-family: 'Fira Code', monospace;
+    font-size: 0.78rem;
+    padding: 0.9rem 1.1rem;
+    border-radius: 3px;
+    margin: 0.8rem 0 1.2rem;
+    line-height: 1.8;
+    overflow-x: auto;
+  }
+
+  .q-code .kw  { color: #79b8ff; }
+  .q-code .ty  { color: #85e89d; }
+  .q-code .nm  { color: #ffab70; }
+  .q-code .lit { color: #f8c555; }
+  .q-code .op  { color: #f97583; }
+  .q-code .cm  { color: #6a737d; font-style: italic; }
+
+  /* ── OPTIONS ── */
+  .options {
+    display: grid;
+    gap: 0.6rem;
+    margin-top: 1rem;
+  }
+
+  .option {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.9rem;
+    padding: 0.85rem 1rem;
+    border: 1.5px solid var(--border);
+    border-radius: 3px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s, transform 0.15s;
+    font-size: 0.88rem;
+    line-height: 1.5;
+    user-select: none;
+    background: var(--bg);
+  }
+
+  .option:hover:not(.disabled) {
+    border-color: var(--ink);
+    transform: translateX(3px);
+    background: var(--card);
+  }
+
+  .option.disabled { cursor: default; }
+
+  .opt-letter {
+    width: 22px; height: 22px;
+    border: 1.5px solid var(--border);
+    border-radius: 2px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    flex-shrink: 0;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    margin-top: 1px;
+  }
+
+  .option:hover:not(.disabled) .opt-letter {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--bg);
+  }
+
+  .option.correct {
+    border-color: var(--green);
+    background: rgba(42,138,74,0.07);
+  }
+  .option.correct .opt-letter {
+    background: var(--green);
+    border-color: var(--green);
+    color: white;
+  }
+
+  .option.wrong {
+    border-color: var(--red);
+    background: rgba(201,79,42,0.07);
+  }
+  .option.wrong .opt-letter {
+    background: var(--red);
+    border-color: var(--red);
+    color: white;
+  }
+
+  .option.reveal-correct {
+    border-color: var(--green);
+    background: rgba(42,138,74,0.05);
+  }
+  .option.reveal-correct .opt-letter {
+    background: var(--green);
+    border-color: var(--green);
+    color: white;
+  }
+
+  /* ── FEEDBACK ── */
+  .feedback {
+    display: none;
+    margin-top: 1rem;
+    padding: 0.9rem 1.1rem;
+    border-radius: 3px;
+    font-size: 0.83rem;
+    line-height: 1.6;
+    border-left: 3px solid;
+  }
+
+  .feedback.show { display: block; animation: slideUp 0.3s ease; }
+  .feedback.correct-fb { border-color: var(--green); background: rgba(42,138,74,0.08); }
+  .feedback.wrong-fb   { border-color: var(--red);   background: rgba(201,79,42,0.08); }
+
+  .feedback strong { font-weight: 700; }
+
+  /* ── NEXT BUTTON ── */
+  .q-footer {
+    padding: 1rem 1.4rem 1.4rem;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .btn-next {
+    display: none;
+    padding: 0.7rem 1.6rem;
+    background: var(--ink);
+    color: var(--bg);
+    border: none;
+    border-radius: 3px;
+    font-family: 'Syne', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    box-shadow: 3px 3px 0 var(--accent);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+
+  .btn-next.show { display: block; animation: slideUp 0.3s ease; }
+  .btn-next:hover { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 var(--accent); }
+  .btn-next:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--accent); }
+
+  /* ── RESULTS ── */
+  .results {
+    display: none;
+    max-width: 700px;
+    margin: 0 auto;
+    background: var(--card);
+    border: 2px solid var(--ink);
+    border-radius: 4px;
+    box-shadow: 5px 5px 0 var(--ink);
+    overflow: hidden;
+    animation: drop 0.5s ease both;
+  }
+
+  .results.show { display: block; }
+
+  .results-header {
+    background: var(--ink);
+    color: var(--bg);
+    padding: 1.4rem;
+    text-align: center;
+  }
+
+  .results-header h2 {
+    font-size: 1.5rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.3rem;
+  }
+
+  .score-display {
+    font-size: 3.5rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    margin: 1rem 0;
+  }
+
+  .score-display span { color: var(--accent); }
+
+  .score-label {
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    opacity: 0.6;
+  }
+
+  .grade-badge {
+    display: inline-block;
+    margin-top: 0.8rem;
+    padding: 0.3rem 1rem;
+    border: 2px solid var(--bg);
+    border-radius: 2px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  .results-breakdown {
+    padding: 1.4rem;
+  }
+
+  .breakdown-title {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    margin-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.5rem;
+  }
+
+  .breakdown-item {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    font-size: 0.82rem;
+  }
+
+  .bd-num {
+    font-size: 0.65rem;
+    color: var(--muted);
+    width: 1.5rem;
+    flex-shrink: 0;
+  }
+
+  .bd-text { flex: 1; line-height: 1.4; }
+
+  .bd-icon {
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+
+  .results-footer {
+    padding: 1rem 1.4rem 1.4rem;
+    display: flex;
+    justify-content: center;
+  }
+
+  .btn-restart {
+    padding: 0.8rem 2rem;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 3px;
+    font-family: 'Syne', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    box-shadow: 3px 3px 0 var(--ink);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+
+  .btn-restart:hover { transform: translate(-2px,-2px); box-shadow: 5px 5px 0 var(--ink); }
+  .btn-restart:active { transform: translate(1px,1px); box-shadow: 1px 1px 0 var(--ink); }
+
+  @keyframes drop {
+    from { opacity:0; transform: translateY(-12px); }
+    to   { opacity:1; transform: translateY(0); }
+  }
+
+  @keyframes slideUp {
+    from { opacity:0; transform: translateY(8px); }
+    to   { opacity:1; transform: translateY(0); }
+  }
+
+  @media (max-width: 500px) {
+    .q-code { font-size: 0.68rem; }
+    .q-text { font-size: 0.95rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-label">CS3035 · Programming Paradigms</div>
+  <h1>Elements of <em>Programming</em> Languages</h1>
+  <div class="meta">
+    <span id="q-counter">Question 1 of 12</span>
+    <span>·</span>
+    <span>Multiple Choice</span>
+  </div>
+</div>
+
+<div class="progress-wrap">
+  <div class="progress-labels">
+    <span>Progress</span>
+    <span id="pct-label">0%</span>
+  </div>
+  <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+</div>
+
+<div class="quiz-container" id="quiz-container"><!-- cards injected by JS --></div>
+<div class="results" id="results"></div>
+
+<script>
+const questions = [
+  {
+    topic: "Token",
+    text: "Which of the following is the best definition of a <strong>token</strong> in a programming language?",
+    options: [
+      "A complete instruction that performs an action",
+      "The smallest meaningful unit in a program's source code",
+      "A syntactic construct that evaluates to a value",
+      "A grouping of related functions and data"
+    ],
+    correct: 1,
+    feedback: "Tokens (a.k.a. lexical structure) are the smallest meaningful units — like words and punctuation in a sentence. The lexer breaks raw source code into tokens."
+  },
+  {
+    topic: "Token",
+    text: "In the code below, identify what type of token <code style='font-family:Fira Code,monospace;background:#eee;padding:1px 5px;border-radius:2px;'>10</code> is.",
+    code: `<span class="kw">for</span>(<span class="ty">int</span> <span class="nm">i</span> <span class="op">=</span> <span class="lit">1</span> ; <span class="nm">i</span> <span class="op">&lt;=</span> <span class="lit">10</span> ; <span class="op">++</span><span class="nm">i</span>) { }`,
+    options: ["Keyword", "Operator", "Literal", "Separator"],
+    correct: 2,
+    feedback: "10 is a <strong>literal</strong> — a fixed value written directly in source code. Other literals in the example include 0 and 1."
+  },
+  {
+    topic: "Token",
+    text: "Which of the following lists contains <em>only</em> keywords from the example program?",
+    code: `<span class="ty">int</span> <span class="nm">sum</span> <span class="op">=</span> <span class="lit">0</span>;\n<span class="kw">for</span>(<span class="ty">int</span> <span class="nm">i</span><span class="op">=</span><span class="lit">1</span> ; <span class="nm">i</span><span class="op">&lt;=</span><span class="lit">10</span> ; <span class="op">++</span><span class="nm">i</span>) {\n    <span class="nm">sum</span> <span class="op">=</span> <span class="nm">sum</span><span class="op">+</span><span class="nm">i</span>;\n}`,
+    options: [
+      "sum, i",
+      "for, int",
+      "=, <=, ++",
+      "; , { }"
+    ],
+    correct: 1,
+    feedback: "<strong>for</strong> and <strong>int</strong> are reserved keywords. <code>sum</code> and <code>i</code> are variable identifiers. <code>=, <=, ++</code> are operators, and <code>; { }</code> are separators."
+  },
+  {
+    topic: "Expression",
+    text: "What is an <strong>expression</strong> in a programming language?",
+    options: [
+      "An instruction that changes the state of the program",
+      "A group of statements enclosed in braces",
+      "A syntactic construct that evaluates to a single value",
+      "A named block of code that can be called repeatedly"
+    ],
+    correct: 2,
+    feedback: "An expression evaluates to a single value. For example, <code>sum + i</code> evaluates to a number, and <code>i <= 10</code> evaluates to a boolean."
+  },
+  {
+    topic: "Expression",
+    text: "Which of the following from the example is <strong>not</strong> an expression by itself?",
+    code: `<span class="ty">int</span> <span class="nm">sum</span> <span class="op">=</span> <span class="lit">0</span>;`,
+    options: [
+      "sum",
+      "0",
+      "sum + i",
+      "int sum = 0;"
+    ],
+    correct: 3,
+    feedback: "<code>int sum = 0;</code> is a <strong>declaration statement</strong>, not an expression — it performs an action (declaring and initializing a variable) rather than evaluating to a value."
+  },
+  {
+    topic: "Statement",
+    text: "What distinguishes a <strong>statement</strong> from an <strong>expression</strong>?",
+    options: [
+      "Statements always contain keywords; expressions do not",
+      "Statements execute an action and may cause side effects; expressions evaluate to a value",
+      "Statements are only found inside functions; expressions can be anywhere",
+      "Statements use semicolons; expressions use parentheses"
+    ],
+    correct: 1,
+    feedback: "Statements execute actions and typically change program state (side effects). Expressions evaluate to a value. These are fundamentally different roles — though expression statements can do both!"
+  },
+  {
+    topic: "Statement",
+    text: "In the context of programming languages, what is a <strong>side effect</strong>?",
+    options: [
+      "A bug introduced by incorrect syntax",
+      "A secondary function called inside a loop",
+      "A change to the program's state caused by executing a statement",
+      "An expression that returns an unexpected value"
+    ],
+    correct: 2,
+    feedback: "Side effects are changes to program state — like modifying a variable's value. For example, <code>sum = sum + i;</code> has the side effect of updating the value stored in <code>sum</code>."
+  },
+  {
+    topic: "Compound Statement",
+    text: "What is a <strong>compound statement</strong>?",
+    options: [
+      "A statement that contains only expressions",
+      "A statement composed from other statements and expressions",
+      "Two assignment statements on the same line",
+      "A statement that always has a return value"
+    ],
+    correct: 1,
+    feedback: "A compound statement is built from other statements and expressions. The <code>for</code> loop in the example is a compound statement — it contains an init expression, a condition, an update expression, and a body block."
+  },
+  {
+    topic: "Expression Statement",
+    text: "Consider <code style='font-family:Fira Code,monospace;background:#eee;padding:1px 5px;border-radius:2px;'>++i;</code> used on its own line. What makes it an <strong>expression statement</strong>?",
+    code: `<span class="ty">int</span> <span class="nm">i</span> <span class="op">=</span> <span class="lit">100</span>;\n<span class="op">++</span><span class="nm">i</span>;   <span class="cm">// used as a statement</span>`,
+    options: [
+      "It is an expression because it evaluates to a value, and a statement because the value is discarded and it mutates i",
+      "It is only a statement; it does not evaluate to any value",
+      "It is only an expression; it cannot be used as a statement",
+      "The semicolon transforms it from an expression into a statement with no other difference"
+    ],
+    correct: 0,
+    feedback: "<code>++i</code> both evaluates to a value (the new value of i) AND has a side effect (mutating i). When used as a statement, the value is discarded — only the side effect matters. That's what makes it an expression statement."
+  },
+  {
+    topic: "Expression Statement",
+    text: "What is the key difference between <code style='font-family:Fira Code,monospace;background:#eee;padding:1px 5px;border-radius:2px;'>i+1</code> and <code style='font-family:Fira Code,monospace;background:#eee;padding:1px 5px;border-radius:2px;'>++i</code>?",
+    options: [
+      "i+1 is faster at runtime than ++i",
+      "i+1 has a side effect; ++i does not",
+      "++i modifies i (side effect); i+1 only evaluates to a value without changing i",
+      "They are functionally identical in all contexts"
+    ],
+    correct: 2,
+    feedback: "<code>i+1</code> evaluates to a new value but leaves <code>i</code> unchanged. <code>++i</code> also evaluates to a value, but additionally <em>mutates</em> the variable <code>i</code> — that mutation is the side effect."
+  },
+  {
+    topic: "Function",
+    text: "What does it mean for a function to <strong>encapsulate a computation behind a defined interface</strong>?",
+    options: [
+      "The function must be defined before it is called",
+      "Callers use the function by its name and parameters without needing to know the internal implementation",
+      "The function must be inside a class to work correctly",
+      "The function cannot access variables from outside its body"
+    ],
+    correct: 1,
+    feedback: "Encapsulation means the caller just needs to know <em>what</em> the function does (its interface: name, parameters, return type) — not <em>how</em> it does it. The implementation is hidden inside the function body."
+  },
+  {
+    topic: "Class & Object / Module",
+    text: "In the <code style='font-family:Fira Code,monospace;background:#eee;padding:1px 5px;border-radius:2px;'>Car</code> class below, what is <code style='font-family:Fira Code,monospace;background:#eee;padding:1px 5px;border-radius:2px;'>accelerate()</code> and what are <code style='font-family:Fira Code,monospace;background:#eee;padding:1px 5px;border-radius:2px;'>brand</code>, <code style='font-family:Fira Code,monospace;background:#eee;padding:1px 5px;border-radius:2px;'>model</code>, <code style='font-family:Fira Code,monospace;background:#eee;padding:1px 5px;border-radius:2px;'>currentSpeed</code>?",
+    code: `<span class="kw">public class</span> <span class="ty">Car</span> {\n  <span class="ty">String</span> <span class="nm">brand</span>;\n  <span class="ty">String</span> <span class="nm">model</span>;\n  <span class="ty">int</span> <span class="nm">currentSpeed</span>;\n  <span class="kw">public void</span> <span class="nm">accelerate</span>(<span class="ty">int</span> <span class="nm">increment</span>) {\n    <span class="nm">currentSpeed</span> <span class="op">+=</span> <span class="nm">increment</span>;\n  }\n}`,
+    options: [
+      "accelerate() is a field; brand, model, currentSpeed are methods",
+      "accelerate() is a method; brand, model, currentSpeed are fields (attributes)",
+      "All of them are fields — methods can only be defined outside the class",
+      "accelerate() is a constructor; brand, model, currentSpeed are local variables"
+    ],
+    correct: 1,
+    feedback: "In a class, <strong>fields</strong> (also called attributes) store data — here, <code>brand</code>, <code>model</code>, <code>currentSpeed</code>. <strong>Methods</strong> define operations on that data — here, <code>accelerate()</code>. A class bundles both together."
+  }
+];
+
+let current = 0;
+let score = 0;
+let answered = [];
+
+function buildCards() {
+  const container = document.getElementById('quiz-container');
+  questions.forEach((q, idx) => {
+    const card = document.createElement('div');
+    card.className = 'question-card' + (idx === 0 ? ' active' : '');
+    card.id = 'card-' + idx;
+
+    const letters = ['A','B','C','D'];
+    const optionsHTML = q.options.map((opt, oi) => `
+      <div class="option" data-idx="${oi}" onclick="selectAnswer(${idx}, ${oi})">
+        <div class="opt-letter">${letters[oi]}</div>
+        <div>${opt}</div>
+      </div>
+    `).join('');
+
+    card.innerHTML = `
+      <div class="q-header">
+        <span class="q-num">Q${idx+1} of ${questions.length}</span>
+        <span class="q-topic">${q.topic}</span>
+      </div>
+      <div class="q-body">
+        <div class="q-text">${q.text}</div>
+        ${q.code ? `<div class="q-code">${q.code}</div>` : ''}
+        <div class="options" id="options-${idx}">${optionsHTML}</div>
+        <div class="feedback" id="feedback-${idx}"></div>
+      </div>
+      <div class="q-footer">
+        <button class="btn-next" id="next-${idx}" onclick="nextQuestion(${idx})">
+          ${idx === questions.length - 1 ? 'See Results →' : 'Next Question →'}
+        </button>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function selectAnswer(qIdx, optIdx) {
+  if (answered[qIdx] !== undefined) return;
+  answered[qIdx] = optIdx;
+
+  const q = questions[qIdx];
+  const opts = document.querySelectorAll(`#options-${qIdx} .option`);
+  const feedback = document.getElementById(`feedback-${qIdx}`);
+  const nextBtn = document.getElementById(`next-${qIdx}`);
+
+  opts.forEach(o => o.classList.add('disabled'));
+
+  const isCorrect = optIdx === q.correct;
+  if (isCorrect) score++;
+
+  opts[optIdx].classList.add(isCorrect ? 'correct' : 'wrong');
+  if (!isCorrect) opts[q.correct].classList.add('reveal-correct');
+
+  feedback.innerHTML = (isCorrect
+    ? `<strong>✓ Correct!</strong> ${q.feedback}`
+    : `<strong>✗ Incorrect.</strong> ${q.feedback}`);
+  feedback.className = 'feedback show ' + (isCorrect ? 'correct-fb' : 'wrong-fb');
+
+  nextBtn.classList.add('show');
+}
+
+function nextQuestion(qIdx) {
+  document.getElementById('card-' + qIdx).classList.remove('active');
+  current = qIdx + 1;
+
+  if (current >= questions.length) {
+    showResults();
+    return;
+  }
+
+  document.getElementById('card-' + current).classList.add('active');
+  updateProgress();
+}
+
+function updateProgress() {
+  const pct = Math.round((current / questions.length) * 100);
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('pct-label').textContent = pct + '%';
+  document.getElementById('q-counter').textContent = `Question ${current + 1} of ${questions.length}`;
+}
+
+function showResults() {
+  document.getElementById('quiz-container').style.display = 'none';
+  document.getElementById('progress-fill').style.width = '100%';
+  document.getElementById('pct-label').textContent = '100%';
+
+  const pct = Math.round((score / questions.length) * 100);
+  let grade = '', color = '';
+  if (pct >= 90) { grade = 'Excellent!'; color = '#2a8a4a'; }
+  else if (pct >= 75) { grade = 'Good Work'; color = '#2a6fc9'; }
+  else if (pct >= 60) { grade = 'Keep Studying'; color = '#e8a020'; }
+  else { grade = 'Review the Material'; color = '#c94f2a'; }
+
+  const breakdown = questions.map((q, i) => `
+    <div class="breakdown-item">
+      <span class="bd-num">Q${i+1}</span>
+      <span class="bd-text">${q.topic}</span>
+      <span class="bd-icon">${answered[i] === q.correct ? '✅' : '❌'}</span>
+    </div>
+  `).join('');
+
+  const results = document.getElementById('results');
+  results.innerHTML = `
+    <div class="results-header">
+      <h2>Quiz Complete</h2>
+      <div class="score-display"><span>${score}</span> / ${questions.length}</div>
+      <div class="score-label">${pct}% correct</div>
+      <div class="grade-badge" style="border-color:${color};color:${color}">${grade}</div>
+    </div>
+    <div class="results-breakdown">
+      <div class="breakdown-title">Question Breakdown</div>
+      ${breakdown}
+    </div>
+    <div class="results-footer">
+      <button class="btn-restart" onclick="restartQuiz()">Try Again</button>
+    </div>
+  `;
+  results.classList.add('show');
+}
+
+function restartQuiz() {
+  current = 0; score = 0; answered = [];
+  document.getElementById('results').classList.remove('show');
+  document.getElementById('quiz-container').style.display = 'block';
+  document.getElementById('quiz-container').innerHTML = '';
+  document.getElementById('progress-fill').style.width = '0%';
+  document.getElementById('pct-label').textContent = '0%';
+  document.getElementById('q-counter').textContent = 'Question 1 of ' + questions.length;
+  buildCards();
+}
+
+// Init
+buildCards();
+// Animate progress bar in
+setTimeout(() => {
+  document.querySelector('.progress-wrap').style.opacity = '1';
+}, 100);
+</script>
+</body>
+</html>

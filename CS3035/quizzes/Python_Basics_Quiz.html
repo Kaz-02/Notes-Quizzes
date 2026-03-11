@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Python Basics Quiz — CS3035</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #faf7f2;
+    --surface: #ffffff;
+    --border: #e8e0d4;
+    --text: #1a1610;
+    --muted: #8a7f72;
+    --accent: #c84b1f;
+    --accent-light: #fdf0eb;
+    --green: #1a6e3c;
+    --green-light: #eaf5ee;
+    --red: #b91c1c;
+    --red-light: #fef2f2;
+    --code-bg: #f4f0ea;
+    --tag: #e8e0d4;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+  }
+
+  /* ─── Header ─── */
+  .header {
+    background: var(--text);
+    color: var(--bg);
+    padding: 2.5rem 2rem 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .header::after {
+    content: 'QUIZ';
+    position: absolute;
+    right: -0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 10rem;
+    font-weight: 800;
+    color: rgba(255,255,255,0.04);
+    line-height: 1;
+    pointer-events: none;
+    letter-spacing: -0.05em;
+  }
+
+  .header .eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.5rem;
+  }
+
+  .header h1 {
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+  }
+
+  .header p {
+    margin-top: 0.6rem;
+    color: rgba(250,247,242,0.55);
+    font-weight: 400;
+    font-size: 0.95rem;
+  }
+
+  /* ─── Progress bar ─── */
+  .progress-bar-wrap {
+    background: var(--border);
+    height: 4px;
+    position: relative;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: var(--accent);
+    transition: width 0.4s cubic-bezier(.4,0,.2,1);
+    width: 0%;
+  }
+
+  /* ─── Main layout ─── */
+  .main {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 6rem;
+  }
+
+  /* ─── Status bar ─── */
+  .status-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .status-bar .q-counter span {
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  .score-pill {
+    background: var(--text);
+    color: var(--bg);
+    padding: 0.3em 0.9em;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+  }
+
+  /* ─── Question card ─── */
+  .question-card {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    padding: 2rem 2.2rem 1.8rem;
+    animation: slideIn 0.35s cubic-bezier(.4,0,.2,1);
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .q-category {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--accent);
+    background: var(--accent-light);
+    display: inline-block;
+    padding: 0.2em 0.7em;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+  }
+
+  .q-text {
+    font-size: 1.15rem;
+    font-weight: 700;
+    line-height: 1.45;
+    margin-bottom: 1.5rem;
+    letter-spacing: -0.01em;
+  }
+
+  /* code in question */
+  .q-text code, .opt-label code {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.9em;
+    background: var(--code-bg);
+    padding: 0.1em 0.4em;
+    border-radius: 4px;
+    color: var(--accent);
+  }
+
+  pre.q-code {
+    font-family: 'DM Mono', monospace;
+    background: var(--code-bg);
+    border-radius: 10px;
+    padding: 1rem 1.3rem;
+    font-size: 0.85rem;
+    line-height: 1.7;
+    margin: 0 0 1.5rem;
+    overflow-x: auto;
+    border: 1px solid var(--border);
+  }
+
+  /* ─── Options ─── */
+  .options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+  }
+
+  .opt {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.9rem;
+    padding: 0.9rem 1.1rem;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s, transform 0.1s;
+    background: var(--bg);
+    text-align: left;
+    width: 100%;
+    font-family: 'Syne', sans-serif;
+  }
+
+  .opt:hover:not(:disabled) {
+    border-color: var(--accent);
+    background: var(--accent-light);
+    transform: translateX(3px);
+  }
+
+  .opt:disabled { cursor: default; }
+
+  .opt.correct {
+    border-color: var(--green);
+    background: var(--green-light);
+  }
+
+  .opt.wrong {
+    border-color: var(--red);
+    background: var(--red-light);
+  }
+
+  .opt-key {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    background: var(--tag);
+    border-radius: 4px;
+    padding: 0.2em 0.5em;
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    transition: background 0.15s, color 0.15s;
+  }
+
+  .opt.correct .opt-key {
+    background: var(--green);
+    color: #fff;
+  }
+  .opt.wrong .opt-key {
+    background: var(--red);
+    color: #fff;
+  }
+
+  .opt-label {
+    font-size: 0.97rem;
+    font-weight: 400;
+    line-height: 1.45;
+    color: var(--text);
+  }
+
+  /* ─── Feedback ─── */
+  .feedback {
+    margin-top: 1.3rem;
+    padding: 1rem 1.2rem;
+    border-radius: 10px;
+    font-size: 0.92rem;
+    line-height: 1.55;
+    display: none;
+    animation: popIn 0.25s ease;
+  }
+
+  @keyframes popIn {
+    from { opacity: 0; transform: scale(0.97); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+
+  .feedback.correct {
+    background: var(--green-light);
+    border: 1px solid #6fcf97;
+    color: var(--green);
+    display: block;
+  }
+
+  .feedback.wrong {
+    background: var(--red-light);
+    border: 1px solid #fca5a5;
+    color: var(--red);
+    display: block;
+  }
+
+  .feedback strong {
+    display: block;
+    margin-bottom: 0.3rem;
+    font-size: 0.95rem;
+  }
+
+  /* ─── Next button ─── */
+  .btn-next {
+    display: none;
+    margin-top: 1.5rem;
+    width: 100%;
+    padding: 0.9rem;
+    background: var(--text);
+    color: var(--bg);
+    border: none;
+    border-radius: 10px;
+    font-family: 'Syne', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+
+  .btn-next:hover { opacity: 0.85; transform: translateY(-1px); }
+  .btn-next.visible { display: block; animation: popIn 0.3s ease; }
+
+  /* ─── Results screen ─── */
+  .results {
+    display: none;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    padding: 2.5rem 2.2rem;
+    text-align: center;
+    animation: slideIn 0.4s ease;
+  }
+
+  .results.show { display: block; }
+
+  .results .big-score {
+    font-size: 5rem;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.05em;
+    color: var(--accent);
+  }
+
+  .results .label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    margin-top: 0.4rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .results h2 {
+    font-size: 1.5rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.02em;
+  }
+
+  .results p {
+    color: var(--muted);
+    font-size: 0.97rem;
+    margin-bottom: 1.8rem;
+  }
+
+  .grade-bar {
+    background: var(--border);
+    height: 10px;
+    border-radius: 999px;
+    overflow: hidden;
+    margin: 1rem 0 1.8rem;
+  }
+
+  .grade-bar-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 999px;
+    transition: width 1s cubic-bezier(.4,0,.2,1);
+  }
+
+  .breakdown {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.8rem;
+    margin-bottom: 2rem;
+    text-align: left;
+  }
+
+  .breakdown-item {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.8rem 1rem;
+  }
+
+  .breakdown-item .bi-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    margin-bottom: 0.2rem;
+  }
+
+  .breakdown-item .bi-val {
+    font-size: 1.6rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+  }
+
+  .btn-retry {
+    display: inline-block;
+    padding: 0.85rem 2.5rem;
+    background: var(--text);
+    color: var(--bg);
+    border: none;
+    border-radius: 10px;
+    font-family: 'Syne', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+
+  .btn-retry:hover { opacity: 0.8; }
+
+  @media (max-width: 520px) {
+    .question-card { padding: 1.4rem 1.2rem; }
+    .breakdown { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="eyebrow">CS3035 · Programming Paradigms</div>
+  <h1>Python Basics<br>Quiz</h1>
+  <p>15 questions · Test your knowledge</p>
+</div>
+
+<div class="progress-bar-wrap">
+  <div class="progress-bar-fill" id="progressBar"></div>
+</div>
+
+<div class="main">
+  <div class="status-bar">
+    <div class="q-counter">Question <span id="qNum">1</span> of <span id="qTotal">15</span></div>
+    <div class="score-pill" id="scoreDisplay">Score: 0</div>
+  </div>
+
+  <!-- Question card -->
+  <div class="question-card" id="questionCard">
+    <div class="q-category" id="qCategory"></div>
+    <div class="q-text" id="qText"></div>
+    <pre class="q-code" id="qCode" style="display:none"></pre>
+    <div class="options" id="optionsContainer"></div>
+    <div class="feedback" id="feedback"></div>
+    <button class="btn-next" id="btnNext">Next Question →</button>
+  </div>
+
+  <!-- Results -->
+  <div class="results" id="results">
+    <div class="big-score" id="finalPct">0%</div>
+    <div class="label">Final Score</div>
+    <h2 id="resultTitle"></h2>
+    <p id="resultMsg"></p>
+    <div class="grade-bar"><div class="grade-bar-fill" id="gradeBarFill" style="width:0%"></div></div>
+    <div class="breakdown">
+      <div class="breakdown-item">
+        <div class="bi-label">Correct</div>
+        <div class="bi-val" id="resCorrect" style="color:var(--green)">0</div>
+      </div>
+      <div class="breakdown-item">
+        <div class="bi-label">Incorrect</div>
+        <div class="bi-val" id="resWrong" style="color:var(--red)">0</div>
+      </div>
+      <div class="breakdown-item">
+        <div class="bi-label">Total Questions</div>
+        <div class="bi-val" id="resTotal">15</div>
+      </div>
+      <div class="breakdown-item">
+        <div class="bi-label">Percentage</div>
+        <div class="bi-val" id="resPct" style="color:var(--accent)">0%</div>
+      </div>
+    </div>
+    <button class="btn-retry" onclick="initQuiz()">Try Again ↺</button>
+  </div>
+</div>
+
+<script>
+const questions = [
+  {
+    category: "About Python",
+    text: "Where does Python currently rank on the TIOBE Index?",
+    options: ["#2", "#4", "#1", "#10"],
+    correct: 2,
+    explanation: "As of the lecture slides, Python is ranked #1 on the TIOBE Index, reflecting its massive popularity."
+  },
+  {
+    category: "Execution Model",
+    text: "Which best describes an interpreted language?",
+    options: [
+      "The whole program is compiled to binary before it runs",
+      "Each instruction is translated and executed one at a time",
+      "The source code runs directly on hardware",
+      "It uses only bytecode with no translation"
+    ],
+    correct: 1,
+    explanation: "Interpreted languages translate and execute source code one instruction at a time, with the interpreter running alongside the program."
+  },
+  {
+    category: "Execution Model",
+    text: "Python and Java are described as 'hybrid' languages. What does this mean?",
+    options: [
+      "They can run on both Windows and Mac",
+      "They support both OOP and functional paradigms",
+      "They compile source to an intermediate bytecode before execution",
+      "They use both static and dynamic typing"
+    ],
+    correct: 2,
+    explanation: "Both Python and Java compile source code into an intermediate bytecode format — they're not purely interpreted or purely compiled."
+  },
+  {
+    category: "Syntax Basics",
+    text: "What is the output of the following Python program?\n\nprint(\"Hello, World!\")",
+    options: [
+      "Hello, World",
+      "\"Hello, World!\"",
+      "Hello, World!",
+      "SyntaxError"
+    ],
+    correct: 2,
+    explanation: "print() outputs the string without the surrounding quotes. The output is: Hello, World!"
+  },
+  {
+    category: "Types & Literals",
+    text: "Which of the following is a valid way to create a multi-line string in Python?",
+    options: [
+      '<code>/* This is a\nmulti-line string */</code>',
+      '<code>"""This is a\nmulti-line string"""</code>',
+      '<code>// This is a\n// multi-line string</code>',
+      '<code>< This is a\nmulti-line string ></code>'
+    ],
+    correct: 1,
+    explanation: "Triple quotes (\"\"\" or ''') are used for multi-line strings in Python. The other options are comment or markup syntax from other languages."
+  },
+  {
+    category: "Types & Literals",
+    text: "What is the key difference between a list and a tuple in Python?",
+    options: [
+      "Lists can only hold numbers; tuples can hold any type",
+      "Tuples are immutable; lists are mutable",
+      "Lists are ordered; tuples are unordered",
+      "Tuples can be indexed; lists cannot"
+    ],
+    correct: 1,
+    explanation: "A tuple is an immutable list — once created it cannot be changed. Lists are mutable. Both can hold mixed types and are ordered."
+  },
+  {
+    category: "Types & Literals",
+    text: "You need an empty set in Python. Which code is correct?",
+    options: [
+      "<code>{}</code>",
+      "<code>set{}</code>",
+      "<code>[]</code>",
+      "<code>set()</code>"
+    ],
+    correct: 3,
+    explanation: "set() creates an empty set. {} creates an empty dictionary — not an empty set!"
+  },
+  {
+    category: "Operators",
+    text: "What does the <code>//</code> operator do in Python?",
+    options: [
+      "It starts a comment",
+      "It performs regular division",
+      "It performs floor (integer) division",
+      "It is the exponentiation operator"
+    ],
+    correct: 2,
+    explanation: "// is the floor division operator. For example, 7 // 2 = 3. The comment operator in Python is #, and exponentiation is **."
+  },
+  {
+    category: "Expressions",
+    text: "What is the value of <code>x</code> after: <code>x = 10 if [] else 20</code>?",
+    options: ["10", "20", "True", "SyntaxError"],
+    correct: 1,
+    explanation: "An empty list [] is falsy in Python. So the condition is False, and x gets the else value: 20."
+  },
+  {
+    category: "Control Flow",
+    text: "Python does NOT have which of the following loop structures?",
+    options: ["for loop", "while loop", "do-while loop", "nested loops"],
+    correct: 2,
+    explanation: "Python has no do-while loop. It supports for loops (iterating over sequences) and while loops, but not do-while."
+  },
+  {
+    category: "Control Flow",
+    text: "What does the <code>_</code> case mean in a Python <code>match</code> statement?",
+    options: [
+      "It matches only None values",
+      "It is the default (catch-all) case",
+      "It skips the current iteration",
+      "It breaks out of the match block"
+    ],
+    correct: 1,
+    explanation: "In a match statement, _ is the wildcard / default case — similar to default: in Java's switch, but no break is needed."
+  },
+  {
+    category: "Functions",
+    text: "What does a Python function return if it has no explicit return statement?",
+    options: ["0", "False", "None", "An empty string"],
+    correct: 2,
+    explanation: "A Python function that doesn't explicitly return a value implicitly returns None."
+  },
+  {
+    category: "Functions",
+    text: "Consider this code:\n\ndef add_to_list(value, my_list=[]):\n    my_list.append(value)\n    return my_list\n\nprint(add_to_list(1))\nprint(add_to_list(2))\nprint(add_to_list(3))\n\nWhat is printed?",
+    code: "def add_to_list(value, my_list=[]):\n    my_list.append(value)\n    return my_list\n\nprint(add_to_list(1))\nprint(add_to_list(2))\nprint(add_to_list(3))",
+    options: [
+      "[1]\n[2]\n[3]",
+      "[1]\n[1, 2]\n[1, 2, 3]",
+      "Error — cannot use list as default",
+      "[1, 2, 3]\n[1, 2, 3]\n[1, 2, 3]"
+    ],
+    correct: 1,
+    explanation: "Default parameter values are evaluated ONCE at function definition time. The same list object is reused across all calls, so it keeps accumulating values. Output: [1], then [1, 2], then [1, 2, 3]."
+  },
+  {
+    category: "Classes",
+    text: "In a Python class, what is the role of <code>self</code>?",
+    options: [
+      "It is a keyword that creates a new object",
+      "It refers to the class itself (like static in Java)",
+      "It represents the current instance and must be the first parameter of instance methods",
+      "It is optional and only needed in the constructor"
+    ],
+    correct: 2,
+    explanation: "self represents the current object (instance). It must be the first parameter of every instance method, including __init__. Python does not pass it automatically — you declare it explicitly."
+  },
+  {
+    category: "Modules & Packages",
+    text: "Which import statement lets you call <code>add(2, 3)</code> directly (without a module prefix)?",
+    options: [
+      "<code>import foo</code>",
+      "<code>import foo as f</code>",
+      "<code>from foo import add</code>",
+      "None of the above"
+    ],
+    correct: 2,
+    explanation: "from foo import add brings add directly into the current namespace, so you can call add(2, 3) without the foo. prefix."
+  }
+];
+
+let current = 0;
+let score = 0;
+let answered = false;
+
+function shuffle(arr) {
+  return [...arr].sort(() => Math.random() - 0.5);
+}
+
+// We store the shuffled order per question
+let shuffledQuestions = [];
+
+function initQuiz() {
+  shuffledQuestions = shuffle(questions);
+  current = 0;
+  score = 0;
+  answered = false;
+  document.getElementById('results').classList.remove('show');
+  document.getElementById('questionCard').style.display = '';
+  document.getElementById('scoreDisplay').textContent = 'Score: 0';
+  updateProgress();
+  renderQuestion();
+}
+
+function updateProgress() {
+  const pct = (current / shuffledQuestions.length) * 100;
+  document.getElementById('progressBar').style.width = pct + '%';
+  document.getElementById('qNum').textContent = current + 1;
+  document.getElementById('qTotal').textContent = shuffledQuestions.length;
+}
+
+function renderQuestion() {
+  answered = false;
+  const q = shuffledQuestions[current];
+  document.getElementById('qCategory').textContent = q.category;
+  document.getElementById('qText').innerHTML = q.text;
+
+  const codeEl = document.getElementById('qCode');
+  if (q.code) {
+    codeEl.textContent = q.code;
+    codeEl.style.display = 'block';
+  } else {
+    codeEl.style.display = 'none';
+  }
+
+  const feedback = document.getElementById('feedback');
+  feedback.className = 'feedback';
+  feedback.innerHTML = '';
+
+  const btnNext = document.getElementById('btnNext');
+  btnNext.classList.remove('visible');
+  btnNext.textContent = current === shuffledQuestions.length - 1 ? 'See Results →' : 'Next Question →';
+
+  const container = document.getElementById('optionsContainer');
+  container.innerHTML = '';
+
+  const keys = ['A', 'B', 'C', 'D'];
+  // Shuffle options while tracking correct answer
+  const optWithIdx = q.options.map((opt, i) => ({ opt, i }));
+  const shuffledOpts = shuffle(optWithIdx);
+  const newCorrectIdx = shuffledOpts.findIndex(o => o.i === q.correct);
+
+  shuffledOpts.forEach(({ opt }, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'opt';
+    btn.innerHTML = `
+      <span class="opt-key">${keys[idx]}</span>
+      <span class="opt-label">${opt}</span>`;
+    btn.addEventListener('click', () => handleAnswer(idx, newCorrectIdx, btn));
+    container.appendChild(btn);
+  });
+
+  // Animate card
+  const card = document.getElementById('questionCard');
+  card.style.animation = 'none';
+  card.offsetHeight; // reflow
+  card.style.animation = '';
+}
+
+function handleAnswer(chosen, correct, btn) {
+  if (answered) return;
+  answered = true;
+
+  const allBtns = document.querySelectorAll('.opt');
+  allBtns.forEach(b => b.disabled = true);
+
+  const feedback = document.getElementById('feedback');
+  const q = shuffledQuestions[current];
+
+  if (chosen === correct) {
+    score++;
+    btn.classList.add('correct');
+    feedback.className = 'feedback correct';
+    feedback.innerHTML = `<strong>✓ Correct!</strong>${q.explanation}`;
+  } else {
+    btn.classList.add('wrong');
+    allBtns[correct].classList.add('correct');
+    feedback.className = 'feedback wrong';
+    feedback.innerHTML = `<strong>✗ Not quite.</strong>${q.explanation}`;
+  }
+
+  document.getElementById('scoreDisplay').textContent = `Score: ${score}`;
+  document.getElementById('btnNext').classList.add('visible');
+  updateProgress();
+}
+
+document.getElementById('btnNext').addEventListener('click', () => {
+  current++;
+  if (current >= shuffledQuestions.length) {
+    showResults();
+  } else {
+    updateProgress();
+    renderQuestion();
+  }
+});
+
+function showResults() {
+  document.getElementById('questionCard').style.display = 'none';
+  const results = document.getElementById('results');
+  results.classList.add('show');
+
+  const total = shuffledQuestions.length;
+  const pct = Math.round((score / total) * 100);
+
+  document.getElementById('finalPct').textContent = pct + '%';
+  document.getElementById('resCorrect').textContent = score;
+  document.getElementById('resWrong').textContent = total - score;
+  document.getElementById('resTotal').textContent = total;
+  document.getElementById('resPct').textContent = pct + '%';
+  document.getElementById('progressBar').style.width = '100%';
+
+  let title, msg;
+  if (pct === 100) { title = "Perfect Score! 🎉"; msg = "Outstanding! You've mastered Python Basics."; }
+  else if (pct >= 80) { title = "Great Work! 👏"; msg = "Solid understanding of Python fundamentals. Review the ones you missed."; }
+  else if (pct >= 60) { title = "Good Effort 👍"; msg = "You've got the core concepts. A bit more review will help cement the details."; }
+  else { title = "Keep Studying 📚"; msg = "Go back through the lecture slides and try again — you'll improve!"; }
+
+  document.getElementById('resultTitle').textContent = title;
+  document.getElementById('resultMsg').textContent = msg;
+
+  setTimeout(() => {
+    document.getElementById('gradeBarFill').style.width = pct + '%';
+  }, 100);
+}
+
+initQuiz();
+</script>
+</body>
+</html>

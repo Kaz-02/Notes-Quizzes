@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Control Flow Quiz — CS3035</title>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0c0c0f;
+    --surface: #13131a;
+    --surface2: #1a1a24;
+    --border: #252535;
+    --text: #e8e6f0;
+    --muted: #6b6880;
+    --accent: #7c6af7;
+    --accent-glow: rgba(124,106,247,0.15);
+    --accent-border: rgba(124,106,247,0.35);
+    --green: #34d399;
+    --green-bg: rgba(52,211,153,0.08);
+    --green-border: rgba(52,211,153,0.3);
+    --red: #f87171;
+    --red-bg: rgba(248,113,113,0.08);
+    --red-border: rgba(248,113,113,0.3);
+    --yellow: #fbbf24;
+    --code-bg: #0a0a10;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Outfit', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Animated grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(124,106,247,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(124,106,247,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Radial glow */
+  body::after {
+    content: '';
+    position: fixed;
+    top: -200px; left: 50%;
+    transform: translateX(-50%);
+    width: 700px; height: 500px;
+    background: radial-gradient(ellipse, rgba(124,106,247,0.08) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── Header ── */
+  .header {
+    position: relative;
+    z-index: 1;
+    padding: 3rem 2rem 2rem;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--accent-glow);
+    border: 1px solid var(--accent-border);
+    border-radius: 999px;
+    padding: 0.3em 1em;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 1.2rem;
+  }
+
+  .tag::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 2s ease infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.7); }
+  }
+
+  .header h1 {
+    font-size: clamp(2rem, 5vw, 3rem);
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1.05;
+    margin-bottom: 0.5rem;
+  }
+
+  .header h1 span {
+    background: linear-gradient(135deg, #7c6af7, #a78bfa, #60a5fa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .header p {
+    color: var(--muted);
+    font-size: 0.95rem;
+    font-weight: 400;
+  }
+
+  /* ── Progress ── */
+  .progress-wrap {
+    position: relative;
+    z-index: 1;
+    padding: 1.2rem 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  .progress-track {
+    flex: 1;
+    height: 4px;
+    background: var(--border);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #7c6af7, #60a5fa);
+    border-radius: 999px;
+    transition: width 0.5s cubic-bezier(.4,0,.2,1);
+    width: 0%;
+  }
+
+  .progress-meta {
+    display: flex;
+    gap: 1.2rem;
+    align-items: center;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.72rem;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .score-badge {
+    background: var(--accent-glow);
+    border: 1px solid var(--accent-border);
+    color: var(--accent);
+    padding: 0.25em 0.8em;
+    border-radius: 6px;
+    font-weight: 500;
+  }
+
+  /* ── Main ── */
+  .main {
+    position: relative;
+    z-index: 1;
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 7rem;
+  }
+
+  /* ── Question card ── */
+  .qcard {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    animation: cardIn 0.4s cubic-bezier(.4,0,.2,1);
+  }
+
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(24px) scale(0.98); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .qcard-top {
+    padding: 1.8rem 2rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .qmeta {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    margin-bottom: 1.1rem;
+  }
+
+  .qnum {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 0.2em 0.6em;
+    border-radius: 5px;
+  }
+
+  .qcat {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: var(--accent-glow);
+    border: 1px solid var(--accent-border);
+    padding: 0.2em 0.7em;
+    border-radius: 5px;
+  }
+
+  .qtext {
+    font-size: 1.12rem;
+    font-weight: 600;
+    line-height: 1.5;
+    letter-spacing: -0.01em;
+  }
+
+  .qtext code {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.88em;
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.1em 0.4em;
+    color: #a78bfa;
+  }
+
+  /* Code block in question */
+  pre.qcode {
+    font-family: 'Fira Code', monospace;
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.1rem 1.4rem;
+    font-size: 0.82rem;
+    line-height: 1.85;
+    margin: 1.1rem 0 0;
+    overflow-x: auto;
+    position: relative;
+  }
+
+  pre.qcode::before {
+    content: attr(data-lang);
+    position: absolute;
+    top: 0.55rem; right: 0.8rem;
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+  }
+
+  .kw  { color: #93c5fd; }
+  .fn  { color: #86efac; }
+  .str { color: #fde68a; }
+  .cm  { color: #44403c; font-style: italic; }
+  .num { color: #f9a8d4; }
+  .op  { color: #fb923c; }
+
+  /* ── Options ── */
+  .qcard-opts {
+    padding: 1.5rem 2rem;
+  }
+
+  .opts {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .opt {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem 1.2rem;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s, transform 0.1s;
+    text-align: left;
+    width: 100%;
+    font-family: 'Outfit', sans-serif;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .opt::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, var(--accent-glow), transparent);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .opt:hover:not(:disabled)::before { opacity: 1; }
+  .opt:hover:not(:disabled) {
+    border-color: var(--accent-border);
+    transform: translateX(4px);
+  }
+
+  .opt:disabled { cursor: default; transform: none; }
+
+  .opt.correct {
+    border-color: var(--green-border);
+    background: var(--green-bg);
+  }
+
+  .opt.wrong {
+    border-color: var(--red-border);
+    background: var(--red-bg);
+  }
+
+  .opt-key {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.68rem;
+    font-weight: 500;
+    background: var(--border);
+    color: var(--muted);
+    border-radius: 5px;
+    padding: 0.2em 0.55em;
+    flex-shrink: 0;
+    margin-top: 0.15rem;
+    transition: background 0.15s, color 0.15s;
+    letter-spacing: 0.05em;
+  }
+
+  .opt.correct .opt-key { background: var(--green); color: #022c22; }
+  .opt.wrong   .opt-key { background: var(--red);   color: #450a0a; }
+
+  .opt-text {
+    font-size: 0.95rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: var(--text);
+    position: relative;
+  }
+
+  .opt-text code {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.85em;
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.1em 0.35em;
+    color: #a78bfa;
+  }
+
+  /* ── Feedback ── */
+  .feedback {
+    margin: 0 2rem 1.5rem;
+    padding: 1rem 1.2rem;
+    border-radius: 10px;
+    font-size: 0.92rem;
+    line-height: 1.6;
+    display: none;
+    animation: popIn 0.25s ease;
+  }
+
+  @keyframes popIn {
+    from { opacity: 0; transform: scale(0.96); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+
+  .feedback.correct {
+    background: var(--green-bg);
+    border: 1px solid var(--green-border);
+    color: var(--green);
+    display: block;
+  }
+
+  .feedback.wrong {
+    background: var(--red-bg);
+    border: 1px solid var(--red-border);
+    color: var(--red);
+    display: block;
+  }
+
+  .feedback .fb-title {
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.4rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .feedback p { color: inherit; font-size: 0.92rem; margin-bottom: 0; }
+
+  .feedback code {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.83em;
+    background: rgba(0,0,0,0.25);
+    border-radius: 4px;
+    padding: 0.1em 0.35em;
+  }
+
+  /* ── Next button ── */
+  .btn-next {
+    display: none;
+    width: calc(100% - 4rem);
+    margin: 0 2rem 2rem;
+    padding: 0.95rem;
+    background: linear-gradient(135deg, #7c6af7, #60a5fa);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-next::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+  }
+
+  .btn-next:hover { opacity: 0.9; transform: translateY(-1px); }
+  .btn-next.show { display: block; animation: popIn 0.3s ease; }
+
+  /* ── Results ── */
+  .results {
+    display: none;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    animation: cardIn 0.5s ease;
+  }
+
+  .results.show { display: block; }
+
+  .results-top {
+    padding: 3rem 2rem 2rem;
+    text-align: center;
+    background: linear-gradient(180deg, var(--surface2), var(--surface));
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .results-top::before {
+    content: '';
+    position: absolute;
+    top: -80px; left: 50%;
+    transform: translateX(-50%);
+    width: 300px; height: 200px;
+    background: radial-gradient(ellipse, rgba(124,106,247,0.15) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .big-pct {
+    font-size: 5.5rem;
+    font-weight: 800;
+    letter-spacing: -0.05em;
+    line-height: 1;
+    background: linear-gradient(135deg, #7c6af7, #a78bfa, #60a5fa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.3rem;
+  }
+
+  .big-label {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--muted);
+    margin-bottom: 1.2rem;
+  }
+
+  .result-title {
+    font-size: 1.6rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.4rem;
+  }
+
+  .result-msg {
+    color: var(--muted);
+    font-size: 0.95rem;
+    max-width: 380px;
+    margin: 0 auto;
+  }
+
+  .grade-track {
+    height: 6px;
+    background: var(--border);
+    border-radius: 999px;
+    overflow: hidden;
+    margin: 1.5rem 0 0;
+  }
+
+  .grade-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #7c6af7, #60a5fa);
+    border-radius: 999px;
+    transition: width 1s cubic-bezier(.4,0,.2,1);
+    width: 0%;
+  }
+
+  .results-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .stat {
+    padding: 1.2rem;
+    text-align: center;
+    border-right: 1px solid var(--border);
+  }
+
+  .stat:last-child { border-right: none; }
+
+  .stat-val {
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    margin-bottom: 0.2rem;
+  }
+
+  .stat-label {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+  }
+
+  .results-actions {
+    padding: 1.5rem 2rem;
+    display: flex;
+    justify-content: center;
+  }
+
+  .btn-retry {
+    padding: 0.9rem 2.8rem;
+    background: linear-gradient(135deg, #7c6af7, #60a5fa);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+
+  .btn-retry:hover { opacity: 0.85; transform: translateY(-1px); }
+
+  @media(max-width: 560px) {
+    .qcard-top, .qcard-opts { padding: 1.2rem; }
+    .feedback { margin: 0 1.2rem 1.2rem; }
+    .btn-next { width: calc(100% - 2.4rem); margin: 0 1.2rem 1.5rem; }
+    .results-stats { grid-template-columns: 1fr 1fr; }
+    .stat:nth-child(2) { border-right: none; }
+    .stat:nth-child(3) { border-right: 1px solid var(--border); }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="tag">CS3035 · Programming Paradigms</div>
+  <h1>Control <span>Flow</span> Quiz</h1>
+  <p>15 questions · Operators, Precedence, Exceptions & more</p>
+</div>
+
+<div class="progress-wrap">
+  <div class="progress-track">
+    <div class="progress-fill" id="progressFill"></div>
+  </div>
+  <div class="progress-meta">
+    <span id="qCounter">1 / 15</span>
+    <span class="score-badge" id="scoreBadge">Score: 0</span>
+  </div>
+</div>
+
+<div class="main">
+
+  <div class="qcard" id="qcard">
+    <div class="qcard-top">
+      <div class="qmeta">
+        <span class="qnum" id="qNum">Q1</span>
+        <span class="qcat" id="qCat">Category</span>
+      </div>
+      <div class="qtext" id="qText"></div>
+      <pre class="qcode" id="qCode" data-lang="python" style="display:none"></pre>
+    </div>
+    <div class="qcard-opts">
+      <div class="opts" id="opts"></div>
+    </div>
+    <div class="feedback" id="feedback">
+      <div class="fb-title" id="fbTitle"></div>
+      <p id="fbMsg"></p>
+    </div>
+    <button class="btn-next" id="btnNext">Next →</button>
+  </div>
+
+  <div class="results" id="results">
+    <div class="results-top">
+      <div class="big-pct" id="resPct">0%</div>
+      <div class="big-label">Final Score</div>
+      <div class="result-title" id="resTitle"></div>
+      <div class="result-msg" id="resMsg"></div>
+      <div class="grade-track"><div class="grade-fill" id="gradeFill"></div></div>
+    </div>
+    <div class="results-stats">
+      <div class="stat">
+        <div class="stat-val" id="sCorrect" style="color:var(--green)">0</div>
+        <div class="stat-label">Correct</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val" id="sWrong" style="color:var(--red)">0</div>
+        <div class="stat-label">Wrong</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val" id="sTotal">15</div>
+        <div class="stat-label">Total</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val" id="sPct" style="color:var(--accent)">0%</div>
+        <div class="stat-label">Accuracy</div>
+      </div>
+    </div>
+    <div class="results-actions">
+      <button class="btn-retry" onclick="init()">Try Again ↺</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const ALL_QUESTIONS = [
+  {
+    cat: "Arity",
+    text: "Which operator type takes exactly ONE operand?",
+    opts: ["Binary", "Ternary", "Unary", "Nullary"],
+    correct: 2,
+    explain: "A unary operator takes exactly one operand. Examples: <code>not x</code>, <code>-x</code>. Note: <code>++</code> is a unary operator in Java/C but does NOT exist in Python."
+  },
+  {
+    cat: "Arity",
+    text: "Python does NOT have which operator that exists in Java?",
+    opts: ["The <code>not</code> logical operator", "The <code>++</code> increment operator", "The <code>**</code> exponentiation operator", "The <code>//</code> floor division operator"],
+    correct: 1,
+    explain: "Python has no <code>++</code> or <code>--</code> increment/decrement operators. Use <code>x += 1</code> instead. The <code>not</code>, <code>**</code>, and <code>//</code> operators all exist in Python."
+  },
+  {
+    cat: "Arity",
+    text: "What is Python's ternary (conditional) expression syntax?",
+    opts: [
+      "<code>condition ? value_if_true : value_if_false</code>",
+      "<code>value_if_true if condition else value_if_false</code>",
+      "<code>if condition then value_if_true else value_if_false</code>",
+      "<code>condition → value_if_true | value_if_false</code>"
+    ],
+    correct: 1,
+    explain: "Python's ternary syntax is <code>x if condition else y</code>. Java/C use <code>condition ? x : y</code>. Python's version reads more like natural English."
+  },
+  {
+    cat: "Precedence",
+    text: "In what order are different operator types generally evaluated?",
+    opts: [
+      "Ternary → Binary → Unary",
+      "Logical → Comparison → Arithmetic",
+      "Unary → Binary → Ternary, and Arithmetic → Comparison → Logical",
+      "All operators have equal precedence"
+    ],
+    correct: 2,
+    explain: "Precedence order (highest to lowest): Unary > Binary > Ternary, and within binary operators: Arithmetic > Comparison > Logical. This means <code>not</code> binds tighter than <code>and</code>, which binds tighter than <code>or</code>."
+  },
+  {
+    cat: "Precedence",
+    text: "Given <code>a = 10, b = 20</code>, what is the output of:\n\nx = y = 100 + a * b if not (a + b < 100) else a * b - 100\nx += y\nprint(x)",
+    code: "a = 10; b = 20\nx = y = 100 + a * b if not (a + b < 100) else a * b - 100\nx += y\nprint(x)",
+    opts: ["2100", "200", "100", "300"],
+    correct: 1,
+    explain: "Step by step: <code>a + b = 30</code>. <code>30 < 100</code> is True, so <code>not True</code> = False. Ternary takes the else: <code>a * b - 100 = 200 - 100 = 100</code>. So <code>x = y = 100</code>. Then <code>x += y</code> → <code>x = 100 + 100 = 200</code>."
+  },
+  {
+    cat: "Associativity",
+    text: "What does it mean for an operator to be LEFT-associative?",
+    opts: [
+      "It only works on values to its left",
+      "When two operators have the same precedence, the leftmost one is evaluated first",
+      "It always produces a result on the left side of the expression",
+      "It requires the left operand to be a variable"
+    ],
+    correct: 1,
+    explain: "Left-associativity means operators of the same precedence are evaluated left-to-right. So <code>10 - 5 - 2</code> = <code>(10 - 5) - 2</code> = <code>3</code>, not <code>10 - (5 - 2)</code> = <code>7</code>."
+  },
+  {
+    cat: "Associativity",
+    text: "After running this code, what are the values of x and y?\n\nx = 10\ny = x = 10 - 5 - 2",
+    code: "x = 10\ny = x = 10 - 5 - 2",
+    opts: ["x = 10, y = 3", "x = 3, y = 3", "x = 3, y = 10", "x = 10, y = 10"],
+    correct: 1,
+    explain: "Assignment <code>=</code> is right-associative. First: <code>10 - 5 - 2</code> = <code>3</code> (subtraction is left-associative). Then right-to-left assignment: <code>x = 3</code>, then <code>y = x</code> = <code>3</code>. Both x and y end up as 3."
+  },
+  {
+    cat: "Associativity",
+    text: "What happens when you write <code>a < b < c</code> in Python?",
+    opts: [
+      "It causes a TypeError — chaining comparisons is not allowed",
+      "It evaluates as <code>(a < b) < c</code>, comparing a boolean to c",
+      "It evaluates as <code>a < b and b < c</code> — a valid chained comparison",
+      "It is the same as <code>a < c</code>"
+    ],
+    correct: 2,
+    explain: "Python supports chained comparisons natively. <code>a < b < c</code> means <code>a < b and b < c</code>. This would be an error in Java, where comparison operators are non-associative and you'd need to write the full boolean expression."
+  },
+  {
+    cat: "Short Circuiting",
+    text: "What is short circuiting in the context of boolean expressions?",
+    opts: [
+      "An electrical error that crashes the program",
+      "Skipping the rest of a loop when a condition is met",
+      "Stopping evaluation of a boolean expression once the final result is determined",
+      "Using bitwise operators instead of logical ones for speed"
+    ],
+    correct: 2,
+    explain: "Short circuiting stops evaluating a boolean expression as soon as the outcome is certain. For <code>A and B</code>: if A is False, B is never evaluated. For <code>A or B</code>: if A is True, B is never evaluated."
+  },
+  {
+    cat: "Short Circuiting",
+    text: "What is the output of this code?\n\ndef foo(x):\n    print(x)\n    return x * x\n\nx = 5\nif x > 10 and foo(x) < 1000:\n    print(x)",
+    code: "def foo(x):\n    print(x)\n    return x*x\n\nx = 5\nif x > 10 and foo(x) < 1000:\n    print(x)",
+    opts: ["5\n5", "25\n5", "(no output)", "5"],
+    correct: 2,
+    explain: "<code>x > 10</code> is <code>5 > 10</code> = False. Due to short circuiting with <code>and</code>, <code>foo(x)</code> is NEVER called. The body of the if statement is also not reached. Nothing is printed."
+  },
+  {
+    cat: "Short Circuiting",
+    text: "Which pattern correctly uses short circuiting as a safety 'guard'?",
+    opts: [
+      "<code>if obj.value > 0 and obj is not None:</code>",
+      "<code>if obj is not None and obj.value > 0:</code>",
+      "<code>if not obj or obj.value > 0:</code>",
+      "<code>if obj or obj.value > 0:</code>"
+    ],
+    correct: 1,
+    explain: "Check <code>obj is not None</code> FIRST. If obj is None, short circuiting prevents <code>obj.value</code> from being evaluated — avoiding an AttributeError. Option A would crash if obj is None because it evaluates <code>obj.value</code> first."
+  },
+  {
+    cat: "Compound Assignment",
+    text: "How many times is <code>x</code> evaluated in <code>x += 1</code> vs <code>x = x + 1</code>?",
+    opts: [
+      "Once in both cases",
+      "Twice in both cases",
+      "<code>x += 1</code> evaluates x once; <code>x = x + 1</code> evaluates x twice",
+      "<code>x += 1</code> evaluates x twice; <code>x = x + 1</code> evaluates x once"
+    ],
+    correct: 2,
+    explain: "In <code>x += 1</code>, x is evaluated once as the target. In <code>x = x + 1</code>, x is evaluated twice: once on the right side to read its value, and once on the left side as the assignment target."
+  },
+  {
+    cat: "Compound Assignment",
+    text: "In this code, what is different about the two lines?\n\nfoo(mylist)[0] += 1\nfoo(mylist)[0] = foo(mylist)[0] + 1",
+    code: "def foo(values):\n    values.append(0)\n    return values\n\nmylist = []\nfoo(mylist)[0] += 1          # Line A\nfoo(mylist)[0] = foo(mylist)[0] + 1  # Line B",
+    opts: [
+      "They are identical in behavior",
+      "Line A calls foo() once (appends one 0); Line B calls foo() twice (appends two 0s)",
+      "Line A fails with an IndexError; Line B works correctly",
+      "Line B is more efficient than Line A"
+    ],
+    correct: 1,
+    explain: "Line A: <code>foo()</code> is called once, appending one 0. Line B: <code>foo()</code> is called TWICE — once to get the list for the right-hand side, and once for the left-hand side. Two zeros are appended. The results are different!"
+  },
+  {
+    cat: "Exceptions",
+    text: "What is an exception in programming?",
+    opts: [
+      "A special variable that stores error codes",
+      "A mechanism to signal, propagate, and handle errors outside the normal flow of execution",
+      "A comment that warns about potential bugs",
+      "A return value of -1 indicating failure"
+    ],
+    correct: 1,
+    explain: "An exception is a mechanism for a program to signal (raise), propagate (bubble up the call stack), and handle errors that occur in exceptional situations outside the normal flow of execution."
+  },
+  {
+    cat: "Exceptions",
+    text: "Which of the following is an EXCEPTION (vs. a normal error)?",
+    opts: [
+      "A user entering the wrong password",
+      "A user submitting an empty form field",
+      "A database connection failure",
+      "A user entering letters in a number field"
+    ],
+    correct: 2,
+    explain: "A database connection failure is an exception — it's an unexpected, external, hardware/infrastructure-level event outside normal program flow. Wrong passwords and bad user input are normal errors that should be handled with regular if/else logic, not exceptions."
+  }
+];
+
+let questions = [];
+let current = 0;
+let score = 0;
+let answered = false;
+
+function shuffle(arr) {
+  return [...arr].sort(() => Math.random() - 0.5);
+}
+
+function init() {
+  questions = shuffle(ALL_QUESTIONS);
+  current = 0;
+  score = 0;
+  answered = false;
+  document.getElementById('results').classList.remove('show');
+  document.getElementById('qcard').style.display = '';
+  document.getElementById('scoreBadge').textContent = 'Score: 0';
+  render();
+}
+
+function updateProgress() {
+  const pct = (current / questions.length) * 100;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('qCounter').textContent = `${current + 1} / ${questions.length}`;
+  document.getElementById('qNum').textContent = `Q${current + 1}`;
+}
+
+function render() {
+  answered = false;
+  const q = questions[current];
+
+  document.getElementById('qCat').textContent = q.cat;
+  document.getElementById('qText').innerHTML = q.text.replace(/\n/g, '<br>');
+
+  const codeEl = document.getElementById('qCode');
+  if (q.code) {
+    codeEl.textContent = q.code;
+    codeEl.style.display = 'block';
+  } else {
+    codeEl.style.display = 'none';
+  }
+
+  // Reset feedback
+  const fb = document.getElementById('feedback');
+  fb.className = 'feedback';
+
+  // Reset next button
+  const btnNext = document.getElementById('btnNext');
+  btnNext.classList.remove('show');
+  btnNext.textContent = current === questions.length - 1 ? 'See Results →' : 'Next Question →';
+
+  // Build options with shuffled order
+  const keys = ['A', 'B', 'C', 'D'];
+  const indexed = q.opts.map((o, i) => ({ o, i }));
+  const shuffled = shuffle(indexed);
+  const newCorrect = shuffled.findIndex(x => x.i === q.correct);
+
+  const container = document.getElementById('opts');
+  container.innerHTML = '';
+
+  shuffled.forEach(({ o }, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'opt';
+    btn.innerHTML = `<span class="opt-key">${keys[idx]}</span><span class="opt-text">${o}</span>`;
+    btn.addEventListener('click', () => handleAnswer(idx, newCorrect, btn));
+    container.appendChild(btn);
+  });
+
+  updateProgress();
+
+  // Animate card
+  const card = document.getElementById('qcard');
+  card.style.animation = 'none';
+  card.offsetHeight;
+  card.style.animation = '';
+}
+
+function handleAnswer(chosen, correct, chosenBtn) {
+  if (answered) return;
+  answered = true;
+
+  const allBtns = document.querySelectorAll('.opt');
+  allBtns.forEach(b => b.disabled = true);
+
+  const q = questions[current];
+  const fb = document.getElementById('feedback');
+
+  if (chosen === correct) {
+    score++;
+    chosenBtn.classList.add('correct');
+    fb.className = 'feedback correct';
+    document.getElementById('fbTitle').innerHTML = '✓ Correct!';
+    document.getElementById('fbMsg').innerHTML = q.explain;
+  } else {
+    chosenBtn.classList.add('wrong');
+    allBtns[correct].classList.add('correct');
+    fb.className = 'feedback wrong';
+    document.getElementById('fbTitle').innerHTML = '✗ Not quite';
+    document.getElementById('fbMsg').innerHTML = q.explain;
+  }
+
+  document.getElementById('scoreBadge').textContent = `Score: ${score}`;
+  document.getElementById('btnNext').classList.add('show');
+}
+
+document.getElementById('btnNext').addEventListener('click', () => {
+  current++;
+  if (current >= questions.length) {
+    showResults();
+  } else {
+    render();
+  }
+});
+
+function showResults() {
+  document.getElementById('qcard').style.display = 'none';
+  const res = document.getElementById('results');
+  res.classList.add('show');
+
+  const total = questions.length;
+  const pct = Math.round((score / total) * 100);
+
+  document.getElementById('resPct').textContent = pct + '%';
+  document.getElementById('sCorrect').textContent = score;
+  document.getElementById('sWrong').textContent = total - score;
+  document.getElementById('sTotal').textContent = total;
+  document.getElementById('sPct').textContent = pct + '%';
+  document.getElementById('progressFill').style.width = '100%';
+  document.getElementById('qCounter').textContent = `${total} / ${total}`;
+
+  let title, msg;
+  if (pct === 100)     { title = "Perfect Score! 🎉"; msg = "Flawless! You've mastered Control Flow."; }
+  else if (pct >= 80)  { title = "Great Work! 👏";    msg = "Strong understanding. Review the ones you missed."; }
+  else if (pct >= 60)  { title = "Good Effort 👍";    msg = "Solid foundation. A bit more review will help."; }
+  else                 { title = "Keep Studying 📚";  msg = "Go back through the lecture slides and try again!"; }
+
+  document.getElementById('resTitle').textContent = title;
+  document.getElementById('resMsg').textContent = msg;
+
+  setTimeout(() => {
+    document.getElementById('gradeFill').style.width = pct + '%';
+  }, 150);
+}
+
+init();
+</script>
+</body>
+</html>
