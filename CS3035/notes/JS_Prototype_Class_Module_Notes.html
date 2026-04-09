@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CS3035 — JS Prototype, Class & Module</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #0e0e10;
+      --surface: #16161a;
+      --surface2: #1e1e24;
+      --border: #2a2a34;
+      --accent: #a78bfa;
+      --accent2: #34d399;
+      --accent3: #fb923c;
+      --accent4: #60a5fa;
+      --accent5: #f472b6;
+      --text: #e8e8f0;
+      --muted: #8888a0;
+      --code-bg: #111118;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Lora', Georgia, serif;
+      font-size: 16px;
+      line-height: 1.75;
+      min-height: 100vh;
+    }
+
+    /* Header */
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: 3rem 0 2rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(96,165,250,0.1) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .course-tag {
+      display: inline-block;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--accent4);
+      border: 1px solid rgba(96,165,250,0.4);
+      padding: 4px 14px;
+      border-radius: 20px;
+      margin-bottom: 1.2rem;
+    }
+    h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1.8rem, 4vw, 3rem);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: #fff;
+      margin-bottom: 0.5rem;
+    }
+    header p {
+      font-size: 14px;
+      color: var(--muted);
+      font-family: 'IBM Plex Mono', monospace;
+    }
+
+    /* Layout */
+    main {
+      max-width: 880px;
+      margin: 0 auto;
+      padding: 2.5rem 1.5rem 4rem;
+    }
+
+    /* TOC */
+    .toc {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem 1.75rem;
+      margin-bottom: 3rem;
+    }
+    .toc-title {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 1rem;
+    }
+    .toc ol { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; counter-reset: toc; }
+    .toc ol li { counter-increment: toc; }
+    .toc ol li::before { content: counter(toc, decimal-leading-zero) ". "; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--accent4); }
+    .toc a { color: var(--muted); text-decoration: none; font-size: 14px; font-family: 'IBM Plex Mono', monospace; transition: color 0.2s; }
+    .toc a:hover { color: var(--text); }
+
+    /* Section */
+    section { margin-bottom: 3rem; scroll-margin-top: 1rem; }
+    .section-label { display: flex; align-items: center; gap: 10px; margin-bottom: 1.2rem; flex-wrap: wrap; }
+    .section-num { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--accent4); min-width: 28px; }
+    h2 { font-family: 'Syne', sans-serif; font-size: 1.4rem; font-weight: 700; color: #fff; letter-spacing: -0.01em; }
+    .lang-badges { display: flex; gap: 6px; margin-left: auto; }
+    .badge { font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 500; padding: 2px 8px; border-radius: 20px; letter-spacing: 0.05em; white-space: nowrap; }
+    .badge-js  { background: rgba(251,146,60,0.15); color: #fb923c; border: 1px solid rgba(251,146,60,0.3); }
+    .badge-es6 { background: rgba(167,139,250,0.12); color: #a78bfa; border: 1px solid rgba(167,139,250,0.25); }
+    .badge-concept { background: rgba(136,136,160,0.12); color: var(--muted); border: 1px solid rgba(136,136,160,0.2); }
+
+    .divider { border: none; border-top: 1px solid var(--border); margin-bottom: 1.5rem; }
+
+    p { margin-bottom: 1rem; color: #c8c8d8; }
+
+    /* Code blocks */
+    pre {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent4);
+      border-radius: 0 8px 8px 0;
+      padding: 1.1rem 1.3rem;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13.5px;
+      line-height: 1.65;
+      overflow-x: auto;
+      margin: 1.1rem 0;
+      color: #d4d4f0;
+    }
+    code { font-family: 'IBM Plex Mono', monospace; font-size: 13px; background: rgba(96,165,250,0.1); color: var(--accent4); padding: 1px 5px; border-radius: 4px; }
+    pre code { background: none; color: inherit; padding: 0; font-size: inherit; }
+
+    .kw  { color: #c084fc; }
+    .fn  { color: #60a5fa; }
+    .str { color: #34d399; }
+    .cm  { color: #4a4a6a; font-style: italic; }
+    .num { color: #fb923c; }
+    .kw2 { color: #f472b6; }
+
+    /* File label on pre */
+    .file-pre { margin-bottom: 0; }
+    .file-label {
+      display: inline-block;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      color: var(--accent4);
+      background: rgba(96,165,250,0.08);
+      border: 1px solid rgba(96,165,250,0.2);
+      border-bottom: none;
+      border-radius: 6px 6px 0 0;
+      padding: 3px 10px;
+      margin-bottom: 0;
+    }
+    .file-pre + pre { border-radius: 0 8px 8px 0; margin-top: 0; }
+
+    /* Callouts */
+    .callout { border-radius: 8px; padding: 1rem 1.2rem; margin: 1rem 0; font-size: 14.5px; }
+    .callout .label { font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px; }
+    .callout-answer { background: rgba(52,211,153,0.07); border: 1px solid rgba(52,211,153,0.25); border-left: 3px solid var(--accent2); }
+    .callout-answer .label { color: var(--accent2); }
+    .callout-warning { background: rgba(251,146,60,0.07); border: 1px solid rgba(251,146,60,0.2); border-left: 3px solid var(--accent3); }
+    .callout-warning .label { color: var(--accent3); }
+    .callout-info { background: rgba(96,165,250,0.07); border: 1px solid rgba(96,165,250,0.2); border-left: 3px solid var(--accent4); }
+    .callout-info .label { color: var(--accent4); }
+    .callout-tip { background: rgba(167,139,250,0.07); border: 1px solid rgba(167,139,250,0.2); border-left: 3px solid var(--accent); }
+    .callout-tip .label { color: var(--accent); }
+
+    /* Key points */
+    ul.points { list-style: none; margin: 0.5rem 0 1rem; }
+    ul.points li { display: flex; gap: 10px; color: #c8c8d8; font-size: 15px; margin-bottom: 0.6rem; }
+    ul.points li::before { content: '◆'; color: var(--accent4); font-size: 8px; margin-top: 9px; flex-shrink: 0; }
+
+    /* Two-column */
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 1rem 0; }
+    .col-block { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.1rem; }
+    .col-block .col-title { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.6rem; }
+    .col-block pre { margin: 0; border-left: none; border-radius: 6px; font-size: 12.5px; }
+
+    /* Table */
+    .table-wrap { margin: 1rem 0; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 500px; }
+    th { font-family: 'IBM Plex Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); border-bottom: 1px solid var(--border); padding: 8px 12px; text-align: left; font-weight: 500; }
+    td { padding: 10px 12px; border-bottom: 1px solid rgba(42,42,52,0.7); color: #c8c8d8; vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+    td:first-child { font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: var(--accent4); white-space: nowrap; }
+
+    /* Prototype chain diagram */
+    .proto-chain {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0;
+      margin: 1.2rem 0;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13px;
+    }
+    .proto-obj {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.75rem 1.2rem;
+      min-width: 280px;
+    }
+    .proto-obj.top    { background: rgba(96,165,250,0.08); border-color: rgba(96,165,250,0.3); }
+    .proto-obj.mid    { background: rgba(167,139,250,0.08); border-color: rgba(167,139,250,0.3); }
+    .proto-obj.bottom { background: rgba(52,211,153,0.06); border-color: rgba(52,211,153,0.25); }
+    .proto-obj .obj-label { font-size: 11px; color: var(--muted); margin-bottom: 4px; letter-spacing: 0.06em; }
+    .proto-obj .obj-name  { font-weight: 500; color: #fff; margin-bottom: 6px; }
+    .proto-obj .obj-props { font-size: 12px; color: var(--muted); }
+    .proto-obj .obj-props span { color: var(--accent2); }
+    .proto-arrow { padding: 4px 0 4px 20px; font-size: 18px; color: var(--border); }
+
+    /* Class hierarchy diagram */
+    .class-diagram {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+      margin: 1.5rem 0;
+    }
+    .class-box {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.75rem 1.5rem;
+      text-align: center;
+      font-family: 'IBM Plex Mono', monospace;
+      min-width: 200px;
+    }
+    .class-box.parent { background: rgba(167,139,250,0.1); border-color: rgba(167,139,250,0.35); }
+    .class-box.child  { background: rgba(96,165,250,0.08); border-color: rgba(96,165,250,0.3); }
+    .class-box .cb-label { font-size: 10px; color: var(--muted); letter-spacing: 0.1em; margin-bottom: 4px; }
+    .class-box .cb-name  { font-size: 15px; color: #fff; margin-bottom: 6px; }
+    .class-box .cb-members { font-size: 12px; color: var(--muted); text-align: left; }
+    .class-box .cb-members div { padding: 1px 0; }
+    .class-box .cb-members .m-method { color: var(--accent4); }
+    .class-box .cb-members .m-prop   { color: var(--accent2); }
+    .class-arrow { font-size: 22px; color: var(--border); padding: 4px 0; }
+    .extends-label { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); margin-bottom: 2px; }
+
+    /* Export/Import comparison grid */
+    .export-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin: 1rem 0;
+    }
+    .export-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .export-card-head {
+      padding: 0.55rem 1rem;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: rgba(96,165,250,0.08);
+      color: var(--accent4);
+      border-bottom: 1px solid var(--border);
+    }
+    .export-card pre { border: none; border-radius: 0; margin: 0; font-size: 12px; border-left: none; background: transparent; }
+
+    /* Readings */
+    .readings {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.2rem 1.5rem;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 14px;
+      color: var(--muted);
+      text-align: center;
+    }
+    .readings a { color: var(--accent4); text-decoration: none; }
+    .readings a:hover { text-decoration: underline; }
+
+    footer {
+      text-align: center;
+      padding: 2rem;
+      border-top: 1px solid var(--border);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+    }
+
+    @media (max-width: 600px) {
+      .two-col, .export-grid, .toc ol { grid-template-columns: 1fr; }
+      .proto-obj { min-width: unset; width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="course-tag">CS3035 · Programming Paradigms</div>
+  <h1>JS Prototype, Class &amp; Module</h1>
+  <p>Chengyu Sun &nbsp;·&nbsp; California State University, Los Angeles</p>
+</header>
+
+<main>
+
+  <!-- TOC -->
+  <nav class="toc">
+    <div class="toc-title">Contents</div>
+    <ol>
+      <li><a href="#s1">Prototype Inheritance</a></li>
+      <li><a href="#s2">Properties in Prototype Inheritance</a></li>
+      <li><a href="#s3">Inherited Methods</a></li>
+      <li><a href="#s4">[[Prototype]] and __proto__</a></li>
+      <li><a href="#s5">What is prototype?</a></li>
+      <li><a href="#s6">Constructor Functions</a></li>
+      <li><a href="#s7">"Static" Members</a></li>
+      <li><a href="#s8">ES6 Class Syntax</a></li>
+      <li><a href="#s9">Inheritance &amp; Instantiation</a></li>
+      <li><a href="#s10">ES6 Module System</a></li>
+    </ol>
+  </nav>
+
+  <!-- 1 -->
+  <section id="s1">
+    <div class="section-label">
+      <span class="section-num">01</span>
+      <h2>Prototype Inheritance</h2>
+      <div class="lang-badges"><span class="badge badge-js">JS</span></div>
+    </div>
+    <hr class="divider"/>
+    <p>In JavaScript, objects can inherit properties from other objects via the <strong>prototype chain</strong>. <code>Object.create(proto)</code> creates a new object whose prototype is set to <code>proto</code>.</p>
+    <pre><span class="kw">let</span> honda = { make: <span class="str">"Honda"</span> };
+<span class="kw">let</span> civic = <span class="fn">Object.create</span>( honda );   <span class="cm">// honda is civic's prototype</span>
+civic.model = <span class="str">"Civic"</span>;
+
+console.<span class="fn">log</span>( civic );          <span class="cm">// { model: "Civic" }  ← only own props shown</span>
+console.<span class="fn">log</span>( civic.make );    <span class="cm">// "Honda"    ← inherited from honda</span>
+console.<span class="fn">log</span>( civic.model );   <span class="cm">// "Civic"    ← own property</span>
+console.<span class="fn">log</span>( honda.model );   <span class="cm">// undefined  ← honda has no model</span></pre>
+    <div class="callout callout-answer">
+      <div class="label">Output Explained</div>
+      <strong>civic</strong> only stores <code>model</code> — yet reading <code>civic.make</code> succeeds because JS walks up the prototype chain to <code>honda</code>. <code>honda.model</code> is <code>undefined</code> because inheritance is one-directional (child → parent, never parent → child).
+    </div>
+  </section>
+
+  <!-- 2 -->
+  <section id="s2">
+    <div class="section-label">
+      <span class="section-num">02</span>
+      <h2>Properties in Prototype Inheritance</h2>
+      <div class="lang-badges"><span class="badge badge-js">JS</span></div>
+    </div>
+    <hr class="divider"/>
+    <div class="two-col">
+      <div class="col-block">
+        <div class="col-title">Reading a property</div>
+        <p style="font-size:14px;margin-top:0.5rem">If the property doesn't exist on the object itself, JS <em>walks up</em> the prototype chain until it finds it or reaches <code>null</code>.</p>
+      </div>
+      <div class="col-block">
+        <div class="col-title">Writing a property</div>
+        <p style="font-size:14px;margin-top:0.5rem">If the property doesn't exist on the object, a <em>new own property</em> is created directly on that object — the prototype is never touched.</p>
+      </div>
+    </div>
+    <div class="callout callout-info">
+      <div class="label">Key Rule</div>
+      Read → look up the chain. Write → always create/update on the current object only.
+    </div>
+  </section>
+
+  <!-- 3 -->
+  <section id="s3">
+    <div class="section-label">
+      <span class="section-num">03</span>
+      <h2>Inherited Methods</h2>
+      <div class="lang-badges"><span class="badge badge-js">JS</span></div>
+    </div>
+    <hr class="divider"/>
+    <p>Functions stored as properties are inherited just like any other property. Inside the inherited function, <code>this</code> refers to the object the method is called on — <em>not</em> the prototype it lives on.</p>
+    <pre>honda.owner = <span class="str">"Car Dealer"</span>;
+honda.printOwner = <span class="kw">function</span>() {
+  console.<span class="fn">log</span>(<span class="kw">this</span>.owner);
+};
+
+honda.<span class="fn">printOwner</span>();   <span class="cm">// "Car Dealer"   — this = honda</span>
+civic.<span class="fn">printOwner</span>();   <span class="cm">// "Car Dealer"   — inherited; this = civic, civic.owner walks up to honda</span>
+
+civic.owner = <span class="str">"Chengyu"</span>;      <span class="cm">// creates OWN property on civic</span>
+civic.<span class="fn">printOwner</span>();   <span class="cm">// "Chengyu"      — this = civic, now has its own owner</span></pre>
+    <div class="callout callout-tip">
+      <div class="label">this binding rule</div>
+      <code>this</code> is always set to the object <em>before the dot</em> at the call site — <code>civic.printOwner()</code> → <code>this</code> is <code>civic</code>.
+    </div>
+  </section>
+
+  <!-- 4 -->
+  <section id="s4">
+    <div class="section-label">
+      <span class="section-num">04</span>
+      <h2>[[Prototype]] and __proto__</h2>
+      <div class="lang-badges"><span class="badge badge-js">JS</span></div>
+    </div>
+    <hr class="divider"/>
+    <p>Every JS object has an internal hidden slot called <code>[[Prototype]]</code>. It can be read/written via the legacy accessor <code>__proto__</code> (or the cleaner <code>Object.getPrototypeOf()</code>).</p>
+
+    <div class="proto-chain">
+      <div class="proto-obj top">
+        <div class="obj-label">ROOT</div>
+        <div class="obj-name">Object.prototype</div>
+        <div class="obj-props">toString, hasOwnProperty, valueOf, …</div>
+      </div>
+      <div class="proto-arrow">↑ [[Prototype]]</div>
+      <div class="proto-obj mid">
+        <div class="obj-label">PROTOTYPE</div>
+        <div class="obj-name">honda</div>
+        <div class="obj-props">make: <span>"Honda"</span>, owner: <span>"Car Dealer"</span>, printOwner: <span>ƒ</span></div>
+      </div>
+      <div class="proto-arrow">↑ [[Prototype]]</div>
+      <div class="proto-obj bottom">
+        <div class="obj-label">OBJECT</div>
+        <div class="obj-name">civic</div>
+        <div class="obj-props">model: <span>"Civic"</span></div>
+      </div>
+    </div>
+
+    <pre><span class="cm">// Reading [[Prototype]]</span>
+civic.__proto__ === honda;             <span class="cm">// true</span>
+<span class="fn">Object.getPrototypeOf</span>(civic) === honda; <span class="cm">// true (preferred)</span></pre>
+  </section>
+
+  <!-- 5 -->
+  <section id="s5">
+    <div class="section-label">
+      <span class="section-num">05</span>
+      <h2>What is <code style="font-size:1.1rem">prototype</code>?</h2>
+      <div class="lang-badges"><span class="badge badge-js">JS</span></div>
+    </div>
+    <hr class="divider"/>
+    <p>Don't confuse <code>[[Prototype]]</code> (the hidden link between objects) with the <code>.prototype</code> property (a plain object that lives on <em>constructor functions</em>).</p>
+    <div class="callout callout-info">
+      <div class="label">How it connects</div>
+      When you call <code>new Foo()</code>, the newly created object's <code>[[Prototype]]</code> is set to <code>Foo.prototype</code>. This is how instance methods defined on <code>Foo.prototype</code> become available to all instances.
+    </div>
+    <ul class="points">
+      <li><code>Object</code>, <code>Array</code>, <code>Function</code>, etc. are all constructor functions with a <code>.prototype</code> object.</li>
+      <li>The "instance methods" you use daily (<code>.push()</code>, <code>.map()</code>, <code>.toString()</code>) are actually methods stored on those <code>.prototype</code> objects.</li>
+      <li><code>&lt;Constructor&gt;.prototype</code> sets the prototype for every object that constructor creates.</li>
+    </ul>
+  </section>
+
+  <!-- 6 -->
+  <section id="s6">
+    <div class="section-label">
+      <span class="section-num">06</span>
+      <h2>Constructor Functions &amp; Class Patterns</h2>
+      <div class="lang-badges"><span class="badge badge-js">JS</span></div>
+    </div>
+    <hr class="divider"/>
+    <p>Any function called with <code>new</code> becomes a constructor. Before ES6 classes, this was the standard way to create reusable object blueprints.</p>
+
+    <p style="margin-top:1rem"><strong>Pattern A — method on prototype</strong> (shared across all instances)</p>
+    <pre><span class="kw">function</span> <span class="fn">Point</span>(x, y) {
+  <span class="kw">this</span>.x = x;
+  <span class="kw">this</span>.y = y;
+}
+Point.prototype.toString = <span class="kw">function</span>() {
+  <span class="kw">return</span> <span class="str">`(${<span class="kw">this</span>.x},${<span class="kw">this</span>.y})`</span>;
+};
+
+<span class="kw">var</span> p = <span class="kw">new</span> <span class="fn">Point</span>(<span class="num">2</span>, <span class="num">3</span>);
+console.<span class="fn">log</span>(p.<span class="fn">toString</span>());   <span class="cm">// "(2,3)"</span></pre>
+
+    <p><strong>Pattern B — method inside constructor</strong> (each instance gets its own copy)</p>
+    <pre><span class="kw">function</span> <span class="fn">Point</span>(x, y) {
+  <span class="kw">this</span>.x = x;
+  <span class="kw">this</span>.y = y;
+  <span class="kw">this</span>.toString = <span class="kw">function</span>() {
+    <span class="kw">return</span> <span class="str">`(${<span class="kw">this</span>.x},${<span class="kw">this</span>.y})`</span>;
+  };
+}</pre>
+
+    <div class="callout callout-warning">
+      <div class="label">Pattern A vs Pattern B — key difference</div>
+      <strong>Prototype method (A):</strong> one function object shared by all instances — memory-efficient.<br><br>
+      <strong>Constructor method (B):</strong> a new function object is created per instance — allows closures over private data, but uses more memory.
+    </div>
+  </section>
+
+  <!-- 7 -->
+  <section id="s7">
+    <div class="section-label">
+      <span class="section-num">07</span>
+      <h2>"Static" Members</h2>
+      <div class="lang-badges"><span class="badge badge-js">JS</span></div>
+    </div>
+    <hr class="divider"/>
+    <p>Before ES6 <code>static</code>, "static" members were simulated by adding properties directly to the constructor function — not to <code>this</code> or <code>prototype</code>.</p>
+    <pre><span class="kw">function</span> <span class="fn">Point</span>(x, y) { <span class="kw">this</span>.x = x; <span class="kw">this</span>.y = y; }
+
+Point.origin = <span class="kw">new</span> <span class="fn">Point</span>(<span class="num">0</span>, <span class="num">0</span>);    <span class="cm">// "static" property</span>
+Point.distance = <span class="kw">function</span>(a, b) {   <span class="cm">// "static" method</span>
+  <span class="kw">return</span> Math.<span class="fn">hypot</span>(b.x - a.x, b.y - a.y);
+};
+
+<span class="cm">// Called on the constructor, not on instances</span>
+console.<span class="fn">log</span>(Point.origin);          <span class="cm">// Point { x: 0, y: 0 }</span></pre>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Where defined</th><th>How accessed</th><th>Equivalent to</th></tr></thead>
+        <tbody>
+          <tr><td>this.x = …</td><td>instance.x</td><td>Instance property</td></tr>
+          <tr><td>Constructor.prototype.fn = …</td><td>instance.fn()</td><td>Instance method</td></tr>
+          <tr><td>Constructor.x = …</td><td>Constructor.x</td><td>Static property/method</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 8 -->
+  <section id="s8">
+    <div class="section-label">
+      <span class="section-num">08</span>
+      <h2>ES6 Class Syntax</h2>
+      <div class="lang-badges"><span class="badge badge-es6">ES6+</span></div>
+    </div>
+    <hr class="divider"/>
+    <p>ES6 introduced the <code>class</code> keyword — a cleaner, more readable syntax. Under the hood it is <em>still</em> constructor functions and prototypes; no new runtime mechanism was added.</p>
+    <pre><span class="kw">class</span> Animal {
+  <span class="fn">constructor</span>(name) {
+    <span class="kw">this</span>.name = name;       <span class="cm">// instance property</span>
+  }
+
+  <span class="fn">eat</span>() {                   <span class="cm">// added to Animal.prototype</span>
+    console.<span class="fn">log</span>(<span class="str">`${<span class="kw">this</span>.name} is eating.`</span>);
+  }
+
+  <span class="kw2">static</span> <span class="fn">describe</span>() {      <span class="cm">// static method on Animal itself</span>
+    console.<span class="fn">log</span>(<span class="str">"Animals eat, sleep, and breathe."</span>);
+  }
+}
+
+<span class="kw">let</span> cat = <span class="kw">new</span> <span class="fn">Animal</span>(<span class="str">"Whiskers"</span>);
+cat.<span class="fn">eat</span>();           <span class="cm">// "Whiskers is eating."</span>
+Animal.<span class="fn">describe</span>();   <span class="cm">// static — called on class, not instance</span></pre>
+
+    <div class="callout callout-tip">
+      <div class="label">Behind the scenes</div>
+      <code>class Animal { eat() {} }</code> is functionally identical to:<br>
+      <code>function Animal(name) { this.name = name; }</code><br>
+      <code>Animal.prototype.eat = function() { … };</code>
+    </div>
+  </section>
+
+  <!-- 9 -->
+  <section id="s9">
+    <div class="section-label">
+      <span class="section-num">09</span>
+      <h2>Inheritance &amp; Instantiation</h2>
+      <div class="lang-badges"><span class="badge badge-es6">ES6+</span></div>
+    </div>
+    <hr class="divider"/>
+    <p>Use <code>extends</code> to create a subclass and <code>super()</code> to call the parent constructor.</p>
+
+    <div class="class-diagram">
+      <div class="class-box parent">
+        <div class="cb-label">PARENT CLASS</div>
+        <div class="cb-name">Animal</div>
+        <div class="cb-members">
+          <div class="m-prop">+ name</div>
+          <div class="m-method">+ eat()</div>
+        </div>
+      </div>
+      <div class="class-arrow">↑ extends</div>
+      <div class="extends-label">Dog extends Animal</div>
+      <div class="class-box child">
+        <div class="cb-label">CHILD CLASS</div>
+        <div class="cb-name">Dog</div>
+        <div class="cb-members">
+          <div class="m-prop">+ name (via super)</div>
+          <div class="m-prop">+ breed</div>
+          <div class="m-method">+ eat() (inherited)</div>
+          <div class="m-method">+ bark()</div>
+        </div>
+      </div>
+    </div>
+
+    <pre><span class="kw">class</span> Dog <span class="kw2">extends</span> Animal {
+  <span class="fn">constructor</span>(name, breed) {
+    <span class="kw2">super</span>(name);             <span class="cm">// must call super() before using this</span>
+    <span class="kw">this</span>.breed = breed;
+  }
+
+  <span class="fn">bark</span>() {
+    console.<span class="fn">log</span>(<span class="str">`${<span class="kw">this</span>.name} is barking.`</span>);
+  }
+}
+
+<span class="kw">let</span> dog = <span class="kw">new</span> <span class="fn">Dog</span>(<span class="str">"Buddy"</span>, <span class="str">"Golden Retriever"</span>);
+dog.<span class="fn">eat</span>();    <span class="cm">// "Buddy is eating."   ← inherited from Animal</span>
+dog.<span class="fn">bark</span>();   <span class="cm">// "Buddy is barking."  ← own method</span></pre>
+
+    <div class="callout callout-info">
+      <div class="label">super() rules</div>
+      In a subclass constructor, you <strong>must</strong> call <code>super()</code> before accessing <code>this</code>. If you forget, you'll get a ReferenceError.
+    </div>
+  </section>
+
+  <!-- 10 -->
+  <section id="s10">
+    <div class="section-label">
+      <span class="section-num">10</span>
+      <h2>ES6 Module System</h2>
+      <div class="lang-badges"><span class="badge badge-es6">ES6+</span></div>
+    </div>
+    <hr class="divider"/>
+    <p>Each file is its own module with its own scope. Nothing is shared by default — you must explicitly <code>export</code> and <code>import</code>.</p>
+
+    <ul class="points">
+      <li>JS originally had no module system — several competing systems emerged (CommonJS, AMD, UMD). Modern JS has standardized on ES6 modules.</li>
+      <li>Like Python, each file = one module.</li>
+    </ul>
+
+    <p style="margin-top: 1.5rem"><strong>Exporting</strong></p>
+    <div class="export-grid">
+      <div class="export-card">
+        <div class="export-card-head">Export individually</div>
+        <pre><span class="kw">export</span> <span class="kw">const</span> PI = <span class="num">3.14159</span>;
+
+<span class="kw">export</span> <span class="kw">function</span> <span class="fn">add</span>(a, b) {
+  <span class="kw">return</span> a + b;
+}</pre>
+      </div>
+      <div class="export-card">
+        <div class="export-card-head">Export all together (with alias)</div>
+        <pre><span class="kw">const</span> PI = <span class="num">3.14159</span>;
+<span class="kw">function</span> <span class="fn">add</span>(a, b) { … }
+
+<span class="kw">export</span> {
+  PI,
+  add <span class="kw">as</span> addition
+};</pre>
+      </div>
+      <div class="export-card">
+        <div class="export-card-head">Default export (one per file)</div>
+        <pre><span class="kw">export</span> <span class="kw2">default</span> <span class="kw">class</span> Point {
+  <span class="fn">constructor</span>(x, y) { … }
+}</pre>
+      </div>
+      <div class="export-card">
+        <div class="export-card-head">Re-export from another module</div>
+        <pre><span class="kw">export</span> { add } <span class="kw">from</span> <span class="str">"./foo.js"</span>;
+<span class="kw">export</span> * <span class="kw">from</span> <span class="str">"./utils.js"</span>;</pre>
+      </div>
+    </div>
+
+    <p style="margin-top: 1.5rem"><strong>Importing</strong></p>
+    <pre><span class="cm">// Named import — curly braces required</span>
+<span class="kw">import</span> { add } <span class="kw">from</span> <span class="str">"./foo.js"</span>;
+
+<span class="cm">// Multiple named imports</span>
+<span class="kw">import</span> { PI, add } <span class="kw">from</span> <span class="str">"./foo.js"</span>;
+
+<span class="cm">// Named import with alias</span>
+<span class="kw">import</span> { add <span class="kw">as</span> myAdd } <span class="kw">from</span> <span class="str">"./foo.js"</span>;
+
+<span class="cm">// Import everything into a namespace object</span>
+<span class="kw">import</span> * <span class="kw">as</span> foo <span class="kw">from</span> <span class="str">"./foo.js"</span>;
+foo.<span class="fn">add</span>(<span class="num">2</span>, <span class="num">3</span>);
+
+<span class="cm">// Default import — NO curly braces</span>
+<span class="kw">import</span> Point <span class="kw">from</span> <span class="str">"./Point.js"</span>;</pre>
+
+    <div class="callout callout-warning">
+      <div class="label">Common Gotcha</div>
+      Named exports require <code>{ }</code> when importing. Default exports do <strong>not</strong>. Mixing them up is one of the most frequent ES6 module errors.
+    </div>
+
+    <div class="table-wrap" style="margin-top:1.5rem">
+      <table>
+        <thead><tr><th>Export style</th><th>How to import</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>export const x</td><td>import { x } from "…"</td><td>Curly braces required</td></tr>
+          <tr><td>export { x as y }</td><td>import { y } from "…"</td><td>Use the alias name</td></tr>
+          <tr><td>export default …</td><td>import anything from "…"</td><td>No curly braces; name is up to the importer</td></tr>
+          <tr><td>export * from "…"</td><td>import { x } from "…"</td><td>Re-exports all named exports</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Readings -->
+  <div class="readings">
+    📖 &nbsp; Readings: <a href="https://javascript.info" target="_blank">The Modern JavaScript Tutorial</a> — Prototypes, inheritance · Classes · Modules
+  </div>
+
+</main>
+
+<footer>
+  CS3035 Programming Paradigms &nbsp;·&nbsp; JS Prototype, Class &amp; Module &nbsp;·&nbsp; Cal State LA
+</footer>
+
+</body>
+</html>

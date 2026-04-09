@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JS Basics — CS3035</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0e14;
+    --surface: #16161f;
+    --surface2: #1d1d2a;
+    --border: #2a2a3d;
+    --accent: #7b6ff0;
+    --accent2: #f07b6f;
+    --accent3: #6ff0c8;
+    --text: #dcdcf0;
+    --muted: #8888aa;
+    --code-bg: #111120;
+    --keyword: #c084fc;
+    --string: #86efac;
+    --fn: #7dd3fc;
+    --comment: #6b7280;
+    --num: #fbbf24;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    line-height: 1.7;
+    min-height: 100vh;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(circle at 15% 25%, rgba(123,111,240,0.06) 0%, transparent 50%),
+      radial-gradient(circle at 85% 75%, rgba(111,240,200,0.05) 0%, transparent 50%),
+      radial-gradient(circle at 55% 10%, rgba(240,123,111,0.04) 0%, transparent 40%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrapper {
+    position: relative;
+    z-index: 1;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 60px 32px 100px;
+  }
+
+  header {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 32px;
+    margin-bottom: 56px;
+  }
+
+  .course-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent3);
+    margin-bottom: 12px;
+    display: block;
+  }
+
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 900;
+    line-height: 1.1;
+    background: linear-gradient(135deg, #fff 0%, var(--accent3) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 10px;
+  }
+
+  .subtitle { color: var(--muted); font-size: 0.95rem; font-style: italic; }
+
+  .section {
+    margin-bottom: 56px;
+    animation: fadeUp 0.5s ease both;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .section:nth-child(1) { animation-delay: 0.05s; }
+  .section:nth-child(2) { animation-delay: 0.1s; }
+  .section:nth-child(3) { animation-delay: 0.15s; }
+  .section:nth-child(4) { animation-delay: 0.2s; }
+  .section:nth-child(5) { animation-delay: 0.25s; }
+  .section:nth-child(6) { animation-delay: 0.3s; }
+  .section:nth-child(7) { animation-delay: 0.35s; }
+
+  .section-label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .section-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--accent3);
+    border: 1px solid var(--accent3);
+    padding: 2px 8px;
+    border-radius: 3px;
+    letter-spacing: 0.1em;
+  }
+
+  h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  .divider {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, var(--border), transparent);
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px 28px;
+    margin-bottom: 16px;
+    transition: border-color 0.2s;
+  }
+  .card:hover { border-color: #3a3a5a; }
+
+  .card-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent3);
+    margin-bottom: 10px;
+  }
+
+  .card p { color: var(--text); font-size: 0.95rem; margin-bottom: 8px; }
+  .card p:last-child { margin-bottom: 0; }
+
+  .hl  { color: var(--accent);  font-family: 'DM Mono', monospace; font-size: 0.88em; background: rgba(123,111,240,0.12); padding: 1px 6px; border-radius: 4px; }
+  .hlg { color: var(--accent3); font-family: 'DM Mono', monospace; font-size: 0.88em; background: rgba(111,240,200,0.10); padding: 1px 6px; border-radius: 4px; }
+  .hlr { color: var(--accent2); font-family: 'DM Mono', monospace; font-size: 0.88em; background: rgba(240,123,111,0.10); padding: 1px 6px; border-radius: 4px; }
+
+  .code-block {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 16px 0;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.85rem;
+  }
+
+  .code-header {
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot-r { background: #ff5f57; }
+  .dot-y { background: #febc2e; }
+  .dot-g { background: #28c840; }
+
+  .code-filename { margin-left: auto; font-size: 0.72rem; color: var(--muted); letter-spacing: 0.05em; }
+
+  .code-body { padding: 20px 22px; overflow-x: auto; line-height: 1.8; }
+  .code-body pre { white-space: pre-wrap; }
+
+  .kw  { color: var(--keyword); }
+  .str { color: var(--string); }
+  .fn  { color: var(--fn); }
+  .cm  { color: var(--comment); font-style: italic; }
+  .nm  { color: var(--num); }
+
+  .callout {
+    border-left: 3px solid var(--accent);
+    background: rgba(123,111,240,0.07);
+    border-radius: 0 8px 8px 0;
+    padding: 14px 18px;
+    margin: 16px 0;
+    font-size: 0.9rem;
+  }
+  .callout.green  { border-left-color: var(--accent3); background: rgba(111,240,200,0.06); }
+  .callout.orange { border-left-color: var(--accent2); background: rgba(240,123,111,0.06); }
+
+  /* Two-column grid */
+  .grid2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin: 16px 0;
+  }
+  @media (max-width: 600px) { .grid2 { grid-template-columns: 1fr; } }
+
+  .grid2-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 18px;
+  }
+  .grid2-card.a { border-top: 3px solid var(--accent); }
+  .grid2-card.b { border-top: 3px solid var(--accent3); }
+  .grid2-card.c { border-top: 3px solid var(--accent2); }
+
+  .grid2-title { font-family: 'DM Mono', monospace; font-size: 0.75rem; letter-spacing: 0.1em; margin-bottom: 8px; }
+  .grid2-card.a .grid2-title { color: var(--accent); }
+  .grid2-card.b .grid2-title { color: var(--accent3); }
+  .grid2-card.c .grid2-title { color: var(--accent2); }
+  .grid2-card p { font-size: 0.88rem; color: var(--muted); }
+
+  /* Naming convention badges */
+  .badge-row { display: flex; flex-wrap: wrap; gap: 10px; margin: 12px 0; }
+  .badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.8rem;
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1px solid;
+  }
+  .badge.purple { color: var(--accent);  border-color: var(--accent);  background: rgba(123,111,240,0.1); }
+  .badge.green  { color: var(--accent3); border-color: var(--accent3); background: rgba(111,240,200,0.08); }
+  .badge.orange { color: var(--accent2); border-color: var(--accent2); background: rgba(240,123,111,0.08); }
+  .badge.muted  { color: var(--muted);   border-color: var(--border);  background: var(--surface2); }
+
+  /* Falsy grid */
+  .falsy-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 16px 0;
+  }
+  .falsy-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.85rem;
+    padding: 8px 16px;
+    background: rgba(240,123,111,0.1);
+    border: 1px solid rgba(240,123,111,0.3);
+    border-radius: 8px;
+    color: var(--accent2);
+  }
+  .truthy-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.85rem;
+    padding: 8px 16px;
+    background: rgba(111,240,200,0.1);
+    border: 1px solid rgba(111,240,200,0.3);
+    border-radius: 8px;
+    color: var(--accent3);
+  }
+
+  /* Arrow function steps */
+  .arrow-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin: 16px 0;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.85rem;
+  }
+  .arrow-step {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 18px;
+    color: var(--text);
+  }
+  .arrow-down {
+    text-align: center;
+    color: var(--accent);
+    font-size: 1.2rem;
+    line-height: 1.4;
+  }
+
+  /* Scope table */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 0.85rem;
+  }
+  th {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 10px 14px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    color: var(--accent3);
+    text-align: left;
+  }
+  td {
+    border: 1px solid var(--border);
+    padding: 10px 14px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--text);
+  }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  /* TOC */
+  .toc {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 22px 28px;
+    margin-bottom: 52px;
+  }
+  .toc-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+  .toc a {
+    display: block;
+    color: var(--text);
+    text-decoration: none;
+    padding: 5px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.9rem;
+    transition: color 0.15s;
+  }
+  .toc a:last-child { border-bottom: none; }
+  .toc a:hover { color: var(--accent3); }
+  .toc a span { font-family: 'DM Mono', monospace; font-size: 0.75rem; color: var(--accent3); margin-right: 10px; }
+
+  /* Equality comparison visual */
+  .eq-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.88rem;
+  }
+  .eq-row:last-child { border-bottom: none; }
+  .eq-expr { flex: 1; color: var(--fn); }
+  .eq-result { padding: 4px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 500; }
+  .eq-true  { background: rgba(111,240,200,0.15); color: var(--accent3); border: 1px solid rgba(111,240,200,0.3); }
+  .eq-false { background: rgba(240,123,111,0.15); color: var(--accent2); border: 1px solid rgba(240,123,111,0.3); }
+  .eq-note  { color: var(--muted); font-size: 0.78rem; flex: 1.2; }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <header>
+    <span class="course-tag">CS3035 · Programming Paradigms</span>
+    <h1>JavaScript Basics</h1>
+    <p class="subtitle">Core language features — comprehensive study notes</p>
+  </header>
+
+  <nav class="toc">
+    <div class="toc-title">Contents</div>
+    <a href="#background"><span>01</span>Background & History</a>
+    <a href="#types"><span>02</span>Types, Literals & Variables</a>
+    <a href="#operators"><span>03</span>Operators & Expressions</a>
+    <a href="#statements"><span>04</span>Statements & Control Flow</a>
+    <a href="#functions"><span>05</span>Functions (First-Class Citizens)</a>
+    <a href="#objects"><span>06</span>Objects, Methods & Accessor Properties</a>
+    <a href="#arrays"><span>07</span>Arrays</a>
+  </nav>
+
+  <!-- ===== 01 BACKGROUND ===== -->
+  <section class="section" id="background">
+    <div class="section-label">
+      <span class="section-num">01</span>
+      <h2>Background &amp; History</h2>
+      <div class="divider"></div>
+    </div>
+
+    <div class="grid2">
+      <div class="grid2-card a">
+        <div class="grid2-title">Popularity (2025)</div>
+        <p>#6 on TIOBE Index. <strong>#1</strong> most-used language in the Stack Overflow Developer Survey, making it the most widely used for the 13th year running.</p>
+      </div>
+      <div class="grid2-card b">
+        <div class="grid2-title">Derived Languages</div>
+        <p>Basis for TypeScript, Dart, JSX, Elm, and more — its influence extends far beyond the browser.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Brief Timeline</div>
+      <table>
+        <thead>
+          <tr><th>Year</th><th>Event</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>1995</td><td>Created at Netscape; named "JavaScript" to ride Java's popularity wave</td></tr>
+          <tr><td>1997</td><td>Standardized as ECMAScript (ES1)</td></tr>
+          <tr><td>2009</td><td>ES5 — major update, JSON support, strict mode</td></tr>
+          <tr><td>2015</td><td>ES6 — classes, arrow functions, modules, let/const. <strong>Start of modern JS.</strong></td></tr>
+          <tr><td>2016+</td><td>Annual releases (ES7, ES8, …) with incremental improvements</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Two Flavors</div>
+      <div class="grid2" style="margin:0;">
+        <div class="grid2-card b">
+          <div class="grid2-title">Client-Side (Browser)</div>
+          <p>Manipulates the DOM, handles events, communicates with servers — all inside the browser.</p>
+        </div>
+        <div class="grid2-card a">
+          <div class="grid2-title">Node.js (Outside Browser)</div>
+          <p>Server-side JS, CLI tools, desktop apps — the same language, different runtime APIs.<br><br>
+          Run a file: <span class="hl">node file.js</span><br>
+          Interactive shell: <span class="hl">node</span> (REPL), exit with <span class="hl">.exit</span></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 02 TYPES ===== -->
+  <section class="section" id="types">
+    <div class="section-label">
+      <span class="section-num">02</span>
+      <h2>Types, Literals &amp; Variables</h2>
+      <div class="divider"></div>
+    </div>
+
+    <div class="grid2">
+      <div class="grid2-card a">
+        <div class="grid2-title">Primitive Types (immutable values)</div>
+        <p><span class="hl">Boolean</span> — <span class="hlg">true</span> / <span class="hlg">false</span></p>
+        <p><span class="hl">Number</span> — integers &amp; floats (one type)</p>
+        <p><span class="hl">String</span> — text</p>
+        <p><span class="hl">Null</span> — intentional absence of value</p>
+        <p><span class="hl">Undefined</span> — declared but not assigned</p>
+        <p><span class="hl">Symbol</span> — unique identifiers (advanced)</p>
+      </div>
+      <div class="grid2-card b">
+        <div class="grid2-title">Non-Primitive</div>
+        <p><span class="hlg">Object</span> — everything else: plain objects, arrays, functions, dates…</p>
+        <br>
+        <p style="color:var(--muted);font-size:0.82rem;">Use <span class="hl">typeof x</span> to check type at runtime.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Literals</div>
+      <div class="code-block">
+        <div class="code-header"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+        <div class="code-body"><pre><span class="cm">// Boolean</span>
+<span class="kw">true</span>   <span class="kw">false</span>
+
+<span class="cm">// Number (one type for int & float)</span>
+<span class="nm">123</span>   <span class="nm">4.56</span>   <span class="nm">-7</span>
+
+<span class="cm">// String — single or double quotes</span>
+<span class="str">"hello"</span>   <span class="str">'world'</span>
+
+<span class="cm">// Null / Undefined</span>
+<span class="kw">null</span>   <span class="kw">undefined</span>
+
+<span class="cm">// Template Literal (backtick!) — embeds expressions with ${}</span>
+<span class="kw">let</span> a = <span class="nm">10</span>, b = <span class="nm">20</span>;
+console.<span class="fn">log</span>( <span class="str">`${a}+${b} is ${a+b}`</span> );  <span class="cm">// "10+20 is 30"</span>
+
+<span class="cm">// Object Literal</span>
+<span class="kw">let</span> car = { make: <span class="str">"Honda"</span>, model: <span class="str">"Civic"</span>, year: <span class="nm">2001</span> };</pre></div>
+      </div>
+      <div class="callout green">Template literals use <strong>backtick (`)</strong>, not a single quote. Expressions inside <span class="hlg">${ }</span> are evaluated at runtime.</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Variables &amp; Constants</div>
+      <div class="code-block">
+        <div class="code-header"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+        <div class="code-body"><pre><span class="kw">let</span> x;           <span class="cm">// declare (undefined)</span>
+x = <span class="nm">10</span>;          <span class="cm">// now a Number</span>
+x = <span class="str">'abc'</span>;       <span class="cm">// now a String — JS is dynamically typed!</span>
+
+<span class="kw">const</span> y = <span class="nm">20</span>;   <span class="cm">// constant — cannot be reassigned</span></pre></div>
+      </div>
+      <div class="callout orange">Avoid <span class="hlr">var</span> in modern JS — it has function scope and hoisting quirks. Prefer <span class="hlr">let</span> and <span class="hlr">const</span>.</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Variable Scope</div>
+      <table>
+        <thead><tr><th>Keyword</th><th>Scope</th><th>Hoisted?</th><th>Reassignable?</th></tr></thead>
+        <tbody>
+          <tr><td>no keyword (a = 10)</td><td>Global</td><td>—</td><td>Yes</td></tr>
+          <tr><td>var</td><td>Function</td><td>Yes (to undefined)</td><td>Yes</td></tr>
+          <tr><td>let</td><td>Block { }</td><td>No (TDZ)</td><td>Yes</td></tr>
+          <tr><td>const</td><td>Block { }</td><td>No (TDZ)</td><td>No</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Naming Conventions</div>
+      <p style="margin-bottom:12px; color:var(--muted); font-size:0.88rem;">Identifiers: letters, digits, <span class="hl">$</span>, <span class="hl">_</span> — cannot start with a digit.</p>
+      <div class="badge-row">
+        <div class="badge purple">camelCase → variables &amp; functions</div>
+        <div class="badge green">UPPER_CASE → constants</div>
+        <div class="badge orange">PascalCase → classes</div>
+        <div class="badge muted">kebab-case → file names</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 03 OPERATORS ===== -->
+  <section class="section" id="operators">
+    <div class="section-label">
+      <span class="section-num">03</span>
+      <h2>Operators &amp; Expressions</h2>
+      <div class="divider"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Equality: == vs ===</div>
+      <div style="padding: 4px 0;">
+        <div class="eq-row">
+          <span class="eq-expr">"5" == 5</span>
+          <span class="eq-result eq-true">true</span>
+          <span class="eq-note">Loose equality — coerces types before comparing</span>
+        </div>
+        <div class="eq-row">
+          <span class="eq-expr">"5" === 5</span>
+          <span class="eq-result eq-false">false</span>
+          <span class="eq-note">Strict equality — same type AND same value required</span>
+        </div>
+        <div class="eq-row">
+          <span class="eq-expr">5 === 5</span>
+          <span class="eq-result eq-true">true</span>
+          <span class="eq-note">Same type, same value ✔</span>
+        </div>
+        <div class="eq-row">
+          <span class="eq-expr">null == undefined</span>
+          <span class="eq-result eq-true">true</span>
+          <span class="eq-note">Special case — only pair that's loosely equal across types</span>
+        </div>
+      </div>
+      <div class="callout">Always prefer <span class="hl">===</span> and <span class="hl">!==</span> in modern JS. Loose equality (<span class="hl">==</span>) can cause subtle bugs.</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Truthy &amp; Falsy Values</div>
+      <p style="margin-bottom:12px; font-size:0.9rem;">JS has weak typing — non-boolean values are coerced to boolean in conditions.</p>
+      <p style="margin-bottom:8px; font-family:'DM Mono',monospace; font-size:0.78rem; color:var(--accent2); letter-spacing:0.1em;">FALSY — treated as false</p>
+      <div class="falsy-grid">
+        <span class="falsy-tag">false</span>
+        <span class="falsy-tag">0</span>
+        <span class="falsy-tag">""</span>
+        <span class="falsy-tag">null</span>
+        <span class="falsy-tag">undefined</span>
+        <span class="falsy-tag">NaN</span>
+      </div>
+      <p style="margin: 12px 0 8px; font-family:'DM Mono',monospace; font-size:0.78rem; color:var(--accent3); letter-spacing:0.1em;">TRUTHY — everything else, including:</p>
+      <div class="falsy-grid">
+        <span class="truthy-tag">"0"</span>
+        <span class="truthy-tag">[]</span>
+        <span class="truthy-tag">{}</span>
+        <span class="truthy-tag">42</span>
+        <span class="truthy-tag">"false"</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 04 STATEMENTS ===== -->
+  <section class="section" id="statements">
+    <div class="section-label">
+      <span class="section-num">04</span>
+      <h2>Statements &amp; Control Flow</h2>
+      <div class="divider"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Loops — JS vs Java</div>
+      <table>
+        <thead><tr><th>Loop</th><th>What it iterates</th><th>Note</th></tr></thead>
+        <tbody>
+          <tr><td>for</td><td>Classic index loop</td><td>Same as Java</td></tr>
+          <tr><td>while / do…while</td><td>Condition-based</td><td>Same as Java</td></tr>
+          <tr><td>for…in</td><td>Object property <strong>keys</strong></td><td>JS-specific</td></tr>
+          <tr><td>for…of</td><td>Iterable <strong>values</strong> (Array, String, …)</td><td>JS-specific</td></tr>
+          <tr><td>Array.forEach()</td><td>Array elements (callback)</td><td>Replaces for-each</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Loop Examples</div>
+      <div class="code-block">
+        <div class="code-header"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+        <div class="code-body"><pre><span class="kw">const</span> arr = [<span class="str">'a'</span>, <span class="str">'b'</span>, <span class="str">'c'</span>];
+
+<span class="cm">// for...of — iterate VALUES</span>
+<span class="kw">for</span> (<span class="kw">const</span> val <span class="kw">of</span> arr) console.<span class="fn">log</span>(val);  <span class="cm">// a, b, c</span>
+
+<span class="cm">// for...in — iterate KEYS (indices for arrays)</span>
+<span class="kw">for</span> (<span class="kw">const</span> key <span class="kw">in</span> arr) console.<span class="fn">log</span>(key);  <span class="cm">// 0, 1, 2</span>
+
+<span class="cm">// forEach — callback style</span>
+arr.<span class="fn">forEach</span>(val => console.<span class="fn">log</span>(val));       <span class="cm">// a, b, c</span></pre></div>
+      </div>
+    </div>
+
+    <div class="callout orange">The <span class="hlr">switch</span> statement uses <strong>strict equality</strong> (<span class="hlr">===</span>) for case matching, unlike C/Java which use value equality. Semicolons are optional but recommended.</div>
+  </section>
+
+  <!-- ===== 05 FUNCTIONS ===== -->
+  <section class="section" id="functions">
+    <div class="section-label">
+      <span class="section-num">05</span>
+      <h2>Functions — First-Class Citizens</h2>
+      <div class="divider"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Functions Can Be Used Anywhere Values Can</div>
+      <div class="grid2" style="margin: 12px 0 0;">
+        <div class="grid2-card a"><div class="grid2-title">Assigned to variables</div><p>A function can be stored in a variable, just like a number or string.</p></div>
+        <div class="grid2-card b"><div class="grid2-title">Passed as arguments</div><p>Pass a function to another function — this is what enables callbacks.</p></div>
+        <div class="grid2-card b"><div class="grid2-title">Returned from functions</div><p>A function can produce and return another function (closures, factories).</p></div>
+        <div class="grid2-card a"><div class="grid2-title">Object properties &amp; array elements</div><p>When a function is stored in an object, it becomes a <em>method</em>.</p></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Function Declaration vs Function Expression</div>
+      <div class="code-block">
+        <div class="code-header"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+        <div class="code-body"><pre><span class="cm">// 1. Function declaration — hoisted, can be called before definition</span>
+<span class="kw">function</span> <span class="fn">foo</span>() {
+  console.<span class="fn">log</span>(<span class="str">"foo"</span>);
+}
+
+<span class="cm">// 2. Function literal (expression) — NOT hoisted</span>
+<span class="kw">let</span> bar = <span class="kw">function</span>() {
+  console.<span class="fn">log</span>(<span class="str">"bar"</span>);
+};
+
+<span class="cm">// 3. Passing a named function as argument</span>
+<span class="fn">setTimeout</span>(bar, <span class="nm">5000</span>);
+
+<span class="cm">// 4. Passing an anonymous function literal as argument</span>
+<span class="fn">setTimeout</span>(<span class="kw">function</span>() {
+  console.<span class="fn">log</span>(<span class="str">"foobar"</span>);
+}, <span class="nm">5000</span>);</pre></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Arrow Functions (a.k.a. Lambdas)</div>
+      <p style="margin-bottom:14px; font-size:0.9rem;">Concise syntax for function literals. Three equivalent forms:</p>
+      <div class="arrow-steps">
+        <div class="arrow-step"><span class="kw">function</span>(<span class="fn">a</span>) { <span class="kw">return</span> a*<span class="nm">2</span> }</div>
+        <div class="arrow-down">↓ remove "function", add =></div>
+        <div class="arrow-step">(<span class="fn">a</span>) <span class="kw">=></span> { <span class="kw">return</span> a*<span class="nm">2</span> }</div>
+        <div class="arrow-down">↓ single param → drop (), single expression → drop return & {}</div>
+        <div class="arrow-step"><span class="fn">a</span> <span class="kw">=></span> a*<span class="nm">2</span></div>
+      </div>
+      <div class="callout orange">⚠️ Arrow functions have <strong>no own <span class="hlr">this</span></strong> — they inherit <span class="hlr">this</span> from outer scope. Never use them as object methods.</div>
+    </div>
+  </section>
+
+  <!-- ===== 06 OBJECTS ===== -->
+  <section class="section" id="objects">
+    <div class="section-label">
+      <span class="section-num">06</span>
+      <h2>Objects, Methods &amp; Accessor Properties</h2>
+      <div class="divider"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Object Literal</div>
+      <p style="margin-bottom:12px; font-size:0.9rem;">A collection of <strong>key : value</strong> pairs called <em>data properties</em>. Keys can be valid identifiers or strings/numbers.</p>
+      <div class="code-block">
+        <div class="code-header"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+        <div class="code-body"><pre><span class="kw">let</span> car = {
+  make:    <span class="str">'Honda'</span>,        <span class="cm">// identifier key</span>
+  model:   <span class="str">"Civic"</span>,
+  <span class="str">"Year"</span>:  <span class="nm">2001</span>,           <span class="cm">// string key (quoted)</span>
+  owner:   { name: <span class="str">"Chengyu"</span> }  <span class="cm">// nested object</span>
+};</pre></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Accessing Properties — Two Ways</div>
+      <div class="code-block">
+        <div class="code-header"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+        <div class="code-body"><pre><span class="cm">// Dot notation — when key is a valid identifier</span>
+console.<span class="fn">log</span>(car.make);        <span class="cm">// "Honda"</span>
+
+<span class="cm">// Bracket notation — any key, or computed from a variable</span>
+console.<span class="fn">log</span>(car[<span class="str">"make"</span>]);     <span class="cm">// "Honda"</span>
+
+<span class="kw">let</span> field = <span class="str">"model"</span>;
+console.<span class="fn">log</span>(car[field]);      <span class="cm">// "Civic" — computed property!</span>
+
+<span class="cm">// Properties can be added dynamically</span>
+car.color = <span class="str">"red"</span>;
+car[<span class="nm">0</span>] = <span class="str">"something"</span>;</pre></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">JSON — Quick Comparison to Object Literal</div>
+      <div class="grid2" style="margin:12px 0 0;">
+        <div class="grid2-card a">
+          <div class="grid2-title">JS Object Literal</div>
+          <p>Keys can be bare identifiers. Strings can use single or double quotes. Can include functions.</p>
+        </div>
+        <div class="grid2-card b">
+          <div class="grid2-title">JSON</div>
+          <p>Keys <strong>must</strong> be double-quoted strings. Values must be double-quoted. No functions, no comments. Used for data exchange.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Method &amp; <code>this</code></div>
+      <p style="margin-bottom:12px; font-size:0.9rem;">A <strong>method</strong> is a function stored as an object property. Inside a method, <span class="hl">this</span> refers to the calling object.</p>
+      <div class="code-block">
+        <div class="code-header"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+        <div class="code-body"><pre><span class="kw">let</span> john = {
+  firstName: <span class="str">"John"</span>,
+  lastName:  <span class="str">"Doe"</span>,
+  greeting: <span class="kw">function</span>() {
+    console.<span class="fn">log</span>(<span class="str">`Hi, ${this.firstName}!`</span>);  <span class="cm">// this → john</span>
+  }
+};
+
+john.<span class="fn">greeting</span>();   <span class="cm">// "Hi, John!"</span></pre></div>
+      </div>
+      <div class="callout orange">⚠️ <strong>Do NOT use arrow functions for methods.</strong> Arrow functions capture <span class="hlr">this</span> from the surrounding scope, not the calling object.</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Accessor Property (Getter / Setter)</div>
+      <p style="margin-bottom:12px; font-size:0.9rem;">Accessed like a data property but backed by functions — great for computed or validated values.</p>
+      <div class="code-block">
+        <div class="code-header"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div><span class="code-filename">circle-accessor.js</span></div>
+        <div class="code-body"><pre><span class="kw">let</span> circle = {
+  radius: <span class="nm">5</span>,
+
+  <span class="kw">get</span> <span class="fn">area</span>() {                        <span class="cm">// called when reading circle.area</span>
+    <span class="kw">return</span> Math.PI * <span class="kw">this</span>.radius ** <span class="nm">2</span>;
+  },
+
+  <span class="kw">set</span> <span class="fn">area</span>(value) {                   <span class="cm">// called when writing circle.area = x</span>
+    <span class="kw">this</span>.radius = Math.<span class="fn">sqrt</span>(value / Math.PI);
+  }
+};
+
+console.<span class="fn">log</span>(circle.area);  <span class="cm">// reads via getter  → ~78.54</span>
+circle.area = <span class="nm">100</span>;         <span class="cm">// writes via setter → updates radius</span></pre></div>
+      </div>
+      <div class="callout green">Accessor properties look like data properties to the caller — no parentheses needed. This is similar to Python's <span class="hlg">@property</span> decorator.</div>
+    </div>
+  </section>
+
+  <!-- ===== 07 ARRAYS ===== -->
+  <section class="section" id="arrays">
+    <div class="section-label">
+      <span class="section-num">07</span>
+      <h2>Arrays</h2>
+      <div class="divider"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Array Basics</div>
+      <p style="margin-bottom: 10px;">The most-used collection type in JS. More like Python <code>list</code> or Java <code>ArrayList</code> — dynamic size, mixed types.</p>
+      <div class="code-block">
+        <div class="code-header"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+        <div class="code-body"><pre><span class="kw">let</span> a = [<span class="str">"x"</span>, <span class="str">"y"</span>, <span class="str">"z"</span>];
+
+console.<span class="fn">log</span>(a[<span class="nm">0</span>]);       <span class="cm">// "x"</span>
+console.<span class="fn">log</span>(a.length);   <span class="cm">// 3</span>
+
+a.<span class="fn">push</span>(<span class="str">"w"</span>);              <span class="cm">// ["x","y","z","w"]</span>
+a.<span class="fn">pop</span>();                  <span class="cm">// removes "w"</span>
+a.<span class="fn">map</span>(v => v + <span class="str">"!"</span>);     <span class="cm">// ["x!","y!","z!"] (new array)</span>
+a.<span class="fn">filter</span>(v => v !== <span class="str">"y"</span>); <span class="cm">// ["x","z"] (new array)</span></pre></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Arrays Are Special Objects</div>
+      <p style="margin-bottom:12px; font-size:0.9rem;">Under the hood, array indices are just numeric string keys on an object. This has some surprising consequences:</p>
+      <div class="code-block">
+        <div class="code-header"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+        <div class="code-body"><pre>a = [<span class="str">"x"</span>, <span class="str">"y"</span>, <span class="str">"z"</span>];
+<span class="cm">// Internally stored as: { 0: "x", 1: "y", 2: "z" }</span>
+
+a.b = <span class="str">"hello"</span>;     <span class="cm">// adds a non-index property (allowed but unusual!)</span>
+
+a[<span class="nm">100</span>] = <span class="nm">10</span>;       <span class="cm">// creates a "hole" — indices 3–99 are undefined</span>
+console.<span class="fn">log</span>(a.length);  <span class="cm">// 101 — length = highest index + 1</span></pre></div>
+      </div>
+      <div class="callout orange">Avoid creating sparse arrays with holes — many array methods skip empty slots inconsistently.</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Key Array Methods Cheatsheet</div>
+      <table>
+        <thead><tr><th>Method</th><th>What it does</th><th>Mutates?</th></tr></thead>
+        <tbody>
+          <tr><td>push / pop</td><td>Add/remove from end</td><td>Yes</td></tr>
+          <tr><td>shift / unshift</td><td>Remove/add at front</td><td>Yes</td></tr>
+          <tr><td>splice(i, n)</td><td>Remove n items at index i</td><td>Yes</td></tr>
+          <tr><td>slice(s, e)</td><td>Return shallow copy of range</td><td>No</td></tr>
+          <tr><td>map(fn)</td><td>Transform each element → new array</td><td>No</td></tr>
+          <tr><td>filter(fn)</td><td>Keep elements where fn returns true</td><td>No</td></tr>
+          <tr><td>reduce(fn, init)</td><td>Accumulate to single value</td><td>No</td></tr>
+          <tr><td>forEach(fn)</td><td>Run fn for each element</td><td>No</td></tr>
+          <tr><td>find / findIndex</td><td>First element / index matching fn</td><td>No</td></tr>
+          <tr><td>includes(val)</td><td>Boolean: does array contain val?</td><td>No</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</div>
+</body>
+</html>

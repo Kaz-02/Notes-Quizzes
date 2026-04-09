@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Higher-Order Functions — CS3035</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0e14;
+    --surface: #16161f;
+    --surface2: #1d1d2a;
+    --border: #2a2a3d;
+    --accent: #7b6ff0;
+    --accent2: #f07b6f;
+    --accent3: #6ff0c8;
+    --accent4: #f0d46f;
+    --text: #dcdcf0;
+    --muted: #8888aa;
+    --code-bg: #111120;
+    --keyword: #c084fc;
+    --string: #86efac;
+    --fn: #7dd3fc;
+    --comment: #6b7280;
+    --num: #fbbf24;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    line-height: 1.7;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(circle at 10% 30%, rgba(123,111,240,0.07) 0%, transparent 50%),
+      radial-gradient(circle at 90% 70%, rgba(240,212,111,0.05) 0%, transparent 50%),
+      radial-gradient(circle at 50% 5%,  rgba(111,240,200,0.04) 0%, transparent 40%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrapper {
+    position: relative;
+    z-index: 1;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 60px 32px 100px;
+  }
+
+  header {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 32px;
+    margin-bottom: 56px;
+  }
+
+  .course-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent4);
+    margin-bottom: 12px;
+    display: block;
+  }
+
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 900;
+    line-height: 1.1;
+    background: linear-gradient(135deg, #fff 0%, var(--accent4) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 10px;
+  }
+
+  .subtitle { color: var(--muted); font-size: 0.95rem; font-style: italic; }
+
+  .section {
+    margin-bottom: 56px;
+    animation: fadeUp 0.5s ease both;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .section:nth-child(1) { animation-delay: 0.05s; }
+  .section:nth-child(2) { animation-delay: 0.10s; }
+  .section:nth-child(3) { animation-delay: 0.15s; }
+  .section:nth-child(4) { animation-delay: 0.20s; }
+  .section:nth-child(5) { animation-delay: 0.25s; }
+
+  .section-label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .section-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--accent4);
+    border: 1px solid var(--accent4);
+    padding: 2px 8px;
+    border-radius: 3px;
+    letter-spacing: 0.1em;
+  }
+
+  h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  .divider {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, var(--border), transparent);
+  }
+
+  /* Cards */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px 28px;
+    margin-bottom: 16px;
+    transition: border-color 0.2s;
+  }
+  .card:hover { border-color: #3a3a5a; }
+
+  .card-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent4);
+    margin-bottom: 10px;
+  }
+
+  .card p { font-size: 0.95rem; margin-bottom: 8px; }
+  .card p:last-child { margin-bottom: 0; }
+
+  /* Inline code highlights */
+  .hl  { color: var(--accent);  font-family: 'DM Mono', monospace; font-size: 0.88em; background: rgba(123,111,240,0.12); padding: 1px 6px; border-radius: 4px; }
+  .hlg { color: var(--accent3); font-family: 'DM Mono', monospace; font-size: 0.88em; background: rgba(111,240,200,0.10); padding: 1px 6px; border-radius: 4px; }
+  .hlr { color: var(--accent2); font-family: 'DM Mono', monospace; font-size: 0.88em; background: rgba(240,123,111,0.10); padding: 1px 6px; border-radius: 4px; }
+  .hly { color: var(--accent4); font-family: 'DM Mono', monospace; font-size: 0.88em; background: rgba(240,212,111,0.10); padding: 1px 6px; border-radius: 4px; }
+
+  /* Code blocks */
+  .code-block {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 16px 0;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.84rem;
+  }
+
+  .code-header {
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot-r { background: #ff5f57; }
+  .dot-y { background: #febc2e; }
+  .dot-g { background: #28c840; }
+
+  .lang-tag {
+    margin-left: auto;
+    font-size: 0.7rem;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border: 1px solid var(--border);
+    padding: 1px 8px;
+    border-radius: 10px;
+  }
+
+  .code-body { padding: 20px 22px; overflow-x: auto; line-height: 1.8; }
+  .code-body pre { white-space: pre-wrap; }
+
+  .kw  { color: var(--keyword); }
+  .str { color: var(--string); }
+  .fn  { color: var(--fn); }
+  .cm  { color: var(--comment); font-style: italic; }
+  .nm  { color: var(--num); }
+  .tp  { color: #fb923c; }   /* type names */
+
+  /* Callouts */
+  .callout {
+    border-left: 3px solid var(--accent4);
+    background: rgba(240,212,111,0.06);
+    border-radius: 0 8px 8px 0;
+    padding: 14px 18px;
+    margin: 16px 0;
+    font-size: 0.9rem;
+  }
+  .callout.purple { border-left-color: var(--accent);  background: rgba(123,111,240,0.07); }
+  .callout.green  { border-left-color: var(--accent3); background: rgba(111,240,200,0.06); }
+  .callout.red    { border-left-color: var(--accent2); background: rgba(240,123,111,0.06); }
+
+  /* Two-column grid */
+  .grid2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin: 16px 0;
+  }
+  @media (max-width: 600px) { .grid2 { grid-template-columns: 1fr; } }
+
+  .grid2-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 18px;
+  }
+  .grid2-card.y { border-top: 3px solid var(--accent4); }
+  .grid2-card.p { border-top: 3px solid var(--accent); }
+  .grid2-card.g { border-top: 3px solid var(--accent3); }
+  .grid2-card.r { border-top: 3px solid var(--accent2); }
+
+  .grid2-title { font-family: 'DM Mono', monospace; font-size: 0.75rem; letter-spacing: 0.1em; margin-bottom: 8px; }
+  .grid2-card.y .grid2-title { color: var(--accent4); }
+  .grid2-card.p .grid2-title { color: var(--accent); }
+  .grid2-card.g .grid2-title { color: var(--accent3); }
+  .grid2-card.r .grid2-title { color: var(--accent2); }
+  .grid2-card p { font-size: 0.88rem; color: var(--muted); }
+
+  /* Variance table */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 0.85rem;
+  }
+  th {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 10px 14px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    color: var(--accent4);
+    text-align: left;
+  }
+  td {
+    border: 1px solid var(--border);
+    padding: 10px 14px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.82rem;
+    vertical-align: middle;
+  }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+  .ok-cell  { color: var(--accent3); }
+  .bad-cell { color: var(--accent2); }
+
+  /* Binding comparison */
+  .binding-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin: 16px 0;
+  }
+  @media (max-width: 600px) { .binding-row { grid-template-columns: 1fr; } }
+
+  .binding-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 18px 20px;
+  }
+  .binding-card.deep   { border-top: 3px solid var(--accent3); }
+  .binding-card.shallow { border-top: 3px solid var(--accent2); }
+
+  .binding-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .binding-card.deep   .binding-label { color: var(--accent3); }
+  .binding-card.shallow .binding-label { color: var(--accent2); }
+  .binding-card p { font-size: 0.88rem; color: var(--muted); }
+
+  /* Formula box */
+  .formula {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 20px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin: 16px 0;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.95rem;
+    flex-wrap: wrap;
+  }
+
+  .formula-term {
+    padding: 8px 20px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+  .formula-term.fn  { background: rgba(123,111,240,0.15); color: var(--accent);  border: 1px solid rgba(123,111,240,0.3); }
+  .formula-term.env { background: rgba(111,240,200,0.12); color: var(--accent3); border: 1px solid rgba(111,240,200,0.3); }
+  .formula-term.result { background: rgba(240,212,111,0.12); color: var(--accent4); border: 1px solid rgba(240,212,111,0.3); }
+  .formula-op { color: var(--muted); font-size: 1.2rem; }
+
+  /* Output trace */
+  .trace {
+    background: #0a0a10;
+    border: 1px dashed #2d3748;
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin-top: 12px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.82rem;
+    color: var(--accent3);
+    line-height: 2;
+  }
+  .trace-label {
+    color: var(--muted);
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .trace-line { display: flex; gap: 12px; }
+  .trace-src  { color: var(--muted); min-width: 60px; }
+
+  /* TOC */
+  .toc {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 22px 28px;
+    margin-bottom: 52px;
+  }
+  .toc-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+  .toc a {
+    display: block;
+    color: var(--text);
+    text-decoration: none;
+    padding: 5px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.9rem;
+    transition: color 0.15s;
+  }
+  .toc a:last-child { border-bottom: none; }
+  .toc a:hover { color: var(--accent4); }
+  .toc a span { font-family: 'DM Mono', monospace; font-size: 0.75rem; color: var(--accent4); margin-right: 10px; }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <header>
+    <span class="course-tag">CS3035 · Programming Paradigms</span>
+    <h1>Higher-Order Functions</h1>
+    <p class="subtitle">Functions as values — closures, variance, binding, functors</p>
+  </header>
+
+  <nav class="toc">
+    <div class="toc-title">Contents</div>
+    <a href="#hof"><span>01</span>Higher-Order Functions & Cross-Language Comparison</a>
+    <a href="#variance"><span>02</span>Function Types, Subtyping & Variance</a>
+    <a href="#binding"><span>03</span>Binding Policy (Deep vs Shallow)</a>
+    <a href="#closure"><span>04</span>Closures</a>
+    <a href="#functor"><span>05</span>Functors & Operator Overloading</a>
+  </nav>
+
+  <!-- ===== 01 HOF ===== -->
+  <section class="section" id="hof">
+    <div class="section-label">
+      <span class="section-num">01</span>
+      <h2>Higher-Order Functions</h2>
+      <div class="divider"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Definition</div>
+      <p>A <strong>higher-order function</strong> is any function that either takes other functions as parameters, returns a function as its result, or both. This is possible because functions are first-class citizens in JavaScript (and Python, etc.).</p>
+    </div>
+
+    <div class="card">
+      <div class="card-title">JavaScript Example — withLogging decorator</div>
+      <p style="margin-bottom:12px; font-size:0.9rem;">This function wraps any other function and logs its arguments and return value. It accepts a function and returns a new function — both criteria for a HOF.</p>
+      <div class="code-block">
+        <div class="code-header"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div><span class="lang-tag">JS</span></div>
+        <div class="code-body"><pre><span class="kw">function</span> <span class="fn">withLogging</span>(fn) {            <span class="cm">// takes a function as param</span>
+  <span class="kw">return function</span> (...args) {         <span class="cm">// returns a new function</span>
+    console.<span class="fn">log</span>(<span class="str">"Calling with args:"</span>, args);
+    <span class="kw">const</span> result = <span class="fn">fn</span>(...args);       <span class="cm">// ...args spreads the array back into args</span>
+    console.<span class="fn">log</span>(<span class="str">"Result:"</span>, result);
+    <span class="kw">return</span> result;
+  };
+}
+
+<span class="cm">// Usage</span>
+<span class="kw">function</span> <span class="fn">add</span>(a, b) { <span class="kw">return</span> a + b; }
+<span class="kw">const</span> loggedAdd = <span class="fn">withLogging</span>(add);
+<span class="fn">loggedAdd</span>(<span class="nm">2</span>, <span class="nm">3</span>);
+<span class="cm">// Calling with args: [2, 3]</span>
+<span class="cm">// Result: 5</span></pre></div>
+      </div>
+      <div class="callout purple">Use <span class="hl">typeof fn === "function"</span> to check at runtime whether a parameter is actually a function before calling it.</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Python Equivalent — @decorator syntax</div>
+      <div class="code-block">
+        <div class="code-header"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div><span class="lang-tag">Python</span></div>
+        <div class="code-body"><pre><span class="kw">def</span> <span class="fn">with_logging</span>(fn):
+    <span class="kw">def</span> <span class="fn">log</span>(*args):
+        <span class="fn">print</span>(<span class="str">"Calling with args:"</span>, args)
+        result = <span class="fn">fn</span>(*args)
+        <span class="fn">print</span>(<span class="str">"Result:"</span>, result)
+        <span class="kw">return</span> result
+    <span class="kw">return</span> log
+
+<span class="cm"># @decorator is shorthand for: add = with_logging(add)</span>
+<span class="kw">@with_logging</span>
+<span class="kw">def</span> <span class="fn">add</span>(a, b):
+    <span class="kw">return</span> a + b</pre></div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="grid2-card p">
+        <div class="grid2-title">C — Function Pointer</div>
+        <p>Pass a function's address as a raw pointer. <strong>No type safety</strong> — any pointer signature can be assigned, causing runtime crashes (e.g. passing <code>void print()</code> where <code>int(int,int)</code> is expected).</p>
+        <div class="code-block" style="margin-top:10px;">
+          <div class="code-header"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div><span class="lang-tag">C</span></div>
+          <div class="code-body"><pre><span class="tp">int</span> (*<span class="fn">funcPtr</span>)(<span class="tp">int</span>, <span class="tp">int</span>);
+funcPtr = add;
+<span class="tp">int</span> result = <span class="fn">funcPtr</span>(<span class="nm">3</span>, <span class="nm">4</span>);</pre></div>
+        </div>
+      </div>
+      <div class="grid2-card g">
+        <div class="grid2-title">C# — Delegate</div>
+        <p>A delegate is a <strong>typed function reference</strong>. The compiler enforces that only functions matching the declared signature can be assigned — much safer than C pointers.</p>
+        <div class="code-block" style="margin-top:10px;">
+          <div class="code-header"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div><span class="lang-tag">C#</span></div>
+          <div class="code-body"><pre><span class="kw">public delegate</span> <span class="tp">int</span> <span class="fn">MathOperation</span>(<span class="tp">int</span> a, <span class="tp">int</span> b);
+<span class="fn">MathOperation</span> op = Add;
+<span class="kw">var</span> result = <span class="fn">op</span>(<span class="nm">1</span>, <span class="nm">2</span>);</pre></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout green">JavaScript is <strong>dynamically typed</strong> — functions have no enforced type signature, so any function can be passed to any HOF. Python works the same way. C# delegates enforce type at compile time.</div>
+  </section>
+
+  <!-- ===== 02 VARIANCE ===== -->
+  <section class="section" id="variance">
+    <div class="section-label">
+      <span class="section-num">02</span>
+      <h2>Function Types, Subtyping &amp; Variance</h2>
+      <div class="divider"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Subtype Polymorphism — The Basics</div>
+      <p>A variable of type <span class="hly">Animal</span> can hold a <span class="hly">Dog</span> (subtype), but not the reverse. A <span class="hly">Dog</span> variable cannot hold a plain <span class="hly">Animal</span> because the animal may lack dog-specific features.</p>
+      <div class="code-block">
+        <div class="code-header"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div><span class="lang-tag">Java / C#</span></div>
+        <div class="code-body"><pre><span class="tp">Animal</span> a = <span class="kw">new</span> <span class="fn">Dog</span>();    <span class="cm">// ✔ Dog IS-A Animal</span>
+<span class="tp">Dog</span>    d = <span class="kw">new</span> <span class="fn">Animal</span>(); <span class="cm">// ✘ Animal is NOT necessarily a Dog</span></pre></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Function Type Variance — Which functions fit <code>delegate Dog DogOp(Dog d)</code>?</div>
+      <p style="margin-bottom:12px; font-size:0.88rem; color:var(--muted);">Type hierarchy: Animal → Dog → Pug (Pug is most specific, Animal is most general)</p>
+      <table>
+        <thead>
+          <tr><th>Function</th><th>Signature</th><th>Compatible?</th><th>Reason</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Func1</td>
+            <td>Animal(Dog x)</td>
+            <td class="ok-cell">✔ Yes</td>
+            <td>Return Animal ⊇ Dog (covariant OK). Param Dog = Dog.</td>
+          </tr>
+          <tr>
+            <td>Func2</td>
+            <td>Pug(Dog x)</td>
+            <td class="ok-cell">✔ Yes</td>
+            <td>Return Pug ⊆ Dog (covariant). Param exact match.</td>
+          </tr>
+          <tr>
+            <td>Func3</td>
+            <td>Dog(Animal x)</td>
+            <td class="ok-cell">✔ Yes</td>
+            <td>Return exact. Param Animal ⊇ Dog (contravariant OK).</td>
+          </tr>
+          <tr>
+            <td>Func4</td>
+            <td>Dog(Pug x)</td>
+            <td class="bad-cell">✘ No</td>
+            <td>Param Pug ⊆ Dog — caller may pass a non-Pug Dog. Unsafe.</td>
+          </tr>
+          <tr>
+            <td>Func5</td>
+            <td>Animal(Pug x)</td>
+            <td class="bad-cell">✘ No</td>
+            <td>Same param problem as Func4.</td>
+          </tr>
+          <tr>
+            <td>Func6</td>
+            <td>Pug(Animal x)</td>
+            <td class="ok-cell">✔ Yes</td>
+            <td>Param contravariant ✔, return covariant ✔.</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="binding-row" style="margin-top:16px;">
+        <div class="binding-card deep">
+          <div class="binding-label">Return type — Covariant</div>
+          <p>The return type of the assigned function can be the <strong>same or a subtype</strong>. A caller expecting <code>Dog</code> is happy receiving a <code>Pug</code> (a more specific dog).</p>
+        </div>
+        <div class="binding-card shallow">
+          <div class="binding-label">Parameter type — Contravariant</div>
+          <p>The parameter type can be the <strong>same or a supertype</strong>. A function that accepts any <code>Animal</code> can safely handle whatever <code>Dog</code> the caller passes in.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 03 BINDING ===== -->
+  <section class="section" id="binding">
+    <div class="section-label">
+      <span class="section-num">03</span>
+      <h2>Binding Policy</h2>
+      <div class="divider"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">The Binding Problem — What does a free variable refer to?</div>
+      <p style="margin-bottom:12px; font-size:0.9rem;">When a function references a variable not in its own scope, <em>which</em> binding of that variable does it use? This only matters under <strong>dynamic scope</strong>.</p>
+      <div class="code-block">
+        <div class="code-header"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div><span class="lang-tag">Pseudo-code (dynamic scope)</span></div>
+        <div class="code-body"><pre><span class="kw">int</span> x = <span class="nm">1</span>;               <span class="cm">// global x</span>
+
+<span class="kw">int</span> <span class="fn">foo</span>(<span class="kw">int</span> (*bar)()) {
+  <span class="kw">int</span> x = <span class="nm">3</span>;             <span class="cm">// foo's local x</span>
+  <span class="kw">return</span> <span class="fn">bar</span>();
+}
+
+<span class="kw">int</span> <span class="fn">baz</span>() {
+  <span class="kw">return</span> x;              <span class="cm">// which x?</span>
+}
+
+<span class="kw">void</span> <span class="fn">main</span>() {
+  <span class="kw">int</span> x = <span class="nm">4</span>;             <span class="cm">// main's local x</span>
+  <span class="fn">print</span>(<span class="fn">foo</span>(baz));       <span class="cm">// passes baz as argument to foo</span>
+}</pre></div>
+      </div>
+    </div>
+
+    <div class="binding-row">
+      <div class="binding-card deep">
+        <div class="binding-label">Deep Binding</div>
+        <p>Use the environment where the function <strong>is referenced / passed</strong>.</p>
+        <p style="margin-top:8px;">Here: <code>baz</code> is referenced in <code>main()</code> → uses <code>main</code>'s <code>x = 4</code>.</p>
+        <p style="margin-top:8px; color:var(--accent3);">Output: <strong>4</strong></p>
+        <p style="margin-top:8px; font-size:0.82rem; color:var(--muted);">This is the behavior of static (lexical) scope — JavaScript uses this.</p>
+      </div>
+      <div class="binding-card shallow">
+        <div class="binding-label">Shallow Binding</div>
+        <p>Use the environment where the function <strong>is called</strong>.</p>
+        <p style="margin-top:8px;">Here: <code>baz</code> is called inside <code>foo()</code> → uses <code>foo</code>'s <code>x = 3</code>.</p>
+        <p style="margin-top:8px; color:var(--accent2);">Output: <strong>3</strong></p>
+        <p style="margin-top:8px; font-size:0.82rem; color:var(--muted);">Used in some dynamic scoping languages. Less predictable.</p>
+      </div>
+    </div>
+
+    <div class="callout green">JavaScript uses <strong>static (lexical) scope</strong> with <strong>deep binding</strong>. A function always sees the variables from where it was <em>defined</em>, regardless of where it's called. This is what makes closures work reliably.</div>
+  </section>
+
+  <!-- ===== 04 CLOSURE ===== -->
+  <section class="section" id="closure">
+    <div class="section-label">
+      <span class="section-num">04</span>
+      <h2>Closures</h2>
+      <div class="divider"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Definition</div>
+      <p>A <strong>closure</strong> is a function bundled together with its surrounding lexical environment. When an inner function references variables from an outer function, those variables are "captured" and kept alive even after the outer function has returned.</p>
+    </div>
+
+    <div class="formula">
+      <span class="formula-term fn">Function</span>
+      <span class="formula-op">+</span>
+      <span class="formula-term env">Captured Variables</span>
+      <span class="formula-op">=</span>
+      <span class="formula-term result">Closure</span>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Closure Example — Independent State per Call</div>
+      <div class="code-block">
+        <div class="code-header"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div><span class="lang-tag">JS</span></div>
+        <div class="code-body"><pre><span class="kw">function</span> <span class="fn">foo</span>() {
+  <span class="kw">let</span> value = <span class="nm">10</span>;                   <span class="cm">// captured variable</span>
+  <span class="kw">return</span> () => { console.<span class="fn">log</span>(value++); };  <span class="cm">// inner arrow fn closes over value</span>
+}
+
+<span class="kw">let</span> bar1 = <span class="fn">foo</span>();   <span class="cm">// bar1 gets its OWN copy of value=10</span>
+<span class="kw">let</span> bar2 = <span class="fn">foo</span>();   <span class="cm">// bar2 gets a SEPARATE copy of value=10</span>
+
+<span class="fn">bar1</span>();   <span class="cm">// 10  (value becomes 11)</span>
+<span class="fn">bar1</span>();   <span class="cm">// 11  (value becomes 12)</span>
+<span class="fn">bar2</span>();   <span class="cm">// 10  (bar2's value is independent)</span>
+<span class="fn">bar2</span>();   <span class="cm">// 11</span></pre></div>
+      </div>
+
+      <div class="trace">
+        <div class="trace-label">Console output</div>
+        <div class="trace-line"><span class="trace-src">bar1():</span> 10</div>
+        <div class="trace-line"><span class="trace-src">bar1():</span> 11</div>
+        <div class="trace-line"><span class="trace-src">bar2():</span> 10</div>
+        <div class="trace-line"><span class="trace-src">bar2():</span> 11</div>
+      </div>
+    </div>
+
+    <div class="callout purple">Each call to <span class="hl">foo()</span> creates a <strong>new closure</strong> with its own independent <span class="hl">value</span> variable. <code>bar1</code> and <code>bar2</code> do not share state. This is the key insight — closures give functions private, persistent memory.</div>
+
+    <div class="grid2">
+      <div class="grid2-card g">
+        <div class="grid2-title">Common Use Cases</div>
+        <p>Factory functions, partial application / currying, private state (module pattern), event handlers that remember context, memoization.</p>
+      </div>
+      <div class="grid2-card r">
+        <div class="grid2-title">Common Gotcha</div>
+        <p>Using <span class="hlr">var</span> in loops — all closures share the same variable (declared once, function-scoped). Fix: use <span class="hlg">let</span> (block-scoped) or wrap in an IIFE.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 05 FUNCTOR ===== -->
+  <section class="section" id="functor">
+    <div class="section-label">
+      <span class="section-num">05</span>
+      <h2>Functors &amp; Operator Overloading</h2>
+      <div class="divider"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">What is a Functor?</div>
+      <p>A <strong>functor</strong> is an <em>object</em> that can be used syntactically like a function. In C++, this is achieved by overloading the function call operator <span class="hly">operator()</span>.</p>
+      <p style="margin-top:8px;">The key advantage over plain functions: a functor is an <strong>object</strong>, so it can maintain internal state that persists across calls — similar to a closure in JavaScript.</p>
+    </div>
+
+    <div class="grid2">
+      <div class="grid2-card p">
+        <div class="grid2-title">Operator Overloading — Point + Point</div>
+        <div class="code-block" style="margin-top:10px;">
+          <div class="code-header"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div><span class="lang-tag">C++</span></div>
+          <div class="code-body"><pre><span class="kw">class</span> <span class="tp">Point</span> {
+<span class="kw">public</span>:
+  <span class="tp">double</span> x, y;
+  <span class="tp">Point</span> <span class="kw">operator</span>+(<span class="tp">Point</span> other) {
+    <span class="kw">return</span> <span class="tp">Point</span>(
+      x + other.x,
+      y + other.y
+    );
+  }
+};
+<span class="cm">// Usage:</span>
+<span class="tp">Point</span> p = p1 + p2;</pre></div>
+        </div>
+      </div>
+      <div class="grid2-card y">
+        <div class="grid2-title">Functor — Counter with State</div>
+        <div class="code-block" style="margin-top:10px;">
+          <div class="code-header"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div><span class="lang-tag">C++</span></div>
+          <div class="code-body"><pre><span class="kw">class</span> <span class="tp">Counter</span> {
+<span class="kw">public</span>:
+  <span class="tp">int</span> count = <span class="nm">0</span>;
+  <span class="cm">// overload () operator</span>
+  <span class="tp">int</span> <span class="kw">operator</span>()() {
+    <span class="kw">return</span> count++;
+  }
+};
+<span class="tp">Counter</span> counter;
+<span class="fn">counter</span>();  <span class="cm">// returns 0</span>
+<span class="fn">counter</span>();  <span class="cm">// returns 1</span></pre></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Functor vs Closure — Parallel Comparison</div>
+      <table>
+        <thead><tr><th>Concept</th><th>Language</th><th>Persistent State</th><th>Mechanism</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Closure</td>
+            <td>JavaScript / Python</td>
+            <td class="ok-cell">✔ Yes (captured vars)</td>
+            <td>Inner function captures outer scope variables</td>
+          </tr>
+          <tr>
+            <td>Functor</td>
+            <td>C++ / Java</td>
+            <td class="ok-cell">✔ Yes (object fields)</td>
+            <td>Object with overloaded <code>operator()</code></td>
+          </tr>
+          <tr>
+            <td>Function Pointer</td>
+            <td>C</td>
+            <td class="bad-cell">✘ No</td>
+            <td>Raw pointer — no environment bundled</td>
+          </tr>
+          <tr>
+            <td>Delegate</td>
+            <td>C#</td>
+            <td class="ok-cell">✔ Via lambda</td>
+            <td>Typed function reference; lambda captures context</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout green">The unifying idea: all of these mechanisms let you <strong>pass behavior as a value</strong>. Closures and functors add the ability to carry state with that behavior, enabling powerful patterns like decorators, factories, and stateful callbacks.</div>
+  </section>
+
+</div>
+</body>
+</html>

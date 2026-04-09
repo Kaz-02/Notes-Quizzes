@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CS3035 — Functions Notes</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #0e0e10;
+      --surface: #16161a;
+      --surface2: #1e1e24;
+      --border: #2a2a34;
+      --accent: #a78bfa;
+      --accent2: #34d399;
+      --accent3: #fb923c;
+      --accent4: #60a5fa;
+      --text: #e8e8f0;
+      --muted: #8888a0;
+      --code-bg: #111118;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Lora', Georgia, serif;
+      font-size: 16px;
+      line-height: 1.75;
+      min-height: 100vh;
+    }
+
+    /* Header */
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: 3rem 0 2rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(167,139,250,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .course-tag {
+      display: inline-block;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--accent);
+      border: 1px solid rgba(167,139,250,0.4);
+      padding: 4px 14px;
+      border-radius: 20px;
+      margin-bottom: 1.2rem;
+    }
+    h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2.2rem, 5vw, 3.5rem);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: #fff;
+      margin-bottom: 0.5rem;
+    }
+    header p {
+      font-size: 14px;
+      color: var(--muted);
+      font-family: 'IBM Plex Mono', monospace;
+    }
+
+    /* Layout */
+    main {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 2.5rem 1.5rem 4rem;
+    }
+
+    /* TOC */
+    .toc {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem 1.75rem;
+      margin-bottom: 3rem;
+    }
+    .toc-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 1rem;
+    }
+    .toc ol {
+      list-style: none;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px 24px;
+    }
+    .toc ol li { counter-increment: toc; }
+    .toc ol li::before {
+      content: counter(toc, decimal-leading-zero) ". ";
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      color: var(--accent);
+    }
+    .toc a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 14px;
+      font-family: 'IBM Plex Mono', monospace;
+      transition: color 0.2s;
+    }
+    .toc a:hover { color: var(--text); }
+    ol { counter-reset: toc; }
+
+    /* Section */
+    section {
+      margin-bottom: 3rem;
+      scroll-margin-top: 1rem;
+    }
+    .section-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 1.2rem;
+    }
+    .section-num {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      color: var(--accent);
+      min-width: 28px;
+    }
+    h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -0.01em;
+    }
+    .lang-badges { display: flex; gap: 6px; margin-left: auto; }
+    .badge {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      font-weight: 500;
+      padding: 2px 8px;
+      border-radius: 20px;
+      letter-spacing: 0.05em;
+    }
+    .badge-js  { background: rgba(251,146,60,0.15); color: #fb923c; border: 1px solid rgba(251,146,60,0.3); }
+    .badge-py  { background: rgba(52,211,153,0.12); color: #34d399; border: 1px solid rgba(52,211,153,0.25); }
+    .badge-cpp { background: rgba(96,165,250,0.12); color: #60a5fa; border: 1px solid rgba(96,165,250,0.25); }
+    .badge-cs  { background: rgba(167,139,250,0.12); color: #a78bfa; border: 1px solid rgba(167,139,250,0.25); }
+
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin-bottom: 1.5rem;
+    }
+
+    p { margin-bottom: 1rem; color: #c8c8d8; }
+
+    /* Code blocks */
+    pre {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 8px 8px 0;
+      padding: 1.1rem 1.3rem;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13.5px;
+      line-height: 1.65;
+      overflow-x: auto;
+      margin: 1.1rem 0;
+      color: #d4d4f0;
+    }
+    code {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13px;
+      background: rgba(167,139,250,0.1);
+      color: var(--accent);
+      padding: 1px 5px;
+      border-radius: 4px;
+    }
+    pre code { background: none; color: inherit; padding: 0; font-size: inherit; }
+
+    /* Syntax highlighting helpers */
+    .kw  { color: #c084fc; }
+    .fn  { color: #60a5fa; }
+    .str { color: #34d399; }
+    .cm  { color: #4a4a6a; font-style: italic; }
+    .num { color: #fb923c; }
+    .out { color: #34d399; }
+
+    /* Callout boxes */
+    .callout {
+      border-radius: 8px;
+      padding: 1rem 1.2rem;
+      margin: 1rem 0;
+      font-size: 14.5px;
+    }
+    .callout-answer {
+      background: rgba(52,211,153,0.07);
+      border: 1px solid rgba(52,211,153,0.25);
+      border-left: 3px solid var(--accent2);
+    }
+    .callout-answer .label { color: var(--accent2); font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px; }
+    .callout-warning {
+      background: rgba(251,146,60,0.07);
+      border: 1px solid rgba(251,146,60,0.2);
+      border-left: 3px solid var(--accent3);
+    }
+    .callout-warning .label { color: var(--accent3); font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px; }
+    .callout-info {
+      background: rgba(96,165,250,0.07);
+      border: 1px solid rgba(96,165,250,0.2);
+      border-left: 3px solid var(--accent4);
+    }
+    .callout-info .label { color: var(--accent4); font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px; }
+
+    /* Key points list */
+    ul.points { list-style: none; margin: 0.5rem 0 1rem; }
+    ul.points li {
+      display: flex;
+      gap: 10px;
+      color: #c8c8d8;
+      font-size: 15px;
+      margin-bottom: 0.6rem;
+    }
+    ul.points li::before {
+      content: '◆';
+      color: var(--accent);
+      font-size: 8px;
+      margin-top: 9px;
+      flex-shrink: 0;
+    }
+
+    /* Two column layout */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin: 1rem 0;
+    }
+    .col-block {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem 1.1rem;
+    }
+    .col-block .col-title {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 0.6rem;
+    }
+    .col-block pre { margin: 0; border-left: none; border-radius: 6px; font-size: 12.5px; }
+
+    /* Table */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      margin: 1rem 0;
+    }
+    th {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+      padding: 8px 12px;
+      text-align: left;
+      font-weight: 500;
+    }
+    td {
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(42,42,52,0.7);
+      color: #c8c8d8;
+      vertical-align: top;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+    td:first-child { font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: var(--accent); white-space: nowrap; }
+
+    /* Stack diagram */
+    .stack {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin: 1.2rem 0;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13px;
+    }
+    .frame {
+      border: 1px solid var(--border);
+      padding: 0.65rem 1.2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .frame:first-child { border-radius: 10px 10px 0 0; background: rgba(167,139,250,0.1); border-color: rgba(167,139,250,0.4); }
+    .frame:not(:first-child):not(:last-child) { background: var(--surface); border-top: none; }
+    .frame:last-child { border-radius: 0 0 10px 10px; background: var(--surface2); border-top: none; border-style: dashed; }
+    .frame-label { color: var(--muted); font-size: 11px; letter-spacing: 0.05em; }
+    .frame-ret { color: var(--accent2); font-size: 12px; }
+    .frame-arrow { text-align: center; color: var(--border); font-size: 18px; margin: 2px 0; }
+
+    /* Tail call comparison */
+    .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 1rem 0; }
+    .compare-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+    .compare-card-head { padding: 0.6rem 1rem; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+    .compare-card-head.bad  { background: rgba(251,146,60,0.1); color: var(--accent3); }
+    .compare-card-head.good { background: rgba(52,211,153,0.1); color: var(--accent2); }
+    .compare-card pre { border: none; border-radius: 0; margin: 0; font-size: 12px; border-left: none; }
+
+    /* Readings */
+    .readings {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.2rem 1.5rem;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 14px;
+      color: var(--muted);
+      text-align: center;
+    }
+    .readings span { color: var(--accent); }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 2rem;
+      border-top: 1px solid var(--border);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+    }
+
+    @media (max-width: 600px) {
+      .two-col, .compare-grid, .toc ol { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="course-tag">CS3035 · Programming Paradigms</div>
+  <h1>Functions</h1>
+  <p>Chengyu Sun &nbsp;·&nbsp; California State University, Los Angeles</p>
+</header>
+
+<main>
+
+  <!-- TOC -->
+  <nav class="toc">
+    <div class="toc-title">Contents</div>
+    <ol>
+      <li><a href="#s1">Parameters &amp; Arguments</a></li>
+      <li><a href="#s2">Default Parameter Values</a></li>
+      <li><a href="#s3">Positional &amp; Keyword Arguments</a></li>
+      <li><a href="#s4">Variadic Functions</a></li>
+      <li><a href="#s5">In / Out Parameters</a></li>
+      <li><a href="#s6">Parameter Passing Strategies</a></li>
+      <li><a href="#s7">Recursion &amp; Activation Records</a></li>
+      <li><a href="#s8">Tail Calls &amp; TCO</a></li>
+      <li><a href="#s9">Recursion vs. Iteration</a></li>
+      <li><a href="#s10">Functors &amp; Operator Overloading</a></li>
+    </ol>
+  </nav>
+
+  <!-- 1 -->
+  <section id="s1">
+    <div class="section-label">
+      <span class="section-num">01</span>
+      <h2>Parameters &amp; Arguments</h2>
+      <div class="lang-badges"><span class="badge badge-js">JS</span></div>
+    </div>
+    <hr class="divider"/>
+    <p><strong>Parameters</strong> are the variables listed in the function's definition. <strong>Arguments</strong> are the actual values supplied when the function is called.</p>
+    <pre><span class="kw">function</span> <span class="fn">foo</span>(x, y) {        <span class="cm">// x and y are PARAMETERS</span>
+  <span class="kw">return</span> x + y;
+}
+<span class="fn">foo</span>(<span class="num">1</span>, <span class="num">2</span>);                   <span class="cm">// 1 and 2 are ARGUMENTS</span></pre>
+  </section>
+
+  <!-- 2 -->
+  <section id="s2">
+    <div class="section-label">
+      <span class="section-num">02</span>
+      <h2>Default Parameter Values</h2>
+      <div class="lang-badges"><span class="badge badge-js">JS</span><span class="badge badge-py">Py</span></div>
+    </div>
+    <hr class="divider"/>
+    <p>A parameter can have a default value used when no argument is provided for it. Also known as a <em>default argument</em>.</p>
+    <pre><span class="kw">function</span> <span class="fn">foo</span>(x, y = <span class="num">2</span>, z = <span class="num">3</span>) {
+  <span class="kw">return</span> x + y + z;
+}
+console.<span class="fn">log</span>(<span class="fn">foo</span>(<span class="num">4</span>, <span class="num">5</span>));   <span class="cm">// → ?</span></pre>
+    <div class="callout callout-answer">
+      <div class="label">Answer</div>
+      Output is <strong>12</strong>. x = 4, y = 5 (overrides default of 2), z = 3 (uses default). So 4 + 5 + 3 = 12.
+    </div>
+    <ul class="points">
+      <li>Default parameters should be listed <em>after</em> non-default parameters — otherwise callers can't skip them positionally.</li>
+      <li>In <strong>Python</strong>, defaults are evaluated once at <em>function definition time</em>.</li>
+      <li>In most other languages (JS, C++, etc.), defaults are evaluated at <em>each function call</em>.</li>
+    </ul>
+  </section>
+
+  <!-- 3 -->
+  <section id="s3">
+    <div class="section-label">
+      <span class="section-num">03</span>
+      <h2>Positional &amp; Keyword Arguments</h2>
+      <div class="lang-badges"><span class="badge badge-py">Py</span></div>
+    </div>
+    <hr class="divider"/>
+    <pre><span class="fn">foo</span>(<span class="num">4</span>, <span class="num">5</span>)            <span class="cm"># positional — order matters</span>
+<span class="fn">foo</span>(y=<span class="num">5</span>, x=<span class="num">1</span>)       <span class="cm"># keyword — order doesn't matter</span></pre>
+    <ul class="points">
+      <li>Keyword arguments improve readability and safety, especially in functions with many parameters.</li>
+      <li>They pair well with default values — you can skip parameters you don't need to override.</li>
+    </ul>
+  </section>
+
+  <!-- 4 -->
+  <section id="s4">
+    <div class="section-label">
+      <span class="section-num">04</span>
+      <h2>Variadic Functions</h2>
+      <div class="lang-badges"><span class="badge badge-js">JS</span><span class="badge badge-py">Py</span></div>
+    </div>
+    <hr class="divider"/>
+    <p>A variadic function accepts a variable number of arguments. Only one variadic parameter is permitted, and it must appear at the end of the parameter list.</p>
+    <div class="two-col">
+      <div class="col-block">
+        <div class="col-title">Python — *args → tuple</div>
+        <pre><span class="kw">def</span> <span class="fn">foo</span>(x, *y):
+  <span class="kw">return</span> [x, y]
+
+<span class="fn">foo</span>(<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>)
+<span class="cm"># → [1, (2, 3)]</span></pre>
+      </div>
+      <div class="col-block">
+        <div class="col-title">JavaScript — rest → array</div>
+        <pre><span class="kw">function</span> <span class="fn">foo</span>(x, ...y) {
+  <span class="kw">return</span> [x, y];
+}
+<span class="fn">foo</span>(<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>);
+<span class="cm">// → [1, [2, 3]]</span></pre>
+      </div>
+    </div>
+    <div class="callout callout-info">
+      <div class="label">Terminology</div>
+      JavaScript calls this a <strong>Rest Parameter</strong> (the <code>...spread</code> syntax). Python uses <code>*args</code>. Both collect remaining arguments into a sequence.
+    </div>
+  </section>
+
+  <!-- 5 -->
+  <section id="s5">
+    <div class="section-label">
+      <span class="section-num">05</span>
+      <h2>In / Out Parameters</h2>
+      <div class="lang-badges"><span class="badge badge-cs">C#</span></div>
+    </div>
+    <hr class="divider"/>
+    <table>
+      <thead>
+        <tr><th>Keyword</th><th>Direction</th><th>Meaning</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>in</td><td>Input only</td><td>Caller's value is read inside the function; caller's variable is never modified.</td></tr>
+        <tr><td>out</td><td>Output only</td><td>Function must assign before returning; initial value of caller's variable is ignored.</td></tr>
+        <tr><td>ref / inout</td><td>Input &amp; Output</td><td>Caller's variable is both read and written. Changes are reflected at the call site.</td></tr>
+      </tbody>
+    </table>
+    <pre><span class="cm">// Multiple return values via out</span>
+<span class="kw">void</span> <span class="fn">Calc</span>(<span class="kw">in int</span> a, <span class="kw">in int</span> b, <span class="kw">out int</span> sum, <span class="kw">out int</span> prod) {
+  sum  = a + b;
+  prod = a * b;
+}
+
+<span class="cm">// Modifying caller's variable via ref</span>
+<span class="kw">void</span> <span class="fn">Swap</span>(<span class="kw">ref int</span> a, <span class="kw">ref int</span> b) {
+  <span class="kw">var</span> temp = a;
+  a = b;
+  b = temp;
+}</pre>
+    <p>Swift uses the keyword <code>inout</code> for the same bidirectional purpose.</p>
+  </section>
+
+  <!-- 6 -->
+  <section id="s6">
+    <div class="section-label">
+      <span class="section-num">06</span>
+      <h2>Parameter Passing Strategies</h2>
+      <div class="lang-badges"><span class="badge badge-cs">concept</span></div>
+    </div>
+    <hr class="divider"/>
+    <table>
+      <thead>
+        <tr><th>Strategy</th><th>Mechanism</th><th>Language / Example</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Call by value</td><td>A copy of the argument is passed. Changes inside the function don't affect the caller.</td><td>Most modern languages</td></tr>
+        <tr><td>Call by reference</td><td>The function receives a reference to the caller's variable. Changes affect the caller.</td><td>C/C++ pointers, <code>ref</code> / <code>inout</code></td></tr>
+        <tr><td>Call by result</td><td>Value copied out to caller only on return; initial value not used inside.</td><td><code>out</code> parameter (C#)</td></tr>
+        <tr><td>Call by value-result</td><td>"Copy-in / copy-out" — value copied in at call, result copied out on return.</td><td>Ada</td></tr>
+        <tr><td>Call by name</td><td>The argument expression is substituted textually and re-evaluated every time the parameter is used.</td><td>ALGOL 60</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout callout-warning">
+      <div class="label">Classic gotcha — reference vs. value-result with aliasing</div>
+      <pre style="margin-top:8px;border-left:none;background:transparent;padding:0;font-size:13px"><span class="fn">foo</span>(x, y) { x = x+<span class="num">1</span>; y = y+<span class="num">2</span> }
+z = <span class="num">5</span>;
+<span class="fn">foo</span>(z, z);
+
+<span class="cm">// Call by reference  → both x and y alias z.
+//   x = x+1  → z becomes 6
+//   y = y+2  → z becomes 8 (y is still z)
+//   Result: z = 8</span>
+
+<span class="cm">// Call by value-result → copies in: x=5, y=5.
+//   x = x+1 → x becomes 6
+//   y = y+2 → y becomes 7
+//   Copies out (last write wins): z = 7
+//   Result: z = 7</span></pre>
+    </div>
+
+    <div class="callout callout-warning">
+      <div class="label">Call by name — argument expression is re-evaluated each use</div>
+      <pre style="margin-top:8px;border-left:none;background:transparent;padding:0;font-size:13px"><span class="fn">foo</span>(a, b) { <span class="fn">print</span>(b); <span class="fn">print</span>(b); }
+<span class="kw">int</span> x = -<span class="num">1</span>, y = <span class="num">3</span>;
+<span class="fn">foo</span>(++x, ++y);
+
+<span class="cm">// b is substituted with the expression ++y
+// First  print(b) → ++y → y = 4, prints 4
+// Second print(b) → ++y → y = 5, prints 5
+// Final state: x = 0, y = 5</span></pre>
+    </div>
+  </section>
+
+  <!-- 7 -->
+  <section id="s7">
+    <div class="section-label">
+      <span class="section-num">07</span>
+      <h2>Recursion &amp; Activation Records</h2>
+      <div class="lang-badges"><span class="badge badge-js">JS</span></div>
+    </div>
+    <hr class="divider"/>
+    <p>Recursion is when a function calls itself. Each call creates a new <strong>activation record (frame)</strong> on the call stack, storing that call's arguments and local variables.</p>
+    <pre><span class="kw">function</span> <span class="fn">factorial</span>(n) {
+  <span class="kw">if</span> (n == <span class="num">0</span>) <span class="kw">return</span> <span class="num">1</span>;
+  <span class="kw">return</span> n * <span class="fn">factorial</span>(n - <span class="num">1</span>);
+}</pre>
+    <p>Call stack for <code>factorial(2)</code> — grows as calls are made, unwinds as they return:</p>
+    <div class="stack">
+      <div class="frame">
+        <span>n = 0 &nbsp;<span style="color:#a78bfa;font-size:11px">← top of stack</span></span>
+        <span class="frame-ret">returns 1</span>
+      </div>
+      <div class="frame-arrow">↕</div>
+      <div class="frame">
+        <span>n = 1</span>
+        <span class="frame-ret">returns 1 × 1 = 1</span>
+      </div>
+      <div class="frame-arrow">↕</div>
+      <div class="frame">
+        <span>n = 2</span>
+        <span class="frame-ret">returns 2 × 1 = 2</span>
+      </div>
+      <div class="frame-arrow">↕</div>
+      <div class="frame">
+        <span class="frame-label">Global frame</span>
+        <span class="frame-label">bottom of stack</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8 -->
+  <section id="s8">
+    <div class="section-label">
+      <span class="section-num">08</span>
+      <h2>Tail Calls &amp; Tail-Call Optimization</h2>
+      <div class="lang-badges"><span class="badge badge-js">JS</span></div>
+    </div>
+    <hr class="divider"/>
+    <p>A function call is a <strong>tail call</strong> if the caller immediately returns its result — with no additional computation after the call returns. Tail-call optimization (TCO) lets the runtime reuse the current frame instead of pushing a new one, keeping stack usage constant O(1).</p>
+    <div class="compare-grid">
+      <div class="compare-card">
+        <div class="compare-card-head bad">Regular recursion — O(n) stack</div>
+        <pre><span class="kw">function</span> <span class="fn">factorial</span>(n) {
+  <span class="kw">if</span> (n == <span class="num">0</span>) <span class="kw">return</span> <span class="num">1</span>;
+  <span class="kw">return</span> n * <span class="fn">factorial</span>(n-<span class="num">1</span>);
+  <span class="cm">// must multiply AFTER
+  // recursive call returns</span>
+}</pre>
+      </div>
+      <div class="compare-card">
+        <div class="compare-card-head good">Tail recursion — O(1) stack</div>
+        <pre><span class="kw">function</span> <span class="fn">factorial</span>(n, acc=<span class="num">1</span>) {
+  <span class="kw">if</span> (n == <span class="num">0</span>) <span class="kw">return</span> acc;
+  <span class="kw">return</span> <span class="fn">factorial</span>(n-<span class="num">1</span>, n*acc);
+  <span class="cm">// result passed forward;
+  // nothing to do on return</span>
+}</pre>
+      </div>
+    </div>
+    <ul class="points">
+      <li>In the tail-recursive version, the accumulated result is carried as an argument (<code>acc</code>) — no pending multiplication on the way back.</li>
+      <li>TCO is mandatory in functional languages (Scheme, Haskell) and optional in others (some JS engines support it).</li>
+    </ul>
+  </section>
+
+  <!-- 9 -->
+  <section id="s9">
+    <div class="section-label">
+      <span class="section-num">09</span>
+      <h2>Recursion vs. Iteration</h2>
+      <div class="lang-badges"><span class="badge badge-cs">concept</span></div>
+    </div>
+    <hr class="divider"/>
+    <div class="callout callout-info">
+      <div class="label">Key Theorem</div>
+      Recursion and iteration are <strong>equivalent in expressive power</strong> — anything solvable with one can be solved with the other.
+    </div>
+    <table>
+      <thead><tr><th>Approach</th><th>Prefer when...</th><th>Watch out for...</th></tr></thead>
+      <tbody>
+        <tr><td>Recursion</td><td>Problem is naturally self-similar (trees, divide &amp; conquer). Code clarity matters.</td><td>Stack overflow on deep inputs. Extra memory per call frame.</td></tr>
+        <tr><td>Iteration</td><td>Performance is critical. Input can be arbitrarily large.</td><td>Can be harder to read for inherently recursive problems.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 10 -->
+  <section id="s10">
+    <div class="section-label">
+      <span class="section-num">10</span>
+      <h2>Functors &amp; Operator Overloading</h2>
+      <div class="lang-badges"><span class="badge badge-cpp">C++</span></div>
+    </div>
+    <hr class="divider"/>
+    <p>A <strong>functor</strong> is an object that can be called like a function. The trick is overloading the function-call operator <code>operator()</code>. Unlike a plain function, a functor can hold and mutate <em>state</em> across calls.</p>
+    <pre><span class="kw">class</span> Counter {
+<span class="kw">public</span>:
+  <span class="kw">int</span> count = <span class="num">0</span>;
+
+  <span class="kw">int</span> <span class="fn">operator()</span>() {
+    <span class="kw">return</span> count++;      <span class="cm">// state persists between calls</span>
+  }
+};
+
+Counter counter;
+counter();   <span class="cm">// returns 0 → count is now 1</span>
+counter();   <span class="cm">// returns 1 → count is now 2</span></pre>
+
+    <p>Operator overloading (used to enable functors) also lets you define arithmetic on custom types:</p>
+    <pre><span class="kw">class</span> Point {
+<span class="kw">public</span>:
+  <span class="kw">double</span> x, y;
+  Point <span class="fn">operator+</span>(Point other) {
+    <span class="kw">return</span> <span class="fn">Point</span>(x + other.x, y + other.y);
+  }
+};
+
+Point p = p1 + p2;   <span class="cm">// calls operator+</span></pre>
+
+    <ul class="points">
+      <li>Functors are the foundation of C++ STL algorithms — they're passed as predicates and comparators.</li>
+      <li>In modern C++, lambdas are often preferred over explicit functor classes, but the underlying mechanism is the same.</li>
+    </ul>
+  </section>
+
+  <!-- Readings -->
+  <div class="readings">
+    📖 &nbsp; Readings: Textbook <span>Chapter 9, 10, and 11.1</span>
+  </div>
+
+</main>
+
+<footer>
+  CS3035 Programming Paradigms &nbsp;·&nbsp; Functions &nbsp;·&nbsp; Cal State LA
+</footer>
+
+</body>
+</html>

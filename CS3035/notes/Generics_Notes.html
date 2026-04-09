@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CS3035 — Generics</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #0e0e10;
+      --surface: #16161a;
+      --surface2: #1e1e24;
+      --border: #2a2a34;
+      --accent: #a78bfa;
+      --accent2: #34d399;
+      --accent3: #fb923c;
+      --accent4: #60a5fa;
+      --accent5: #f472b6;
+      --red: #f87171;
+      --text: #e8e8f0;
+      --muted: #8888a0;
+      --code-bg: #111118;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Lora', Georgia, serif;
+      font-size: 16px;
+      line-height: 1.75;
+      min-height: 100vh;
+    }
+
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: 3rem 0 2rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(167,139,250,0.1) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .course-tag {
+      display: inline-block;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--accent);
+      border: 1px solid rgba(167,139,250,0.4);
+      padding: 4px 14px;
+      border-radius: 20px;
+      margin-bottom: 1.2rem;
+    }
+    h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: #fff;
+      margin-bottom: 0.5rem;
+    }
+    header p { font-size: 14px; color: var(--muted); font-family: 'IBM Plex Mono', monospace; }
+
+    main { max-width: 880px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+
+    /* TOC */
+    .toc { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem 1.75rem; margin-bottom: 3rem; }
+    .toc-title { font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 1rem; }
+    .toc ol { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; counter-reset: toc; }
+    .toc ol li { counter-increment: toc; }
+    .toc ol li::before { content: counter(toc, decimal-leading-zero) ". "; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--accent); }
+    .toc a { color: var(--muted); text-decoration: none; font-size: 14px; font-family: 'IBM Plex Mono', monospace; transition: color 0.2s; }
+    .toc a:hover { color: var(--text); }
+
+    /* Section */
+    section { margin-bottom: 3rem; scroll-margin-top: 1rem; }
+    .section-label { display: flex; align-items: center; gap: 10px; margin-bottom: 1.2rem; flex-wrap: wrap; }
+    .section-num { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--accent); min-width: 28px; }
+    h2 { font-family: 'Syne', sans-serif; font-size: 1.4rem; font-weight: 700; color: #fff; letter-spacing: -0.01em; }
+    .lang-badges { display: flex; gap: 6px; margin-left: auto; flex-wrap: wrap; }
+    .badge { font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 500; padding: 2px 8px; border-radius: 20px; letter-spacing: 0.05em; white-space: nowrap; }
+    .badge-java    { background: rgba(251,146,60,0.15); color: #fb923c; border: 1px solid rgba(251,146,60,0.3); }
+    .badge-concept { background: rgba(136,136,160,0.12); color: var(--muted); border: 1px solid rgba(136,136,160,0.2); }
+    .badge-pecs    { background: rgba(167,139,250,0.12); color: var(--accent); border: 1px solid rgba(167,139,250,0.25); }
+
+    .divider { border: none; border-top: 1px solid var(--border); margin-bottom: 1.5rem; }
+
+    p { margin-bottom: 1rem; color: #c8c8d8; }
+
+    /* Code */
+    pre {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 8px 8px 0;
+      padding: 1.1rem 1.3rem;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13.5px;
+      line-height: 1.65;
+      overflow-x: auto;
+      margin: 1.1rem 0;
+      color: #d4d4f0;
+    }
+    code { font-family: 'IBM Plex Mono', monospace; font-size: 13px; background: rgba(167,139,250,0.1); color: var(--accent); padding: 1px 5px; border-radius: 4px; }
+    pre code { background: none; color: inherit; padding: 0; font-size: inherit; }
+
+    .kw  { color: #c084fc; }
+    .fn  { color: #60a5fa; }
+    .str { color: #34d399; }
+    .cm  { color: #4a4a6a; font-style: italic; }
+    .num { color: #fb923c; }
+    .tp  { color: #f472b6; }   /* type parameter */
+    .err { color: #f87171; }
+
+    /* Callouts */
+    .callout { border-radius: 8px; padding: 1rem 1.2rem; margin: 1rem 0; font-size: 14.5px; }
+    .callout .label { font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px; }
+    .callout-answer  { background: rgba(52,211,153,0.07);  border: 1px solid rgba(52,211,153,0.25);  border-left: 3px solid var(--accent2); }
+    .callout-answer .label  { color: var(--accent2); }
+    .callout-warning { background: rgba(251,146,60,0.07);  border: 1px solid rgba(251,146,60,0.2);   border-left: 3px solid var(--accent3); }
+    .callout-warning .label { color: var(--accent3); }
+    .callout-info    { background: rgba(96,165,250,0.07);  border: 1px solid rgba(96,165,250,0.2);   border-left: 3px solid var(--accent4); }
+    .callout-info .label    { color: var(--accent4); }
+    .callout-tip     { background: rgba(167,139,250,0.07); border: 1px solid rgba(167,139,250,0.2);  border-left: 3px solid var(--accent); }
+    .callout-tip .label     { color: var(--accent); }
+    .callout-danger  { background: rgba(248,113,113,0.07); border: 1px solid rgba(248,113,113,0.2);  border-left: 3px solid var(--red); }
+    .callout-danger .label  { color: var(--red); }
+
+    /* Key points */
+    ul.points { list-style: none; margin: 0.5rem 0 1rem; }
+    ul.points li { display: flex; gap: 10px; color: #c8c8d8; font-size: 15px; margin-bottom: 0.6rem; }
+    ul.points li::before { content: '◆'; color: var(--accent); font-size: 8px; margin-top: 9px; flex-shrink: 0; }
+
+    /* Two-column */
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 1rem 0; }
+    .col-block { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.1rem; }
+    .col-block .col-title { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.6rem; }
+    .col-block pre { margin: 0; border-left: none; border-radius: 6px; font-size: 12.5px; }
+
+    /* Table */
+    .table-wrap { margin: 1rem 0; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th { font-family: 'IBM Plex Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); border-bottom: 1px solid var(--border); padding: 8px 12px; text-align: left; font-weight: 500; }
+    td { padding: 10px 12px; border-bottom: 1px solid rgba(42,42,52,0.7); color: #c8c8d8; vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+    td:first-child { font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: var(--accent); white-space: nowrap; }
+
+    /* Polymorphism type cards */
+    .poly-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 1.2rem 0; }
+    .poly-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1rem; text-align: center; }
+    .poly-card .poly-name { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+    .poly-card .poly-aka  { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); margin-bottom: 8px; }
+    .poly-card .poly-desc { font-size: 13px; color: #c8c8d8; }
+    .poly-card.adhoc   { border-color: rgba(96,165,250,0.3);   background: rgba(96,165,250,0.05); }
+    .poly-card.adhoc   .poly-name { color: var(--accent4); }
+    .poly-card.subtype { border-color: rgba(52,211,153,0.3);   background: rgba(52,211,153,0.05); }
+    .poly-card.subtype .poly-name { color: var(--accent2); }
+    .poly-card.param   { border-color: rgba(167,139,250,0.35); background: rgba(167,139,250,0.07); }
+    .poly-card.param   .poly-name { color: var(--accent); }
+
+    /* Variance diagram */
+    .variance-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 1.2rem 0; }
+    .var-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1rem; }
+    .var-card .var-title { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; text-align: center; margin-bottom: 12px; }
+    .var-card.cov  { border-color: rgba(52,211,153,0.3);   background: rgba(52,211,153,0.05); }
+    .var-card.cov  .var-title { color: var(--accent2); }
+    .var-card.con  { border-color: rgba(251,146,60,0.3);   background: rgba(251,146,60,0.05); }
+    .var-card.con  .var-title { color: var(--accent3); }
+    .var-card.inv  { border-color: rgba(136,136,160,0.3);  background: rgba(136,136,160,0.05); }
+    .var-card.inv  .var-title { color: var(--muted); }
+    .type-row { display: flex; flex-direction: column; align-items: center; gap: 4px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; }
+    .type-box { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; color: var(--text); white-space: nowrap; }
+    .type-arrow { font-size: 16px; }
+    .type-arrow.yes { color: var(--accent2); }
+    .type-arrow.no  { color: var(--red); }
+    .type-arrow.neither { color: var(--muted); }
+
+    /* Stack evolution diagram */
+    .evolution { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 1.2rem 0; align-items: start; }
+    .evo-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+    .evo-head { padding: 0.55rem 1rem; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.07em; text-transform: uppercase; border-bottom: 1px solid var(--border); }
+    .evo-head.bad  { background: rgba(248,113,113,0.08); color: var(--red); }
+    .evo-head.ok   { background: rgba(251,146,60,0.08);  color: var(--accent3); }
+    .evo-head.good { background: rgba(52,211,153,0.08);  color: var(--accent2); }
+    .evo-card pre  { border: none; border-radius: 0; margin: 0; font-size: 12px; border-left: none; background: transparent; padding: 0.85rem 1rem; }
+
+    /* PECS banner */
+    .pecs-banner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      margin: 1.5rem 0;
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: clamp(1.4rem, 4vw, 2rem);
+      letter-spacing: 0.02em;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.2rem 2rem;
+      text-align: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .pecs-p { color: var(--accent2); }
+    .pecs-e { color: var(--accent4); }
+    .pecs-c { color: var(--accent3); }
+    .pecs-s { color: var(--red); }
+    .pecs-rest { color: var(--muted); font-size: 0.6em; font-family: 'IBM Plex Mono', monospace; font-weight: 400; display: block; width: 100%; margin-top: 4px; }
+
+    /* Type erasure timeline */
+    .erasure-flow {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 1.2rem 0;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 14px;
+      flex-wrap: wrap;
+    }
+    .era-box { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 0.6rem 1.1rem; }
+    .era-box.compile { border-color: rgba(96,165,250,0.4); color: var(--accent4); }
+    .era-box.runtime { border-color: rgba(136,136,160,0.4); color: var(--muted); }
+    .era-arrow { font-size: 18px; color: var(--border); }
+    .era-label { font-size: 11px; color: var(--muted); display: block; margin-bottom: 3px; letter-spacing: 0.08em; text-transform: uppercase; }
+
+    /* Readings */
+    .readings { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.2rem 1.5rem; font-family: 'IBM Plex Mono', monospace; font-size: 14px; color: var(--muted); text-align: center; }
+    .readings span { color: var(--accent); }
+
+    footer { text-align: center; padding: 2rem; border-top: 1px solid var(--border); font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); letter-spacing: 0.05em; }
+
+    @media (max-width: 640px) {
+      .two-col, .poly-grid, .variance-grid, .evolution { grid-template-columns: 1fr; }
+      .toc ol { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="course-tag">CS3035 · Programming Paradigms</div>
+  <h1>Generics</h1>
+  <p>Chengyu Sun &nbsp;·&nbsp; California State University, Los Angeles</p>
+</header>
+
+<main>
+
+  <!-- TOC -->
+  <nav class="toc">
+    <div class="toc-title">Contents</div>
+    <ol>
+      <li><a href="#s1">The Problem — Int Stack</a></li>
+      <li><a href="#s2">Object Stack &amp; Its Drawbacks</a></li>
+      <li><a href="#s3">Types of Polymorphism</a></li>
+      <li><a href="#s4">Generic Stack</a></li>
+      <li><a href="#s5">More Java Generic Examples</a></li>
+      <li><a href="#s6">Constraints on Type Parameters</a></li>
+      <li><a href="#s7">Bounded Type Parameter</a></li>
+      <li><a href="#s8">Wildcard Type</a></li>
+      <li><a href="#s9">Variance</a></li>
+      <li><a href="#s10">Java Invariance &amp; PECS</a></li>
+      <li><a href="#s11">Raw Types</a></li>
+      <li><a href="#s12">Type Erasure</a></li>
+    </ol>
+  </nav>
+
+  <!-- 1 -->
+  <section id="s1">
+    <div class="section-label">
+      <span class="section-num">01</span>
+      <h2>The Problem — Int Stack</h2>
+      <div class="lang-badges"><span class="badge badge-java">Java</span></div>
+    </div>
+    <hr class="divider"/>
+    <p>Imagine a stack that works for <code>int</code>. The exact same logic would be needed for <code>String</code>, <code>Double</code>, or any other type. Writing a separate class for every type is impractical.</p>
+    <pre><span class="kw">public class</span> <span class="fn">Stack</span> {
+  <span class="kw">private int</span>[] elements;
+  <span class="cm">// ...</span>
+  <span class="kw">public void</span> <span class="fn">push</span>(<span class="kw">int</span> x) { … }
+  <span class="kw">public int</span>  <span class="fn">pop</span>()       { … }
+  <span class="kw">public int</span>  <span class="fn">peek</span>()      { … }
+}</pre>
+    <div class="callout callout-warning">
+      <div class="label">The Problem</div>
+      This class only works for <code>int</code>. Duplicating it for every data type violates DRY (Don't Repeat Yourself) and is a maintenance nightmare.
+    </div>
+  </section>
+
+  <!-- 2 -->
+  <section id="s2">
+    <div class="section-label">
+      <span class="section-num">02</span>
+      <h2>Object Stack &amp; Its Drawbacks</h2>
+      <div class="lang-badges"><span class="badge badge-java">Java</span></div>
+    </div>
+    <hr class="divider"/>
+    <p>One approach: use <code>Object</code> as the type — Java's root superclass. Polymorphism lets any object be stored.</p>
+    <pre><span class="kw">public class</span> <span class="fn">Stack</span> {
+  <span class="kw">private</span> Object[] elements;
+  <span class="cm">// ...</span>
+  <span class="kw">public void</span> <span class="fn">push</span>(Object x) { … }
+  <span class="kw">public</span> Object <span class="fn">pop</span>()        { … }
+  <span class="kw">public</span> Object <span class="fn">peek</span>()       { … }
+}</pre>
+
+    <div class="two-col">
+      <div class="col-block">
+        <div class="col-title">Benefit</div>
+        <p style="font-size:14px;margin-top:0.5rem">Works for any type. No code duplication needed.</p>
+      </div>
+      <div class="col-block">
+        <div class="col-title">Drawbacks</div>
+        <p style="font-size:14px;margin-top:0.5rem">
+          <strong>No type safety</strong> — anything can be pushed, even if mixed types are a bug.<br><br>
+          <strong>Manual casting required</strong> — every <code>pop()</code> returns an <code>Object</code> that must be cast back, risking <code>ClassCastException</code> at runtime.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 -->
+  <section id="s3">
+    <div class="section-label">
+      <span class="section-num">03</span>
+      <h2>Types of Polymorphism</h2>
+      <div class="lang-badges"><span class="badge badge-concept">concept</span></div>
+    </div>
+    <hr class="divider"/>
+    <p>There are three fundamental kinds of polymorphism in programming languages:</p>
+    <div class="poly-grid">
+      <div class="poly-card adhoc">
+        <div class="poly-name">Ad-hoc</div>
+        <div class="poly-aka">a.k.a. Overloading</div>
+        <div class="poly-desc">Same function name, different parameter types. Resolved at compile time.</div>
+      </div>
+      <div class="poly-card subtype">
+        <div class="poly-name">Subtype</div>
+        <div class="poly-aka">Inheritance / Interfaces</div>
+        <div class="poly-desc">A subtype can be used wherever a supertype is expected. Resolved at runtime.</div>
+      </div>
+      <div class="poly-card param">
+        <div class="poly-name">Parametric</div>
+        <div class="poly-aka">a.k.a. Generics</div>
+        <div class="poly-desc">Code written once works for many types, specified as type parameters.</div>
+      </div>
+    </div>
+    <div class="callout callout-tip">
+      <div class="label">Key Idea</div>
+      Generics (parametric polymorphism) solve the Stack problem: write the code once, substitute the type later — with full type safety.
+    </div>
+  </section>
+
+  <!-- 4 -->
+  <section id="s4">
+    <div class="section-label">
+      <span class="section-num">04</span>
+      <h2>Generic Stack</h2>
+      <div class="lang-badges"><span class="badge badge-java">Java</span></div>
+    </div>
+    <hr class="divider"/>
+    <p>Declare a <strong>type parameter</strong> <code>&lt;T&gt;</code> on the class. <code>T</code> is a placeholder that gets substituted with a real type when the class is instantiated.</p>
+    <pre><span class="kw">public class</span> Stack<span class="tp">&lt;T&gt;</span> {        <span class="cm">// T is the type parameter</span>
+  <span class="kw">private</span> <span class="tp">T</span>[] elements;
+  <span class="cm">// ...</span>
+  <span class="kw">public void</span> <span class="fn">push</span>(<span class="tp">T</span> x)  { … }
+  <span class="kw">public</span>  <span class="tp">T</span>   <span class="fn">pop</span>()        { … }
+  <span class="kw">public</span>  <span class="tp">T</span>   <span class="fn">peek</span>()       { … }
+}
+
+<span class="cm">// Instantiate with a concrete type — no casting needed</span>
+<span class="kw">var</span> stack = <span class="kw">new</span> Stack<span class="tp">&lt;String&gt;</span>();
+stack.<span class="fn">push</span>(<span class="str">"hello"</span>);
+String s = stack.<span class="fn">pop</span>();   <span class="cm">// returns String, no cast!</span></pre>
+
+    <div class="callout callout-answer">
+      <div class="label">Benefit over Object Stack</div>
+      Type errors are caught at <strong>compile time</strong> instead of causing <code>ClassCastException</code> at runtime. One class definition works for any type.
+    </div>
+  </section>
+
+  <!-- 5 -->
+  <section id="s5">
+    <div class="section-label">
+      <span class="section-num">05</span>
+      <h2>More Java Generic Examples</h2>
+      <div class="lang-badges"><span class="badge badge-java">Java</span></div>
+    </div>
+    <hr class="divider"/>
+    <p>Java's <code>java.util</code> package is built on generics. You use them every day:</p>
+    <pre><span class="cm">// Generic class with one type param</span>
+List<span class="tp">&lt;String&gt;</span>    names   = <span class="kw">new</span> ArrayList&lt;&gt;();
+
+<span class="cm">// Generic class with TWO type params</span>
+Map<span class="tp">&lt;String, Integer&gt;</span> scores = <span class="kw">new</span> HashMap&lt;&gt;();</pre>
+
+    <p style="margin-top:1.2rem"><strong>Generic Methods</strong> — the type parameter is declared <em>before</em> the return type:</p>
+    <pre><span class="kw">public class</span> Utility {
+  <span class="kw">public static</span> <span class="tp">&lt;T&gt;</span> <span class="kw">void</span> <span class="fn">printArray</span>(<span class="tp">T</span>[] array) {
+    <span class="cm">// ↑ type param declared BEFORE return type (void)</span>
+    <span class="kw">for</span> (<span class="tp">T</span> element : array) {
+      System.out.<span class="fn">println</span>(element);
+    }
+  }
+}
+
+<span class="cm">// Calling — Java infers T from the argument, no &lt;T&gt; needed</span>
+String[] words = { <span class="str">"hello"</span>, <span class="str">"world"</span> };
+Utility.<span class="fn">printArray</span>(words);   <span class="cm">// T inferred as String</span></pre>
+  </section>
+
+  <!-- 6 -->
+  <section id="s6">
+    <div class="section-label">
+      <span class="section-num">06</span>
+      <h2>Constraints on Type Parameters</h2>
+      <div class="lang-badges"><span class="badge badge-java">Java</span></div>
+    </div>
+    <hr class="divider"/>
+    <p>Sometimes an unbounded <code>T</code> is too permissive. Consider <code>findMax</code> — it needs to <em>compare</em> elements, but a plain <code>T</code> has no guarantee of supporting comparison:</p>
+    <pre><span class="cm">// Problem: T could be anything — how do we compare?</span>
+<span class="kw">public static</span> <span class="tp">&lt;T&gt;</span> <span class="tp">T</span> <span class="fn">findMax</span>(<span class="tp">T</span>[] array) {
+  <span class="cm">// Can't call array[i].compareTo(array[j]) — T might not have it!</span>
+}</pre>
+    <div class="callout callout-danger">
+      <div class="label">The Issue</div>
+      An unconstrained <code>T</code> can be <em>any</em> type. You cannot call methods on it that aren't defined on <code>Object</code>. You need a <strong>bounded type parameter</strong>.
+    </div>
+  </section>
+
+  <!-- 7 -->
+  <section id="s7">
+    <div class="section-label">
+      <span class="section-num">07</span>
+      <h2>Bounded Type Parameter</h2>
+      <div class="lang-badges"><span class="badge badge-java">Java</span></div>
+    </div>
+    <hr class="divider"/>
+    <p>Use <code>extends</code> to constrain <code>T</code> to types that implement a specific interface or extend a specific class. This guarantees the required methods exist.</p>
+    <pre><span class="cm">// T must implement Comparable&lt;T&gt; — guarantees compareTo()</span>
+<span class="kw">public static</span> <span class="tp">&lt;T extends Comparable&lt;T&gt;&gt;</span> <span class="tp">T</span> <span class="fn">findMax</span>(<span class="tp">T</span>[] array) {
+  <span class="tp">T</span> max = array[<span class="num">0</span>];
+  <span class="kw">for</span> (<span class="tp">T</span> item : array) {
+    <span class="kw">if</span> (item.<span class="fn">compareTo</span>(max) > <span class="num">0</span>) max = item;
+  }
+  <span class="kw">return</span> max;
+}</pre>
+    <ul class="points">
+      <li><code>Comparable&lt;T&gt;</code> is itself a generic interface — interfaces can be generic too.</li>
+      <li>The keyword is <code>extends</code> even for interfaces (not <code>implements</code>) — this is a Java generics quirk.</li>
+      <li>Multiple bounds: <code>&lt;T extends Comparable&lt;T&gt; &amp; Serializable&gt;</code> — use <code>&amp;</code> to add more.</li>
+    </ul>
+  </section>
+
+  <!-- 8 -->
+  <section id="s8">
+    <div class="section-label">
+      <span class="section-num">08</span>
+      <h2>Wildcard Type <code>?</code></h2>
+      <div class="lang-badges"><span class="badge badge-java">Java</span></div>
+    </div>
+    <hr class="divider"/>
+    <p>Wildcards are used when <em>consuming</em> a generic type rather than <em>defining</em> one. When you want a method to accept a <code>List</code> of <em>any</em> type without knowing the specific type at the call site:</p>
+    <pre><span class="cm">// List&lt;?&gt; = a list of some unknown type</span>
+<span class="kw">public void</span> <span class="fn">reverse</span>(List<span class="tp">&lt;?&gt;</span> list) {
+  <span class="cm">// Can read elements as Object, but cannot add non-null elements</span>
+  Collections.<span class="fn">reverse</span>(list);
+}
+
+<span class="cm">// Accepts any of these without complaint:</span>
+<span class="fn">reverse</span>(<span class="kw">new</span> ArrayList<span class="tp">&lt;String&gt;</span>());
+<span class="fn">reverse</span>(<span class="kw">new</span> ArrayList<span class="tp">&lt;Integer&gt;</span>());
+<span class="fn">reverse</span>(<span class="kw">new</span> ArrayList<span class="tp">&lt;Dog&gt;</span>());</pre>
+
+    <div class="callout callout-info">
+      <div class="label">Wildcard vs. Type Parameter</div>
+      Use a <strong>type parameter</strong> <code>&lt;T&gt;</code> when you need to refer to the type elsewhere in the signature (e.g., return type or another parameter). Use a <strong>wildcard</strong> <code>&lt;?&gt;</code> when you don't — it signals "I don't care what the exact type is."
+    </div>
+  </section>
+
+  <!-- 9 -->
+  <section id="s9">
+    <div class="section-label">
+      <span class="section-num">09</span>
+      <h2>Variance</h2>
+      <div class="lang-badges"><span class="badge badge-concept">concept</span></div>
+    </div>
+    <hr class="divider"/>
+    <p><strong>Variance</strong> describes how the subtyping relationship between complex types (like generics) relates to the subtyping of their component types. Given that <code>Dog</code> is a subtype of <code>Animal</code>, what is the relationship between <code>List&lt;Dog&gt;</code> and <code>List&lt;Animal&gt;</code>?</p>
+
+    <div class="variance-grid">
+      <div class="var-card cov">
+        <div class="var-title">Covariant</div>
+        <div class="type-row">
+          <span class="type-box">List&lt;Animal&gt;</span>
+          <span class="type-arrow yes">↑ subtypes</span>
+          <span class="type-box">List&lt;Dog&gt;</span>
+        </div>
+        <p style="font-size:12px;color:#c8c8d8;margin-top:10px;text-align:center">Subtype goes in the same direction</p>
+      </div>
+      <div class="var-card con">
+        <div class="var-title">Contravariant</div>
+        <div class="type-row">
+          <span class="type-box">List&lt;Dog&gt;</span>
+          <span class="type-arrow yes">↑ subtypes</span>
+          <span class="type-box">List&lt;Animal&gt;</span>
+        </div>
+        <p style="font-size:12px;color:#c8c8d8;margin-top:10px;text-align:center">Subtype goes in the opposite direction</p>
+      </div>
+      <div class="var-card inv">
+        <div class="var-title">Invariant</div>
+        <div class="type-row">
+          <span class="type-box">List&lt;Animal&gt;</span>
+          <span class="type-arrow neither">✕ no relation</span>
+          <span class="type-box">List&lt;Dog&gt;</span>
+        </div>
+        <p style="font-size:12px;color:#c8c8d8;margin-top:10px;text-align:center">No subtype relationship at all</p>
+      </div>
+    </div>
+
+    <div class="callout callout-tip">
+      <div class="label">Why it matters</div>
+      Getting variance wrong causes either type errors (too strict) or runtime crashes (too permissive). The next slides show why <code>List&lt;T&gt;</code> can't safely be covariant or contravariant when it's both readable and writable.
+    </div>
+
+    <p style="margin-top:1rem"><strong>The core rule (derived from the analysis):</strong></p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Usage</th><th>a.k.a.</th><th>Variance</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td>Read-only</td><td>Producer</td><td style="color:var(--accent2)">Covariant</td><td>You only read — a <code>List&lt;Dog&gt;</code> can safely be read as a <code>List&lt;Animal&gt;</code> since every Dog is an Animal.</td></tr>
+          <tr><td>Write-only</td><td>Consumer</td><td style="color:var(--accent3)">Contravariant</td><td>You only write — a <code>List&lt;Animal&gt;</code> can safely accept Dogs written to it.</td></tr>
+          <tr><td>Read-write</td><td>Both</td><td style="color:var(--muted)">Invariant</td><td>Doing both opens holes in type safety — must be invariant.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 10 -->
+  <section id="s10">
+    <div class="section-label">
+      <span class="section-num">10</span>
+      <h2>Java Invariance &amp; PECS</h2>
+      <div class="lang-badges"><span class="badge badge-pecs">PECS</span><span class="badge badge-java">Java</span></div>
+    </div>
+    <hr class="divider"/>
+    <p>All Java generics are <strong>invariant</strong> by default — <code>List&lt;Dog&gt;</code> and <code>List&lt;Animal&gt;</code> have no subtype relationship, even though <code>Dog extends Animal</code>.</p>
+
+    <pre><span class="err">// Both are TYPE ERRORS in Java:</span>
+Iterator<span class="tp">&lt;Dog&gt;</span>     d1 = …;
+Iterator<span class="tp">&lt;Animal&gt;</span>  a1 = d1;   <span class="err">// ✕ compile error</span>
+
+Comparator<span class="tp">&lt;Animal&gt;</span> a2 = …;
+Comparator<span class="tp">&lt;Dog&gt;</span>    d2 = a2;   <span class="err">// ✕ compile error</span></pre>
+
+    <p>Java's solution is <strong>use-site variance</strong> via bounded wildcards, captured in the <strong>PECS</strong> principle:</p>
+
+    <div class="pecs-banner">
+      <span><span class="pecs-p">P</span>roducer <span class="pecs-e">E</span>xtends, &nbsp; <span class="pecs-c">C</span>onsumer <span class="pecs-s">S</span>uper</span>
+      <span class="pecs-rest">Use &lt;? extends T&gt; for covariance (reading) · Use &lt;? super T&gt; for contravariance (writing)</span>
+    </div>
+
+    <pre><span class="cm">// Iterator only reads (produces values) → covariant → extends</span>
+Iterator<span class="tp">&lt;Dog&gt;</span>               d1 = …;
+Iterator<span class="tp">&lt;? extends Animal&gt;</span>  a1 = d1;   <span class="cm">// ✓ OK — ? extends Animal covers Dog</span>
+
+<span class="cm">// Comparator only writes/consumes → contravariant → super</span>
+Comparator<span class="tp">&lt;Animal&gt;</span>           a2 = …;
+Comparator<span class="tp">&lt;? super Dog&gt;</span>      d2 = a2;   <span class="cm">// ✓ OK — ? super Dog covers Animal</span></pre>
+
+    <div class="callout callout-info">
+      <div class="label">Memory trick</div>
+      If you're <strong>getting</strong> items out of a structure — use <code>extends</code> (producer). If you're <strong>putting</strong> items in — use <code>super</code> (consumer). If you're doing both — use neither (invariant).
+    </div>
+  </section>
+
+  <!-- 11 -->
+  <section id="s11">
+    <div class="section-label">
+      <span class="section-num">11</span>
+      <h2>Raw Types</h2>
+      <div class="lang-badges"><span class="badge badge-java">Java</span></div>
+    </div>
+    <hr class="divider"/>
+    <p>Before Java 5 added generics, all collections used <code>Object</code>. These are called <strong>raw types</strong> — effectively a generic type with <code>T = Object</code>.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Generic Type</th><th>Raw Type</th><th>Equivalent to</th></tr></thead>
+        <tbody>
+          <tr><td>List&lt;T&gt;</td><td>List</td><td>List&lt;Object&gt;</td></tr>
+          <tr><td>ArrayList&lt;T&gt;</td><td>ArrayList</td><td>ArrayList&lt;Object&gt;</td></tr>
+          <tr><td>Map&lt;K,V&gt;</td><td>Map</td><td>Map&lt;Object,Object&gt;</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <ul class="points">
+      <li>Raw types exist for <strong>backward compatibility</strong> — pre-Java 5 code had no generics.</li>
+      <li>Modern Java code should <strong>never</strong> use raw types — they bypass the type system and suppress compiler warnings.</li>
+      <li>Using a raw type generates an "unchecked" compiler warning.</li>
+    </ul>
+  </section>
+
+  <!-- 12 -->
+  <section id="s12">
+    <div class="section-label">
+      <span class="section-num">12</span>
+      <h2>Type Erasure</h2>
+      <div class="lang-badges"><span class="badge badge-java">Java</span></div>
+    </div>
+    <hr class="divider"/>
+    <p>Java generics are implemented via <strong>type erasure</strong>: the compiler enforces type safety at compile time, then <em>removes</em> all generic type information from the bytecode. At runtime, <code>ArrayList&lt;String&gt;</code> and <code>ArrayList&lt;Integer&gt;</code> are both just <code>ArrayList</code>.</p>
+
+    <div class="erasure-flow">
+      <div class="era-box compile">
+        <span class="era-label">Compile time</span>
+        ArrayList&lt;String&gt;
+      </div>
+      <div class="era-arrow">→</div>
+      <div class="era-box runtime">
+        <span class="era-label">Runtime (erased)</span>
+        ArrayList
+      </div>
+    </div>
+
+    <p>This is why certain things that seem logical <strong>do not compile</strong>:</p>
+    <pre><span class="cm">// Cannot create instance of T — type is unknown at runtime</span>
+<span class="tp">T</span> t = <span class="kw">new</span> <span class="tp">T</span>();              <span class="err">// ✕ compile error</span>
+
+<span class="cm">// Cannot create array of T — JVM needs concrete type for array</span>
+<span class="tp">T</span>[] elements = <span class="kw">new</span> <span class="tp">T</span>[capacity];  <span class="err">// ✕ compile error</span>
+
+<span class="cm">// Cannot use instanceof with generic type</span>
+<span class="kw">if</span> (obj <span class="kw">instanceof</span> List<span class="tp">&lt;String&gt;</span>) { … }  <span class="err">// ✕ compile error</span>
+
+<span class="cm">// Workaround — pass Class&lt;T&gt; token at construction time</span>
+<span class="kw">public class</span> Foo<span class="tp">&lt;T&gt;</span> {
+  <span class="kw">private</span> Class<span class="tp">&lt;T&gt;</span> type;
+  <span class="kw">public</span> <span class="fn">Foo</span>(Class<span class="tp">&lt;T&gt;</span> type) { <span class="kw">this</span>.type = type; }
+}</pre>
+
+    <div class="callout callout-tip">
+      <div class="label">Why erasure?</div>
+      Java chose type erasure (rather than reification, where types are kept at runtime) to remain <strong>backward compatible</strong> with pre-Java-5 code. Languages like C# retain generic type info at runtime (reified generics), avoiding these limitations.
+    </div>
+  </section>
+
+  <!-- Readings -->
+  <div class="readings">
+    📖 &nbsp; Readings: Textbook <span>Chapter 22</span>
+  </div>
+
+</main>
+
+<footer>
+  CS3035 Programming Paradigms &nbsp;·&nbsp; Generics &nbsp;·&nbsp; Cal State LA
+</footer>
+
+</body>
+</html>
